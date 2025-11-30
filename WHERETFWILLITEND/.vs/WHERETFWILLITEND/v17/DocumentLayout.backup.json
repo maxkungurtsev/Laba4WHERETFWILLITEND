@@ -11,16 +11,16 @@
       "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Window.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Window.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Window.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\InputDevice.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\InputDevice.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\InputDevice.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\InputDevice.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Window.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Window.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -40,40 +40,40 @@
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\Window.cpp",
               "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Window.cpp",
               "RelativeToolTip": "WHERETFWILLITEND\\Window.cpp",
-              "ViewState": "AgIAADIAAAAAAAAAAAAAwDoAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAACcAAAAAAAAAAAAAAC8AAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-11-28T16:51:09.472Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 4,
               "Title": "Window.h",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Window.h",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\Window.h",
               "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Window.h",
               "RelativeToolTip": "WHERETFWILLITEND\\Window.h",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAMAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2025-11-28T16:50:38.17Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 3,
               "Title": "InputDevice.cpp",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\InputDevice.cpp",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\InputDevice.cpp",
               "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\InputDevice.cpp",
               "RelativeToolTip": "WHERETFWILLITEND\\InputDevice.cpp",
-              "ViewState": "AgIAAB4AAAAAAAAAAAAAACUAAAA0AAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAEAAAARAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-11-28T16:53:01.327Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 2,
               "Title": "InputDevice.h",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\InputDevice.h",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\InputDevice.h",
@@ -90,9 +90,9 @@
               "Title": "main.cpp",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\main.cpp",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\main.cpp",
-              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\main.cpp",
-              "RelativeToolTip": "WHERETFWILLITEND\\main.cpp",
-              "ViewState": "AgIAABIAAAAAAAAAAAAAABoAAAAFAAAAAAAAAA==",
+              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\main.cpp*",
+              "RelativeToolTip": "WHERETFWILLITEND\\main.cpp*",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-11-28T17:10:42.979Z",
               "EditorCaption": ""

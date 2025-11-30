@@ -5,25 +5,34 @@
 
 Window g_Window;
 InputDevice g_Input;
-
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow){
-    if (!g_Window.Create(hInstance, nCmdShow))
-        return 0;
-    g_Input.Initialize(g_Window.GetHWND());
+int Run() {
     MSG msg = {};
     bool running = true;
-    while (running){
+    while (running) {
         while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
-            if (msg.message == WM_QUIT){
+            if (msg.message == WM_QUIT) {
                 running = false;
             }
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
         g_Input.Update();
-        if (g_Input.IsKeyDown(VK_ESCAPE)){
+        if (g_Input.IsKeyDown(VK_ESCAPE)) {
             PostQuitMessage(0);
         }
+        else if (g_Input.IsKeyDown(VK_SPACE)) {
+            MessageBox(nullptr, L"Space detected!", L"Input Test", MB_OK);
+        }
     }
-    return static_cast<int>(msg.wParam);
+    return (int)msg.wParam;
+}
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow){
+    //init window and check if it actually worked
+    if (!g_Window.Create(hInstance, nCmdShow))
+        return 0;
+    //init input device
+    g_Input.Initialize(g_Window.GetHWND());
+    //catch messege stuff
+    int messege = Run();
+    return static_cast<int>(messege);
 }

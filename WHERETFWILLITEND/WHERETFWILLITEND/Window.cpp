@@ -5,18 +5,24 @@ extern InputDevice g_Input;
 
 bool Window::Create(HINSTANCE hInstance, int nCmdShow){
     WNDCLASSEX wc = {};
-    wc.cbSize = sizeof(wc);
+    wc.cbSize = sizeof(WNDCLASSEX);
+    wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.lpfnWndProc = WndProc;
+    wc.cbClsExtra = 0;
+    wc.cbWndExtra = 0;
     wc.hInstance = hInstance;
+    wc.hIcon = LoadIcon(nullptr, IDI_WINLOGO);
     wc.hCursor = LoadCursor(nullptr, IDC_ARROW);
-    wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
+    wc.hbrBackground = (HBRUSH) GetStockObject(BLACK_BRUSH);
     wc.lpszClassName = L"MyDXWindow";
+    wc.hIconSm = wc.hIcon;
+
 
     if (!RegisterClassEx(&wc))
         return false;
 
-    RECT rect = { 0,0,1280,720 };
-    AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE);
+    RECT WindowRect = { 0,0,1280,720 };
+    AdjustWindowRect(&WindowRect, WS_OVERLAPPEDWINDOW, FALSE);
 
     m_hWnd = CreateWindowEx(
         0,
@@ -24,17 +30,18 @@ bool Window::Create(HINSTANCE hInstance, int nCmdShow){
         L"DirectX App",
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT,
-        rect.right - rect.left,
-        rect.bottom - rect.top,
-        nullptr, nullptr,
-        hInstance, nullptr
+        WindowRect.right - WindowRect.left,
+        WindowRect.bottom - WindowRect.top,
+        nullptr, 
+        nullptr,
+        hInstance, 
+        nullptr
     );
     if (!m_hWnd){
         return false;
     }
     ShowWindow(m_hWnd, nCmdShow);
     UpdateWindow(m_hWnd);
-    return true;
 }
 
 LRESULT CALLBACK Window::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
