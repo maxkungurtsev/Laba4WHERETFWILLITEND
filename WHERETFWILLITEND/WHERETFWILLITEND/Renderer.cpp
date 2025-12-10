@@ -51,3 +51,23 @@ void Renderer::CreateCommandStuff() {
         throw std::runtime_error("Failed to create command list");
     }
 };
+
+void Renderer::CreateSwapChain(HWND hwnd, UINT width, UINT height)
+{
+    swap_chain_.Reset();
+    DXGI_SWAP_CHAIN_DESC1 swap_chain_desc{};
+    swap_chain_desc.Width = width;
+    swap_chain_desc.Height = height;
+    swap_chain_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    swap_chain_desc.SampleDesc.Count = 1;
+    swap_chain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
+    swap_chain_desc.BufferCount = 2;
+    swap_chain_desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
+    ComPtr<IDXGIFactory4> factory;
+    CreateDXGIFactory1(IID_PPV_ARGS(&factory));
+    ComPtr<IDXGISwapChain1> tempSwapChain;
+    HRESULT hr = factory->CreateSwapChainForHwnd(command_queue_.Get(), hwnd, &swap_chain_desc, nullptr, nullptr, &tempSwapChain);
+    if (FAILED(hr))
+        throw std::runtime_error("Failed to create SwapChain");
+    tempSwapChain.As(&swap_chain_);
+}

@@ -10,12 +10,12 @@ using Microsoft::WRL::ComPtr;
 class Renderer
 {
 private:
-        Microsoft::WRL::ComPtr<ID3D12Device> device_;
-        Microsoft::WRL::ComPtr<IDXGISwapChain3> swap_chain_;
-        Microsoft::WRL::ComPtr<ID3D12CommandQueue> command_queue_;
-        Microsoft::WRL::ComPtr<ID3D12CommandAllocator> command_allocator_;
-        Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> command_list_;
-        Microsoft::WRL::ComPtr<ID3D12Fence> fence;
+        ComPtr<ID3D12Device> device_;
+        ComPtr<IDXGISwapChain3> swap_chain_;
+        ComPtr<ID3D12CommandQueue> command_queue_;
+        ComPtr<ID3D12CommandAllocator> command_allocator_;
+        ComPtr<ID3D12GraphicsCommandList> command_list_;
+        ComPtr<ID3D12Fence> fence;
         ComPtr<ID3D12DescriptorHeap> rtv_heap_;
         UINT rtv_descriptor_size_;
         ComPtr<ID3D12DescriptorHeap> dsv_heap_;
@@ -36,7 +36,7 @@ public:
     // step5
     void CreateCommandStuff();
     // step6
-    //void CreateSwapChain();
+    void CreateSwapChain(HWND hwnd, UINT width, UINT height);
     // step7
     // void CreateHeaps();
     // step8
