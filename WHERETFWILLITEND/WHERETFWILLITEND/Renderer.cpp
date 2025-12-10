@@ -71,3 +71,31 @@ void Renderer::CreateSwapChain(HWND hwnd, UINT width, UINT height)
         throw std::runtime_error("Failed to create SwapChain");
     tempSwapChain.As(&swap_chain_);
 }
+
+void Renderer::CreateHeaps(int frame_count) {
+    D3D12_DESCRIPTOR_HEAP_DESC desc{};
+    desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+    desc.NumDescriptors = frame_count;  // обычно 2 или 3
+    desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+    desc.NodeMask = 0;
+
+    HRESULT hr = device_->CreateDescriptorHeap(&desc,IID_PPV_ARGS(&rtv_heap_));
+    if (FAILED(hr)){
+        throw std::runtime_error("Failed to create RTV heap");
+    }
+    desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+    HRESULT hr = device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&dsv_heap_));
+    if (FAILED(hr)) {
+        throw std::runtime_error("Failed to create DSV heap");
+    }
+    desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    HRESULT hr = device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&cbv_srv_uav_heap_));
+    if (FAILED(hr)) {
+        throw std::runtime_error("Failed to create CBV, SRV and UAV heap");
+    }
+    desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+    HRESULT hr = device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&sampler_heap_));
+    if (FAILED(hr)) {
+        throw std::runtime_error("Failed to create SAMPLER heap");
+    }
+};

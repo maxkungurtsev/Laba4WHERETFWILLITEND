@@ -38,7 +38,7 @@ public:
     // step6
     void CreateSwapChain(HWND hwnd, UINT width, UINT height);
     // step7
-    // void CreateHeaps();
+    void CreateHeaps(int frame_count);
     // step8
     // void ?();
     // step9.1
