@@ -73,9 +73,10 @@ void Renderer::CreateSwapChain(HWND hwnd, UINT width, UINT height)
 }
 
 void Renderer::CreateHeaps(int frame_count) {
+    frame_count_ = frame_count;
     D3D12_DESCRIPTOR_HEAP_DESC desc{};
     desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
-    desc.NumDescriptors = frame_count;  // обычно 2 или 3
+    desc.NumDescriptors = frame_count_;  // обычно 2 или 3
     desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
     desc.NodeMask = 0;
 
@@ -97,5 +98,18 @@ void Renderer::CreateHeaps(int frame_count) {
     HRESULT hr = device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&sampler_heap_));
     if (FAILED(hr)) {
         throw std::runtime_error("Failed to create SAMPLER heap");
+    }
+};
+
+void Renderer::CreateRTV() {
+    render_targets_ = std::vector<ComPtr<ID3D12Resource>> (frame_count_);
+        D3D12_CPU_DESCRIPTOR_HANDLE rtv_handle = rtv_heap_->GetCPUDescriptorHandleForHeapStart();
+    for (UINT i = 0; i < frame_count_; i++){
+        rtv_handle.ptr = SIZE_T(rtv_handle.ptr + i * rtv_descriptor_size_);
+        HRESULT hr = swap_chain_->GetBuffer(i,IID_PPV_ARGS(&render_targets_[i]));
+        if (FAILED(hr)){
+            throw std::runtime_error("Failed to get swapchain buffer");
+        }
+        device_->CreateRenderTargetView(render_targets_[i].Get(),nullptr, rtv_handle);
     }
 };

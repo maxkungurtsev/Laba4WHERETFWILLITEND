@@ -4,6 +4,7 @@
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <wrl.h>
+#include <vector>
 #include "Window.h"
 using Microsoft::WRL::ComPtr;
 
@@ -24,6 +25,9 @@ private:
         UINT cbv_srv_uav_descriptor_size_;
         ComPtr<ID3D12DescriptorHeap> sampler_heap_;
         UINT sampler_descriptor_size_;
+        UINT frame_count_; 
+        std::vector<ComPtr<ID3D12Resource>> render_targets_;
+
 public:
     // step2
     void CreateGraphicsDevice();
@@ -40,7 +44,7 @@ public:
     // step7
     void CreateHeaps(int frame_count);
     // step8
-    // void ?();
+    void CreateRTV();
     // step9.1
     // void Zbuffer();
     // step9.2
