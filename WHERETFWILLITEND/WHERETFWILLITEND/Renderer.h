@@ -27,6 +27,7 @@ private:
         UINT sampler_descriptor_size_;
         UINT frame_count_; 
         std::vector<ComPtr<ID3D12Resource>> render_targets_;
+        ComPtr<ID3D12Resource> z_buffer_;
 
 public:
     // step2
@@ -46,7 +47,7 @@ public:
     // step8
     void CreateRTV();
     // step9.1
-    // void Zbuffer();
+     void CreateZBuffer(UINT width, UINT height);
     // step9.2
     // void ?();
     // step10
