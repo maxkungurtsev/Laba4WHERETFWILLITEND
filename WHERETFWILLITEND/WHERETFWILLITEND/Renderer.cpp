@@ -1,8 +1,9 @@
 #include "Renderer.h"
 
-void Renderer::CreateGraphicsDevice(UINT width, UINT height) {
+void Renderer::CreateGraphicsDevice(UINT width, UINT height, int frame_count) {
     width_ = width;
     height_ = height;
+    frame_count_= frame_count;
     HRESULT hr = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device_));
     if (FAILED(hr)) {
         throw std::runtime_error("Failed to create command queue");
@@ -78,8 +79,7 @@ void Renderer::CreateSwapChain(HWND hwnd)
     tempSwapChain.As(&swap_chain_);
 }
 
-void Renderer::CreateHeaps(int frame_count) {
-    frame_count_ = frame_count;
+void Renderer::CreateHeaps() {
     D3D12_DESCRIPTOR_HEAP_DESC desc{};
     desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
     desc.NumDescriptors = frame_count_;  // обычно 2 или 3
@@ -173,3 +173,16 @@ void Renderer::ViewportScissorSetup()
     command_list_->RSSetViewports(1, &viewport);
     command_list_->RSSetScissorRects(1, &scissorRect);
 }
+
+void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd) {
+    CreateGraphicsDevice(width, height, frame_count);
+    CreateFence();
+    AskDescryptorSizes();
+    check4XMSAA();
+    CreateCommandStuff();
+    CreateSwapChain(hwnd);
+    CreateHeaps();
+    CreateRTV();
+    CreateZBuffer();
+    ViewportScissorSetup();
+};

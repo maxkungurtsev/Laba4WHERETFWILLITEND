@@ -31,9 +31,9 @@ private:
         UINT width_;
         UINT height_;
 
-public:
+
     // step2
-    void CreateGraphicsDevice(UINT width, UINT height);
+    void CreateGraphicsDevice(UINT width, UINT height, int frame_count);
     // step3.1
     void CreateFence();
     // step3.2
@@ -45,11 +45,13 @@ public:
     // step6
     void CreateSwapChain(HWND hwnd);
     // step7
-    void CreateHeaps(int frame_count);
+    void CreateHeaps();
     // step8
     void CreateRTV();
     // step9
      void CreateZBuffer();
     // step10
      void ViewportScissorSetup();
+public:
+    void Initialize(UINT width, UINT height, int frame_count, HWND hwnd);
 };
