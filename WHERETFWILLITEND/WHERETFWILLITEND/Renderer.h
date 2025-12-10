@@ -1,15 +1,17 @@
 #pragma once
+#include <iostream>
 #include <windows.h>
 #include <d3d12.h>
 #include <dxgi1_6.h>
 #include <wrl.h>
+#include "Window.h"
 using Microsoft::WRL::ComPtr;
 
 class Renderer
 {
 private:
         Microsoft::WRL::ComPtr<ID3D12Device> device_;
-        Microsoft::WRL::ComPtr<IDXGISwapChain> swap_chain_;
+        Microsoft::WRL::ComPtr<IDXGISwapChain3> swap_chain_;
         Microsoft::WRL::ComPtr<ID3D12CommandQueue> command_queue_;
         Microsoft::WRL::ComPtr<ID3D12CommandAllocator> command_allocator_;
         Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> command_list_;
@@ -24,16 +26,25 @@ private:
         UINT sampler_descriptor_size_;
 public:
     // step2
-    HRESULT CreateGraphicsDevice();
+    void CreateGraphicsDevice();
     // step3.1
     void CreateFence();
     // step3.2
     void AskDescryptorSizes();
     // step4
+    bool check4XMSAA();
     // step5
+    void CreateCommandStuff();
     // step6
+    //void CreateSwapChain();
     // step7
+    // void CreateHeaps();
     // step8
-    // step9
+    // void ?();
+    // step9.1
+    // void Zbuffer();
+    // step9.2
+    // void ?();
     // step10
+    // ViewportScissorSetup();
 };
