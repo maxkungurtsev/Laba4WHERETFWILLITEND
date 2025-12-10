@@ -1,6 +1,8 @@
 #include "Renderer.h"
 
-void Renderer::CreateGraphicsDevice() {
+void Renderer::CreateGraphicsDevice(UINT width, UINT height) {
+    width_ = width;
+    height_ = height;
     HRESULT hr = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device_));
     if (FAILED(hr)) {
         throw std::runtime_error("Failed to create command queue");
@@ -50,14 +52,18 @@ void Renderer::CreateCommandStuff() {
     if (FAILED(hr)) {
         throw std::runtime_error("Failed to create command list");
     }
+    hr = command_list_->Close();
+    if (FAILED(hr)) { 
+        throw std::runtime_error("Failed to close initial command list"); 
+    }
 };
 
-void Renderer::CreateSwapChain(HWND hwnd, UINT width, UINT height)
+void Renderer::CreateSwapChain(HWND hwnd)
 {
     swap_chain_.Reset();
     DXGI_SWAP_CHAIN_DESC1 swap_chain_desc{};
-    swap_chain_desc.Width = width;
-    swap_chain_desc.Height = height;
+    swap_chain_desc.Width = width_;
+    swap_chain_desc.Height = height_;
     swap_chain_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     swap_chain_desc.SampleDesc.Count = 1;
     swap_chain_desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
@@ -84,18 +90,19 @@ void Renderer::CreateHeaps(int frame_count) {
     if (FAILED(hr)){
         throw std::runtime_error("Failed to create RTV heap");
     }
+    desc.NumDescriptors = 1;
     desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-    HRESULT hr = device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&dsv_heap_));
+    hr = device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&dsv_heap_));
     if (FAILED(hr)) {
         throw std::runtime_error("Failed to create DSV heap");
     }
     desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    HRESULT hr = device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&cbv_srv_uav_heap_));
+    hr = device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&cbv_srv_uav_heap_));
     if (FAILED(hr)) {
         throw std::runtime_error("Failed to create CBV, SRV and UAV heap");
     }
     desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
-    HRESULT hr = device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&sampler_heap_));
+    hr = device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&sampler_heap_));
     if (FAILED(hr)) {
         throw std::runtime_error("Failed to create SAMPLER heap");
     }
@@ -114,19 +121,13 @@ void Renderer::CreateRTV() {
     }
 };
 
-void Renderer::CreateZBuffer(UINT width, UINT height)
+void Renderer::CreateZBuffer()
 {
-    //DSV heap desc
-    D3D12_DESCRIPTOR_HEAP_DESC dsvHeapDesc{};
-    dsvHeapDesc.NumDescriptors = 1;
-    dsvHeapDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
-    dsvHeapDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
-    device_->CreateDescriptorHeap(&dsvHeapDesc, IID_PPV_ARGS(&dsv_heap_));
     //resourse desc
     D3D12_RESOURCE_DESC depthDesc{};
     depthDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    depthDesc.Width = width;
-    depthDesc.Height = height;
+    depthDesc.Width = width_;
+    depthDesc.Height = height_;
     depthDesc.DepthOrArraySize = 1;
     depthDesc.MipLevels = 1;
     depthDesc.Format = DXGI_FORMAT_D32_FLOAT;
@@ -151,4 +152,24 @@ void Renderer::CreateZBuffer(UINT width, UINT height)
     device_->CreateCommittedResource(&heapProps,D3D12_HEAP_FLAG_NONE,&depthDesc,D3D12_RESOURCE_STATE_DEPTH_WRITE,&optClear,IID_PPV_ARGS(&z_buffer_));
     //DSV
     device_->CreateDepthStencilView(z_buffer_.Get(), nullptr, dsv_heap_->GetCPUDescriptorHandleForHeapStart());
+}
+
+void Renderer::ViewportScissorSetup()
+{
+    D3D12_VIEWPORT viewport = {};
+    viewport.TopLeftX = 0;
+    viewport.TopLeftY = 0;
+    viewport.Width = static_cast<float>(width_);
+    viewport.Height = static_cast<float>(height_);
+    viewport.MinDepth = 0.0f;
+    viewport.MaxDepth = 1.0f;
+
+    D3D12_RECT scissorRect = {};
+    scissorRect.left = 0;
+    scissorRect.top = 0;
+    scissorRect.right = width_;
+    scissorRect.bottom = height_;
+
+    command_list_->RSSetViewports(1, &viewport);
+    command_list_->RSSetScissorRects(1, &scissorRect);
 }

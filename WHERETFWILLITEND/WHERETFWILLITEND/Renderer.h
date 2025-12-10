@@ -28,10 +28,12 @@ private:
         UINT frame_count_; 
         std::vector<ComPtr<ID3D12Resource>> render_targets_;
         ComPtr<ID3D12Resource> z_buffer_;
+        UINT width_;
+        UINT height_;
 
 public:
     // step2
-    void CreateGraphicsDevice();
+    void CreateGraphicsDevice(UINT width, UINT height);
     // step3.1
     void CreateFence();
     // step3.2
@@ -41,15 +43,13 @@ public:
     // step5
     void CreateCommandStuff();
     // step6
-    void CreateSwapChain(HWND hwnd, UINT width, UINT height);
+    void CreateSwapChain(HWND hwnd);
     // step7
     void CreateHeaps(int frame_count);
     // step8
     void CreateRTV();
-    // step9.1
-     void CreateZBuffer(UINT width, UINT height);
-    // step9.2
-    // void ?();
+    // step9
+     void CreateZBuffer();
     // step10
-    // ViewportScissorSetup();
+     void ViewportScissorSetup();
 };

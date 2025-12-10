@@ -1,4 +1,2 @@
 ﻿  Renderer.cpp
-C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\d3dx12.h(15,10): error C1083: Не удается открыть файл включение: d3dx12_barriers.h: No such file or directory,
-  (компиляция исходного файла "Renderer.cpp")
-  
+  WHERETFWILLITEND.vcxproj -> C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\x64\Debug\WHERETFWILLITEND.exe
