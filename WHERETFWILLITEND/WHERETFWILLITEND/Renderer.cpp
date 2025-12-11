@@ -6,14 +6,14 @@ void Renderer::CreateGraphicsDevice(UINT width, UINT height, int frame_count) {
     frame_count_= frame_count;
     HRESULT hr = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device_));
     if (FAILED(hr)) {
-        throw std::runtime_error("Failed to create command queue");
+        throw std::runtime_error("Failed to create Graphics Device");
     }
 };
 
 void Renderer::CreateFence() {
     HRESULT hr = device_->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
     if (FAILED(hr)) {
-        throw std::runtime_error("Failed to create command queue");
+        throw std::runtime_error("Failed to create fence");
     }
 };
 
@@ -57,6 +57,7 @@ void Renderer::CreateCommandStuff() {
     if (FAILED(hr)) { 
         throw std::runtime_error("Failed to close initial command list"); 
     }
+
 };
 
 void Renderer::CreateSwapChain(HWND hwnd)
@@ -77,6 +78,8 @@ void Renderer::CreateSwapChain(HWND hwnd)
     if (FAILED(hr))
         throw std::runtime_error("Failed to create SwapChain");
     tempSwapChain.As(&swap_chain_);
+    current_backbuffer_ = swap_chain_->GetCurrentBackBufferIndex();
+
 }
 
 void Renderer::CreateHeaps() {
@@ -96,11 +99,13 @@ void Renderer::CreateHeaps() {
     if (FAILED(hr)) {
         throw std::runtime_error("Failed to create DSV heap");
     }
+    desc.NumDescriptors = 256;
     desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
     hr = device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&cbv_srv_uav_heap_));
     if (FAILED(hr)) {
         throw std::runtime_error("Failed to create CBV, SRV and UAV heap");
     }
+    desc.NumDescriptors = 16;
     desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
     hr = device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&sampler_heap_));
     if (FAILED(hr)) {
@@ -112,7 +117,7 @@ void Renderer::CreateRTV() {
     render_targets_ = std::vector<ComPtr<ID3D12Resource>> (frame_count_);
         D3D12_CPU_DESCRIPTOR_HANDLE rtv_handle = rtv_heap_->GetCPUDescriptorHandleForHeapStart();
     for (UINT i = 0; i < frame_count_; i++){
-        rtv_handle.ptr = SIZE_T(rtv_handle.ptr + i * rtv_descriptor_size_);
+        rtv_handle.ptr = rtv_heap_->GetCPUDescriptorHandleForHeapStart().ptr + i * rtv_descriptor_size_;
         HRESULT hr = swap_chain_->GetBuffer(i,IID_PPV_ARGS(&render_targets_[i]));
         if (FAILED(hr)){
             throw std::runtime_error("Failed to get swapchain buffer");
@@ -169,9 +174,6 @@ void Renderer::ViewportScissorSetup()
     scissor_rect_.top = 0;
     scissor_rect_.right = width_;
     scissor_rect_.bottom = height_;
-
-    command_list_->RSSetViewports(1, &viewport_);
-    command_list_->RSSetScissorRects(1, &scissor_rect_);
 }
 
 void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd) {
@@ -187,5 +189,38 @@ void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd) {
     ViewportScissorSetup();
 };
 
-void Renderer::Renderframe() {
+void Renderer::RenderFrame(){
+    command_allocator_->Reset();
+    command_list_->RSSetViewports(1, &viewport_);
+    command_list_->RSSetScissorRects(1, &scissor_rect_);
+    command_list_->Reset(command_allocator_.Get(), nullptr);
+    command_list_->RSSetViewports(1, &viewport_);
+    command_list_->RSSetScissorRects(1, &scissor_rect_);
+    D3D12_RESOURCE_BARRIER barrier = {};
+    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+    barrier.Transition.pResource = render_targets_[current_backbuffer_].Get();
+    barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+    barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+
+    command_list_->ResourceBarrier(1, &barrier);
+
+    // 4. Set render target (RTV + DSV)
+    D3D12_CPU_DESCRIPTOR_HANDLE rtv_handle = rtv_heap_->GetCPUDescriptorHandleForHeapStart();
+    rtv_handle.ptr += current_backbuffer_ * rtv_descriptor_size_;
+    D3D12_CPU_DESCRIPTOR_HANDLE dsv_handle = dsv_heap_->GetCPUDescriptorHandleForHeapStart();
+     command_list_->OMSetRenderTargets(1, &rtv_handle, FALSE, &dsv_handle);
+    const float clearColor[] = { 0.2f, 0.4f, 0.6f, 1.0f };
+    command_list_->ClearRenderTargetView(rtv_handle, clearColor, 0, nullptr);
+    command_list_->ClearDepthStencilView(dsv_handle,D3D12_CLEAR_FLAG_DEPTH,1.0f, 0, 0, nullptr);
+    std::swap(barrier.Transition.StateBefore, barrier.Transition.StateAfter);
+    command_list_->ResourceBarrier(1, &barrier);
+    command_list_->Close();
+    ID3D12CommandList* lists[] = { 
+        command_list_.Get() 
+    };
+    command_queue_->ExecuteCommandLists(1, lists);
+    swap_chain_->Present(1, 0); 
+    current_backbuffer_ = swap_chain_->GetCurrentBackBufferIndex();
 }
