@@ -17,6 +17,7 @@ private:
         ComPtr<ID3D12CommandAllocator> command_allocator_;
         ComPtr<ID3D12GraphicsCommandList> command_list_;
         ComPtr<ID3D12Fence> fence;
+        UINT fence_value_ = 0;
         ComPtr<ID3D12DescriptorHeap> rtv_heap_;
         UINT rtv_descriptor_size_;
         ComPtr<ID3D12DescriptorHeap> dsv_heap_;
@@ -30,6 +31,8 @@ private:
         ComPtr<ID3D12Resource> z_buffer_;
         UINT width_;
         UINT height_;
+        D3D12_VIEWPORT viewport_;
+        D3D12_RECT scissor_rect_;
 
 
     // step2
@@ -54,4 +57,5 @@ private:
      void ViewportScissorSetup();
 public:
     void Initialize(UINT width, UINT height, int frame_count, HWND hwnd);
+    void Renderframe();
 };

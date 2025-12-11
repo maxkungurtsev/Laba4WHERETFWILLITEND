@@ -156,22 +156,22 @@ void Renderer::CreateZBuffer()
 
 void Renderer::ViewportScissorSetup()
 {
-    D3D12_VIEWPORT viewport = {};
-    viewport.TopLeftX = 0;
-    viewport.TopLeftY = 0;
-    viewport.Width = static_cast<float>(width_);
-    viewport.Height = static_cast<float>(height_);
-    viewport.MinDepth = 0.0f;
-    viewport.MaxDepth = 1.0f;
+    viewport_ = {};
+    viewport_.TopLeftX = 0;
+    viewport_.TopLeftY = 0;
+    viewport_.Width = static_cast<float>(width_);
+    viewport_.Height = static_cast<float>(height_);
+    viewport_.MinDepth = 0.0f;
+    viewport_.MaxDepth = 1.0f;
 
-    D3D12_RECT scissorRect = {};
-    scissorRect.left = 0;
-    scissorRect.top = 0;
-    scissorRect.right = width_;
-    scissorRect.bottom = height_;
+    scissor_rect_ = {};
+    scissor_rect_.left = 0;
+    scissor_rect_.top = 0;
+    scissor_rect_.right = width_;
+    scissor_rect_.bottom = height_;
 
-    command_list_->RSSetViewports(1, &viewport);
-    command_list_->RSSetScissorRects(1, &scissorRect);
+    command_list_->RSSetViewports(1, &viewport_);
+    command_list_->RSSetScissorRects(1, &scissor_rect_);
 }
 
 void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd) {
@@ -186,3 +186,6 @@ void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd) {
     CreateZBuffer();
     ViewportScissorSetup();
 };
+
+void Renderer::Renderframe() {
+}
