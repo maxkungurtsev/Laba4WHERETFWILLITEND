@@ -6,7 +6,7 @@
 #include <wrl.h>
 #include <vector>
 #include "Window.h"
-//#include "Model.h"
+#include "Model.h"
 using Microsoft::WRL::ComPtr;
 
 class Renderer
@@ -35,6 +35,13 @@ private:
     D3D12_VIEWPORT viewport_;
     D3D12_RECT scissor_rect_;
     UINT current_backbuffer_ = 0;
+    ComPtr<ID3D12RootSignature> root_signature_;
+    ComPtr<ID3D12PipelineState> pipeline_state_;
+    std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout_;
+    ComPtr<ID3D12Resource> vertex_buffer_;
+    D3D12_VERTEX_BUFFER_VIEW vertex_buffer_view_;
+    ComPtr<ID3DBlob> vertex_shader_;
+    ComPtr<ID3DBlob> pixel_shader_;
     // step2
     void CreateGraphicsDevice(UINT width, UINT height, int frame_count);
     // step3.1
@@ -55,7 +62,11 @@ private:
     void CreateZBuffer();
     // step10
     void ViewportScissorSetup();
+    // graphic pipeline bull****
+    void CreateRootSignature();
+    void CreatePipelineStateObject();
+    void CreateVertexBuffer(Model mesh);
 public:
-    void Initialize(UINT width, UINT height, int frame_count, HWND hwnd);
+    void Initialize(UINT width, UINT height, int frame_count, HWND hwnd, Model mesh);
     void RenderFrame();
 };

@@ -3,32 +3,28 @@
   "WorkspaceRootPath": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Renderer.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Renderer.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Renderer.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Renderer.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Window.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Window.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Window.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Window.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Renderer.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Renderer.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\InputDevice.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\InputDevice.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Window.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Window.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Camera.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Camera.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -38,25 +34,24 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 5,
+          "SelectedChildIndex": 0,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "Renderer.h",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Renderer.h",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\Renderer.h",
               "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Renderer.h",
               "RelativeToolTip": "WHERETFWILLITEND\\Renderer.h",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAAaAAAAAAAAAA==",
+              "ViewState": "AgIAAB4AAAAAAAAAAAAswCUAAAAJAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2025-12-10T06:18:30.559Z",
-              "IsPinned": true,
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 4,
               "Title": "Camera.h",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Camera.h",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\Camera.h",
@@ -70,19 +65,6 @@
             {
               "$type": "Document",
               "DocumentIndex": 3,
-              "Title": "Window.cpp",
-              "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Window.cpp",
-              "RelativeDocumentMoniker": "WHERETFWILLITEND\\Window.cpp",
-              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Window.cpp",
-              "RelativeToolTip": "WHERETFWILLITEND\\Window.cpp",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-11-28T16:51:09.472Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
               "Title": "Window.h",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Window.h",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\Window.h",
@@ -95,26 +77,13 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
-              "Title": "main.cpp",
-              "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\main.cpp",
-              "RelativeDocumentMoniker": "WHERETFWILLITEND\\main.cpp",
-              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\main.cpp",
-              "RelativeToolTip": "WHERETFWILLITEND\\main.cpp",
-              "ViewState": "AgIAABIAAAAAAAAAAAAAACEAAAARAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-11-28T17:10:42.979Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "Renderer.cpp",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Renderer.cpp",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\Renderer.cpp",
               "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Renderer.cpp",
               "RelativeToolTip": "WHERETFWILLITEND\\Renderer.cpp",
-              "ViewState": "AgIAAHIAAAAAAAAAAAAswOIAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABgAAAACAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-12-10T06:21:05.159Z",
               "EditorCaption": ""
@@ -122,6 +91,19 @@
             {
               "$type": "Document",
               "DocumentIndex": 5,
+              "Title": "main.cpp",
+              "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\main.cpp",
+              "RelativeDocumentMoniker": "WHERETFWILLITEND\\main.cpp",
+              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\main.cpp",
+              "RelativeToolTip": "WHERETFWILLITEND\\main.cpp",
+              "ViewState": "AgIAACcAAAAAAAAAAAAAABsAAAARAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-11-28T17:10:42.979Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
               "Title": "InputDevice.h",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\InputDevice.h",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\InputDevice.h",

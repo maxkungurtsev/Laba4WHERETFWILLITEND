@@ -176,7 +176,107 @@ void Renderer::ViewportScissorSetup()
     scissor_rect_.bottom = height_;
 }
 
-void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd) {
+void Renderer::CreateRootSignature() {
+    D3D12_ROOT_SIGNATURE_DESC rootSigDesc = {};
+    rootSigDesc.NumParameters = 0;
+    rootSigDesc.pParameters = nullptr;
+    rootSigDesc.NumStaticSamplers = 0;
+    rootSigDesc.pStaticSamplers = nullptr;
+    rootSigDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+    ComPtr<ID3DBlob> serializedRootSig;
+    ComPtr<ID3DBlob> error;
+    HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc,D3D_ROOT_SIGNATURE_VERSION_1,&serializedRootSig,&error);
+    if (FAILED(hr)) {
+        if (error) {
+            std::cerr << (char*)error->GetBufferPointer();
+        }
+        throw std::runtime_error("Failed to serialize root signature");
+    }
+    ComPtr<ID3D12RootSignature> root_signature_;
+    device_->CreateRootSignature(0,serializedRootSig->GetBufferPointer(),serializedRootSig->GetBufferSize(),IID_PPV_ARGS(&root_signature_));
+};
+
+void Renderer::CreatePipelineStateObject() {
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+    psoDesc.InputLayout = { input_layout_.data(), (UINT)input_layout_.size() };
+    psoDesc.pRootSignature = root_signature_.Get();
+    psoDesc.VS = { vertex_shader_->GetBufferPointer(), vertex_shader_->GetBufferSize() };
+    psoDesc.PS = { pixel_shader_->GetBufferPointer(), pixel_shader_->GetBufferSize() };
+    psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+    psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+    psoDesc.RasterizerState.FrontCounterClockwise = FALSE;
+    psoDesc.RasterizerState.DepthClipEnable = TRUE;
+
+    psoDesc.BlendState.AlphaToCoverageEnable = FALSE;
+    psoDesc.BlendState.IndependentBlendEnable = FALSE;
+    const D3D12_RENDER_TARGET_BLEND_DESC defaultBlend = {FALSE,FALSE,
+        D3D12_BLEND_ONE,D3D12_BLEND_ZERO,D3D12_BLEND_OP_ADD,
+        D3D12_BLEND_ONE,D3D12_BLEND_ZERO,D3D12_BLEND_OP_ADD,
+        D3D12_LOGIC_OP_NOOP,
+        D3D12_COLOR_WRITE_ENABLE_ALL
+    };
+    for (int i = 0; i < 8; ++i){
+        psoDesc.BlendState.RenderTarget[i] = defaultBlend;
+    }
+    psoDesc.DepthStencilState.DepthEnable = TRUE;
+    psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+    psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+    psoDesc.DepthStencilState.StencilEnable = FALSE;
+
+    psoDesc.SampleMask = UINT_MAX;
+    psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+    psoDesc.NumRenderTargets = 1;
+    psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+    psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    psoDesc.SampleDesc.Count = 1;
+
+    ComPtr<ID3D12PipelineState> pipeline_state_;
+    device_->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipeline_state_));
+
+};
+
+void Renderer::CreateVertexBuffer(Model mesh) {
+
+    std::vector<Vec3f> verts; 
+    for (int i = 0; i < mesh.Get_verts_amount(); i++) {
+        verts.push_back(mesh.Get_vert(i));
+    }
+    D3D12_HEAP_PROPERTIES heapProps = {};
+    heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+    heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+    heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+
+    D3D12_RESOURCE_DESC resDesc = {};
+    resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    resDesc.Width = sizeof(verts);
+    resDesc.Height = 1;
+    resDesc.DepthOrArraySize = 1;
+    resDesc.MipLevels = 1;
+    resDesc.SampleDesc.Count = 1;
+    resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+
+    device_->CreateCommittedResource(
+        &heapProps,
+        D3D12_HEAP_FLAG_NONE,
+        &resDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&vertex_buffer_)
+    );
+
+    // Копируем данные в буфер
+    void* pData;
+    vertex_buffer_->Map(0, nullptr, &pData);
+    memcpy(pData, verts.data(), verts.size()*sizeof(Vec3f));
+    vertex_buffer_->Unmap(0, nullptr);
+
+    // Настройка vertex buffer view
+    vertex_buffer_view_.BufferLocation = vertex_buffer_->GetGPUVirtualAddress();
+    vertex_buffer_view_.StrideInBytes = sizeof(verts[0]);
+    vertex_buffer_view_.SizeInBytes = verts.size() * sizeof(Vec3f);
+}
+
+void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd,Model mesh) {
     CreateGraphicsDevice(width, height, frame_count);
     CreateFence();
     AskDescryptorSizes();
@@ -187,6 +287,10 @@ void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd) {
     CreateRTV();
     CreateZBuffer();
     ViewportScissorSetup();
+    CreateRootSignature();
+    CreateVertexBuffer(mesh);
+    command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    command_list_->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
 };
 
 void Renderer::RenderFrame(){
@@ -224,3 +328,5 @@ void Renderer::RenderFrame(){
     swap_chain_->Present(1, 0); 
     current_backbuffer_ = swap_chain_->GetCurrentBackBufferIndex();
 }
+
+
