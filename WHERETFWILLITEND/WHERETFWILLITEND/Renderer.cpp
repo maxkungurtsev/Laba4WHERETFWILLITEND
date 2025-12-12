@@ -237,9 +237,17 @@ void Renderer::CreatePipelineStateObject() {
 
 void Renderer::CreateVertexBuffer(Model mesh) {
 
-    std::vector<Vec3f> verts; 
+    std::vector<Vec3f> verts;
+    std::vector<Vec2f> textures;
+    std::vector<Vec3f> normals;
     for (int i = 0; i < mesh.Get_verts_amount(); i++) {
         verts.push_back(mesh.Get_vert(i));
+    }
+    for (int i = 0; i < mesh.Get_textures_amount(); i++) {
+        textures.push_back(mesh.Get_vertex_texture(i));
+    }
+    for (int i = 0; i < mesh.Get_normals_amount(); i++) {
+        normals.push_back(mesh.Get_normal(i));
     }
     D3D12_HEAP_PROPERTIES heapProps = {};
     heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
