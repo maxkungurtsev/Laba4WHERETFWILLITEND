@@ -6,6 +6,7 @@
 #include <wrl.h>
 #include <vector>
 #include "Window.h"
+//#include "Model.h"
 using Microsoft::WRL::ComPtr;
 
 class Renderer

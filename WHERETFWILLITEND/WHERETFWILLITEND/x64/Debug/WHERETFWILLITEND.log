@@ -1,4 +1,15 @@
-﻿  Renderer.cpp
-  main.cpp
+﻿  Camera.cpp
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\vectors.h(28,42): warning C4244: аргумент: преобразование "double" в "float", возможна потеря данных
+  (компиляция исходного файла "Camera.cpp")
+      C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\vectors.h(28,42):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Camera.h(7,8):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "Vec3<float>"
+          C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\vectors.h(28,12):
+          во время компиляции функции-члена класс шаблон "Vec3<float> &Vec3<float>::normalize(void)"
+              C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Camera.cpp(8,10):
+              см. первую ссылку на "Vec3<float>::normalize" в "Camera::Camera"
+  
+  tgaimage.cpp
   Создание кода...
   WHERETFWILLITEND.vcxproj -> C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\x64\Debug\WHERETFWILLITEND.exe
