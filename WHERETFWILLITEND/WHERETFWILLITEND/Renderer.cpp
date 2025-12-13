@@ -181,33 +181,54 @@ void Renderer::ViewportScissorSetup()
     scissor_rect_.bottom = height_;
 }
 
-void Renderer::CreateConstantBuffers(){
+void Renderer::CreateCBV_SRV_Sampler() {
+    // --- CBV: MVP ---
     D3D12_HEAP_PROPERTIES heapProps{};
     heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+    heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+    heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+    heapProps.CreationNodeMask = 1;
+    heapProps.VisibleNodeMask = 1;
+
     D3D12_RESOURCE_DESC resDesc{};
     resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    resDesc.Alignment = 0;
+    resDesc.Width = (sizeof(MVPConstants) + 255) & ~255; // выравнивание 256 байт
     resDesc.Height = 1;
     resDesc.DepthOrArraySize = 1;
     resDesc.MipLevels = 1;
+    resDesc.Format = DXGI_FORMAT_UNKNOWN;
     resDesc.SampleDesc.Count = 1;
+    resDesc.SampleDesc.Quality = 0;
     resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-    //MVP
-    resDesc.Width = (sizeof(MVPConstants) + 255) & ~255;
-    HRESULT hr=device_->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&mvp_cb_));
-    // map etc...
-    if (FAILED(hr)) {
-        throw std::runtime_error("Failed to create MVP RESOURSE");
-    }
+    resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+    // Создание ресурса для MVP CBV
+    HRESULT hr = device_->CreateCommittedResource(
+        &heapProps,
+        D3D12_HEAP_FLAG_NONE,
+        &resDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&mvp_cb_)
+    );
+    if (FAILED(hr)) throw std::runtime_error("Failed to create MVP CBV resource");
+
+    // Map для CPU доступа
     void* mappedData = nullptr;
     mvp_cb_->Map(0, nullptr, &mappedData);
+
+    // Создание CBV дескриптора
     D3D12_CONSTANT_BUFFER_VIEW_DESC mvp_cbv_desc{};
     mvp_cbv_desc.BufferLocation = mvp_cb_->GetGPUVirtualAddress();
     mvp_cbv_desc.SizeInBytes = resDesc.Width;
+
     D3D12_CPU_DESCRIPTOR_HANDLE handle = cbv_srv_uav_heap_->GetCPUDescriptorHandleForHeapStart();
     device_->CreateConstantBufferView(&mvp_cbv_desc, handle);
-    //Light
+
+    // --- CBV: Light ---
     resDesc.Width = (sizeof(LightConstants) + 255) & ~255;
-    hr=device_->CreateCommittedResource(
+    hr = device_->CreateCommittedResource(
         &heapProps,
         D3D12_HEAP_FLAG_NONE,
         &resDesc,
@@ -215,19 +236,19 @@ void Renderer::CreateConstantBuffers(){
         nullptr,
         IID_PPV_ARGS(&light_cb_)
     );
-    if (FAILED(hr)) {
-        throw std::runtime_error("Failed to create Light RESOURSE");
-    }
+    if (FAILED(hr)) throw std::runtime_error("Failed to create Light CBV resource");
+
     light_cb_->Map(0, nullptr, &mappedData);
+
     D3D12_CONSTANT_BUFFER_VIEW_DESC light_cbv_desc{};
     light_cbv_desc.BufferLocation = light_cb_->GetGPUVirtualAddress();
     light_cbv_desc.SizeInBytes = resDesc.Width;
+
+    // Смещаем дескриптор на слот 1
     handle.ptr += cbv_srv_uav_descriptor_size_;
     device_->CreateConstantBufferView(&light_cbv_desc, handle);
-}
 
-void Renderer::CreateSRVandSampler() {
-    // SRV в слоте 2 (t0)
+    // --- SRV: Texture ---
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -236,21 +257,26 @@ void Renderer::CreateSRVandSampler() {
     srvDesc.Texture2D.MipLevels = 1;
     srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 
-    D3D12_CPU_DESCRIPTOR_HANDLE handle = cbv_srv_uav_heap_->GetCPUDescriptorHandleForHeapStart();
-    handle.ptr += SIZE_T(2) * cbv_srv_uav_descriptor_size_; // <--- положить в слот 2
+    handle = cbv_srv_uav_heap_->GetCPUDescriptorHandleForHeapStart();
+    handle.ptr += 2 * cbv_srv_uav_descriptor_size_; // слот 2
     device_->CreateShaderResourceView(texture_.Get(), &srvDesc, handle);
 
-    // Самплер в отдельной куче (sampler_heap_)
+    // --- Sampler ---
     D3D12_SAMPLER_DESC sampDesc{};
     sampDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
     sampDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
     sampDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
     sampDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    sampDesc.MipLODBias = 0.0f;
+    sampDesc.MaxAnisotropy = 1;
+    sampDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
     sampDesc.MinLOD = 0;
     sampDesc.MaxLOD = D3D12_FLOAT32_MAX;
+
     D3D12_CPU_DESCRIPTOR_HANDLE sampHandle = sampler_heap_->GetCPUDescriptorHandleForHeapStart();
     device_->CreateSampler(&sampDesc, sampHandle);
 }
+
 
 void Renderer::CreateRootSignature() {
     // CBV b0 (MVP) - VS
@@ -459,14 +485,25 @@ void Renderer::CreatePipelineStateObject() {
         s2 << "RTVFormat: " << psoDesc.RTVFormats[0] << " DSVFormat: " << psoDesc.DSVFormat << " SampleCount: " << psoDesc.SampleDesc.Count << "\n";
         OutputDebugStringA(s2.str().c_str());
     }
+    std::ostringstream oss;
+    oss << "Creating PSO with parameters:\n";
+    oss << "NumRenderTargets: " << psoDesc.NumRenderTargets << "\n";
+    oss << "RTVFormats[0]: " << psoDesc.RTVFormats[0] << "\n";
+    oss << "DSVFormat: " << psoDesc.DSVFormat << "\n";
+    oss << "SampleCount: " << psoDesc.SampleDesc.Count << "\n";
+    oss << "InputLayout.Elements: " << psoDesc.InputLayout.NumElements << "\n";
+    oss << "RootSignature: " << (psoDesc.pRootSignature ? "valid" : "nullptr") << "\n";
+    oss << "VS Size: " << psoDesc.VS.BytecodeLength << "\n";
+    oss << "PS Size: " << psoDesc.PS.BytecodeLength << "\n";
+    OutputDebugStringA(oss.str().c_str());
+
     HRESULT hr = device_->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipeline_state_));
     if (FAILED(hr)) {
-        std::ostringstream oss;
-        oss << "CreateGraphicsPipelineState failed. HRESULT = 0x" << std::hex << hr;
-        OutputDebugStringA((oss.str() + "\n").c_str()); // также попадёт в Output Window
-        throw std::runtime_error(oss.str());
+        std::ostringstream oss2;
+        oss2 << "CreateGraphicsPipelineState failed. HRESULT = 0x" << std::hex << hr << "\n";
+        OutputDebugStringA(oss2.str().c_str());
+        throw std::runtime_error(oss2.str());
     }
-
 };
 
 void Renderer::CreateVertexBuffer(Model& model){
@@ -658,8 +695,7 @@ void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd, M
     CompileShaders();
     CreateInputLayout();
     LoadTextureFromTGA(mesh.GetTexture(),0);
-    CreateSRVandSampler();
-    CreateConstantBuffers();
+    CreateCBV_SRV_Sampler();
     CreateVertexBuffer(mesh);
     CreatePipelineStateObject();
 }

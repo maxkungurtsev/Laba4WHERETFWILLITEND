@@ -91,9 +91,8 @@ private:
     void CreatePipelineStateObject();
     void CreateVertexBuffer(Model& mesh);
     void CompileShaders();
-    void CreateConstantBuffers();
+    void CreateCBV_SRV_Sampler();
     void CreateInputLayout();
-    void CreateSRVandSampler();
     void LoadTextureFromTGA(TGAImage& image, UINT textureSlot = 0);
 public:
     void Initialize(UINT width, UINT height, int frame_count, HWND hwnd, Model& mesh);
