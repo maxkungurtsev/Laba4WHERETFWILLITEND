@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿  Camera.cpp
 C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\vectors.h(28,42): warning C4244: аргумент: преобразование "double" в "float", возможна потеря данных
   (компиляция исходного файла "Camera.cpp")
@@ -12,4 +13,7 @@ C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITE
   
   tgaimage.cpp
   Создание кода...
+=======
+﻿  Renderer.cpp
+>>>>>>> parent of 4acdfb1 (R E N D E R   T I M E)
   WHERETFWILLITEND.vcxproj -> C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\x64\Debug\WHERETFWILLITEND.exe
