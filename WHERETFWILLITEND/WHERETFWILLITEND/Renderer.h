@@ -1,14 +1,14 @@
 #pragma once
-#include <iostream>
-#include <windows.h>
-#include <d3d12.h>
+#include <d3d12.h> 
 #include <dxgi1_6.h>
-#include <wrl.h>
+#include <windows.h>
+#include <wrl.h>  
+#include <d3dcompiler.h>
+#include <iostream>
 #include <vector>
+#include <sstream>
 #include "Window.h"
 #include "Model.h"
-#include <d3dcompiler.h>
-#include <sstream> 
 using Microsoft::WRL::ComPtr;
 
 struct alignas(256) MVPConstants{
