@@ -8,6 +8,7 @@
 #include "Window.h"
 #include "Model.h"
 #include <d3dcompiler.h>
+#include <sstream> 
 using Microsoft::WRL::ComPtr;
 
 struct alignas(256) MVPConstants{
@@ -88,14 +89,13 @@ private:
     // graphic pipeline bull****
     void CreateRootSignature();
     void CreatePipelineStateObject();
-    void CreateVertexBuffer(const Model& mesh);
+    void CreateVertexBuffer(Model& mesh);
     void CompileShaders();
     void CreateConstantBuffers();
     void CreateInputLayout();
     void CreateSRVandSampler();
     void LoadTextureFromTGA(TGAImage& image, UINT textureSlot = 0);
 public:
-    void Initialize(UINT width, UINT height, int frame_count, HWND hwnd, const Model& mesh);
+    void Initialize(UINT width, UINT height, int frame_count, HWND hwnd, Model& mesh);
     void RenderFrame();
-    void ViewportScissorSetup();
 };

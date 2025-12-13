@@ -372,11 +372,17 @@ void Renderer::CreatePipelineStateObject() {
     psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
     psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
     psoDesc.SampleDesc.Count = sample_amount_;
-    device_->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipeline_state_));
+    HRESULT hr = device_->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipeline_state_));
+    if (FAILED(hr)) {
+        std::ostringstream oss;
+        oss << "CreateGraphicsPipelineState failed. HRESULT = 0x" << std::hex << hr;
+        OutputDebugStringA((oss.str() + "\n").c_str()); // также попадёт в Output Window
+        throw std::runtime_error(oss.str());
+    }
 
 };
 
-void Renderer::CreateVertexBuffer(const Model& model){
+void Renderer::CreateVertexBuffer(Model& model){
     const std::vector<Vertex>& vertices = model.GetVertices();
     vertex_count_ = vertices.size();
     UINT bufferSize = vertex_count_ * sizeof(Vertex);
@@ -440,7 +446,7 @@ void Renderer::CreateInputLayout(){
     };
 }
 
-void Renderer::LoadTextureFromTGA( TGAImage& image, UINT textureSlot = 0){
+void Renderer::LoadTextureFromTGA(TGAImage& image, UINT textureSlot){
     const UINT texWidth = image.get_width();
     const UINT texHeight = image.get_height();
     const UINT pixelSize = 4;
@@ -550,7 +556,7 @@ void Renderer::LoadTextureFromTGA( TGAImage& image, UINT textureSlot = 0){
     device_->CreateShaderResourceView(texture_.Get(), &srvDesc, handle);
 }
 
-void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd, const Model& mesh) {
+void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd, Model& mesh) {
     CreateGraphicsDevice(width, height, frame_count);
     CreateFence();
     AskDescryptorSizes();
@@ -564,8 +570,13 @@ void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd, c
     CreateRootSignature();
     CompileShaders();
     CreateInputLayout();
+    LoadTextureFromTGA(mesh.GetTexture(),0);
+    CreateSRVandSampler();
+    CreateConstantBuffers();
     CreateVertexBuffer(mesh);
-};
+    CreatePipelineStateObject();
+}
+
 
 void Renderer::RenderFrame() {
     //Reset

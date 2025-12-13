@@ -11,24 +11,24 @@
       "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Renderer.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\tgaimage.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\tgaimage.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\VertexShader.hlsl||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:WHERETFWILLITEND\\VertexShader.hlsl||{8B382828-6202-11D1-8870-0000F87579D2}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Model.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Model.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Model.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Model.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\InputDevice.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\InputDevice.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\tgaimage.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\tgaimage.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Model.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Model.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -38,11 +38,11 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 4,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 6,
               "Title": "Model.cpp",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Model.cpp",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\Model.cpp",
@@ -51,12 +51,24 @@
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAASAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-12-13T03:04:39.742Z",
-              "IsPinned": true,
-              "EditorCaption": ""
+              "IsPinned": true
             },
             {
               "$type": "Document",
               "DocumentIndex": 2,
+              "Title": "VertexShader.hlsl",
+              "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\VertexShader.hlsl",
+              "RelativeDocumentMoniker": "WHERETFWILLITEND\\VertexShader.hlsl",
+              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\VertexShader.hlsl",
+              "RelativeToolTip": "WHERETFWILLITEND\\VertexShader.hlsl",
+              "ViewState": "AgIAAAkAAAAAAAAAAAAswAoAAAAaAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-12-13T13:41:50.546Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
               "Title": "tgaimage.h",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\tgaimage.h",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\tgaimage.h",
@@ -64,8 +76,7 @@
               "RelativeToolTip": "WHERETFWILLITEND\\tgaimage.h",
               "ViewState": "AgIAAEgAAAAAAAAAAAAAAFMAAAAaAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-12-13T11:02:06.501Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-12-13T11:02:06.501Z"
             },
             {
               "$type": "Document",
@@ -75,7 +86,7 @@
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\Model.h",
               "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Model.h",
               "RelativeToolTip": "WHERETFWILLITEND\\Model.h",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABEAAAAhAAAAAAAAAA==",
+              "ViewState": "AgIAABIAAAAAAAAAAAAAABgAAAAWAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2025-12-13T09:40:44.141Z",
               "EditorCaption": ""
@@ -86,9 +97,9 @@
               "Title": "Renderer.cpp",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Renderer.cpp",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\Renderer.cpp",
-              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Renderer.cpp",
-              "RelativeToolTip": "WHERETFWILLITEND\\Renderer.cpp",
-              "ViewState": "AgIAAOsBAAAAAAAAAAAswPUBAAAAAAAAAAAAAA==",
+              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Renderer.cpp*",
+              "RelativeToolTip": "WHERETFWILLITEND\\Renderer.cpp*",
+              "ViewState": "AgIAADECAAAAAAAAAAAswDkCAAAaAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-12-10T06:21:05.159Z",
               "EditorCaption": ""
@@ -101,34 +112,23 @@
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\Renderer.h",
               "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Renderer.h",
               "RelativeToolTip": "WHERETFWILLITEND\\Renderer.h",
-              "ViewState": "AgIAAFcAAAAAAAAAAAAAAF4AAAAHAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAYAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2025-12-10T06:18:30.559Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 5,
+              "DocumentIndex": 4,
               "Title": "main.cpp",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\main.cpp",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\main.cpp",
               "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\main.cpp",
               "RelativeToolTip": "WHERETFWILLITEND\\main.cpp",
-              "ViewState": "AgIAAAkAAAAAAAAAAAAAAAcAAAAQAAAAAAAAAA==",
+              "ViewState": "AgIAAC8AAAAAAAAAAADwvzQAAAA5AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-11-28T17:10:42.979Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 6,
-              "Title": "InputDevice.h",
-              "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\InputDevice.h",
-              "RelativeDocumentMoniker": "WHERETFWILLITEND\\InputDevice.h",
-              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\InputDevice.h",
-              "RelativeToolTip": "WHERETFWILLITEND\\InputDevice.h",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAIAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-11-28T16:52:43.319Z"
+              "WhenOpened": "2025-11-28T17:10:42.979Z",
+              "EditorCaption": ""
             }
           ]
         },
