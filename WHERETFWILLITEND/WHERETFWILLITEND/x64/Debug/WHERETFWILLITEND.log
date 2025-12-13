@@ -1,19 +1,114 @@
-<<<<<<< HEAD
 ﻿  Camera.cpp
-C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\vectors.h(28,42): warning C4244: аргумент: преобразование "double" в "float", возможна потеря данных
-  (компиляция исходного файла "Camera.cpp")
-      C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\vectors.h(28,42):
-      контекст создания экземпляра шаблона (сначала самый старый)
-          C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Camera.h(7,8):
-          выполняется компиляция ссылки на экземпляр класс шаблон функции "Vec3<float>"
-          C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\vectors.h(28,12):
-          во время компиляции функции-члена класс шаблон "Vec3<float> &Vec3<float>::normalize(void)"
-              C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Camera.cpp(8,10):
-              см. первую ссылку на "Vec3<float>::normalize" в "Camera::Camera"
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Camera.cpp(11,5): error C3861: XMStoreFloat4X4: идентификатор не найден
+  main.cpp
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\main.cpp(5,1): error C2059: синтаксическая ошибка: <<
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\float.h(19,1): error C2143: синтаксическая ошибка: отсутствие ";" перед "{"
+  (компиляция исходного файла "main.cpp")
   
-  tgaimage.cpp
+C:\Program Files (x86)\Windows Kits\10\Include\10.0.26100.0\ucrt\float.h(19,1): error C2447: {: отсутствует заголовок функции (возможно, используется формальный список старого типа)
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(15,1): error C2059: синтаксическая ошибка: <<
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(16,33): error C2238: непредвиденные лексемы перед ";"
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(46,1): error C2059: синтаксическая ошибка: ==
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(47,37): error C2238: непредвиденные лексемы перед ";"
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(48,33): error C2086: Microsoft::WRL::ComPtr<IDXGISwapChain3> Renderer::swap_chain_: переопределение
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(49,36): error C2086: Microsoft::WRL::ComPtr<ID3D12CommandQueue> Renderer::command_queue_: переопределение
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(50,40): error C2086: Microsoft::WRL::ComPtr<ID3D12CommandAllocator> Renderer::command_allocator_: переопределение
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(51,43): error C2086: Microsoft::WRL::ComPtr<ID3D12GraphicsCommandList> Renderer::command_list_: переопределение
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(52,29): error C2086: Microsoft::WRL::ComPtr<ID3D12Fence> Renderer::fence: переопределение
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(53,14): error C2086: UINT Renderer::fence_value_: переопределение
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(54,38): error C2086: Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> Renderer::rtv_heap_: переопределение
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(55,14): error C2086: UINT Renderer::rtv_descriptor_size_: переопределение
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(56,38): error C2086: Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> Renderer::dsv_heap_: переопределение
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(57,14): error C2086: UINT Renderer::dsv_descriptor_size_: переопределение
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(58,38): error C2086: Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> Renderer::cbv_srv_uav_heap_: переопределение
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(59,14): error C2086: UINT Renderer::cbv_srv_uav_descriptor_size_: переопределение
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(60,38): error C2086: Microsoft::WRL::ComPtr<ID3D12DescriptorHeap> Renderer::sampler_heap_: переопределение
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(61,14): error C2086: UINT Renderer::sampler_descriptor_size_: переопределение
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(62,14): error C2086: UINT Renderer::frame_count_: переопределение
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(63,45): error C2086: std::vector<Microsoft::WRL::ComPtr<ID3D12Resource>,std::allocator<Microsoft::WRL::ComPtr<ID3D12Resource>>> Renderer::render_targets_: переопределение
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(64,32): error C2086: Microsoft::WRL::ComPtr<ID3D12Resource> Renderer::z_buffer_: переопределение
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(65,14): error C2086: UINT Renderer::width_: переопределение
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(66,14): error C2086: UINT Renderer::height_: переопределение
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(67,24): error C2086: D3D12_VIEWPORT Renderer::viewport_: переопределение
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(68,20): error C2086: D3D12_RECT Renderer::scissor_rect_: переопределение
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(71,1): error C2059: синтаксическая ошибка: >>
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(73,72): error C2238: непредвиденные лексемы перед ";"
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(91,1): error C2059: синтаксическая ошибка: <<
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(92,32): error C2238: непредвиденные лексемы перед ";"
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(100,1): error C2059: синтаксическая ошибка: ==
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(101,33): error C2238: непредвиденные лексемы перед ";"
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(105,1): error C2059: синтаксическая ошибка: >>
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(106,1): error C2143: синтаксическая ошибка: отсутствие ";" перед "}"
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.h(106,1): error C2238: непредвиденные лексемы перед ";"
+  (компиляция исходного файла "main.cpp")
+  
+C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\WHERETFWILLITEND\main.cpp(9,10): error C1083: Не удается открыть файл включение: Shader.h: No such file or directory,
   Создание кода...
-=======
-﻿  Renderer.cpp
->>>>>>> parent of 4acdfb1 (R E N D E R   T I M E)
-  WHERETFWILLITEND.vcxproj -> C:\Users\Asus\source\repos\Laba4WHERETFWILLITEND\WHERETFWILLITEND\x64\Debug\WHERETFWILLITEND.exe

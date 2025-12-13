@@ -1,17 +1,15 @@
 #pragma once
-#include"vectors.h"
-#include "eigen/Eigen/dense"
-
+#include <iostream>
+#include <windows.h>
+#include <DirectXMath.h>
 class Camera {
 private:
-	Vec3f camera_position;
-	Vec3f look_at;
-	Vec3f forward;
-	Vec3f right;
-	Vec3f up;
-	Eigen::Matrix4f world_transform;
+	DirectX::XMFLOAT3 camera_position_;
+	DirectX::XMFLOAT3 look_at_;
+	DirectX::XMFLOAT3 up_;
+	DirectX::XMFLOAT4X4 view_;
 public:
-	Camera(Vec3f cam_pos, Vec3f look, Vec3f Up);
-	Eigen::Matrix4f getWorldTransform();
-	Vec3f FixVectors(Vec3f vec);
+	Camera(DirectX::XMFLOAT3 position, DirectX::XMFLOAT3 target, DirectX::XMFLOAT3 up);
+	void UpdateView();
+	const XMFLOAT4X4& GetViewMatrix() const { return view_; }
 };

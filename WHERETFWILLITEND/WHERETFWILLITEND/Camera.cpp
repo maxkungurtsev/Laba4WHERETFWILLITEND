@@ -1,24 +1,13 @@
 #include "Camera.h"
-Camera::Camera(Vec3f cam_pos, Vec3f look, Vec3f Up) {
-	cam_pos.x = -cam_pos.x;
-	cam_pos.y = -cam_pos.y;
-	cam_pos.z = -cam_pos.z;
-	camera_position = cam_pos;
-	look_at = look;
-	forward = (look - cam_pos).normalize();
-	if (forward.length() == 0.0) {
-		forward = Vec3f(0.0, 0.0, 1.0);
-	}
-	float zoom = 1 / ((look - cam_pos).length());
-	//std::cout << ((look - cam_pos).length()) << '\n';
-	right = (Up.normalize()) ^ forward;
-	up = forward ^ right;
-	world_transform << right.x,   right.y,   right.z,   -(camera_position * right),
-					   up.x,      up.y,      up.z,      -(camera_position * up),
-					   forward.x, forward.y, forward.z, -(camera_position * forward),
-					   0.0,       0.0,       0.0,       1.0;
-	world_transform *= zoom;
+using namespace DirectX;
+Camera::Camera(XMFLOAT3 position, XMFLOAT3 target, XMFLOAT3 up): camera_position_(position), look_at_(target), up_(up){
+    UpdateView();
 }
-Eigen::Matrix4f Camera::getWorldTransform() {
-	return world_transform;
-}
+
+void Camera::UpdateView() {
+    XMVECTOR eye = XMLoadFloat3(&camera_position_);
+    XMVECTOR at = XMLoadFloat3(&look_at_);
+    XMVECTOR up = XMLoadFloat3(&up_);
+    XMMATRIX view = XMMatrixLookAtLH(eye, at, up);
+    XMStoreFloat4X4(&view_, view);
+};
