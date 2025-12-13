@@ -7,6 +7,7 @@
 #include "Camera.h"
 Window g_Window;
 InputDevice g_Input;
+Renderer g_Renderer;
 const int width = 800;
 const int height = 800;
 const int depth = 1000;
@@ -16,11 +17,11 @@ const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red = TGAColor(255, 0, 0, 255);
 //light stuff
 const float intensity = 5.0;
-//Vec3f light_coords = Vec3f(2.0, 0.0, 0.0);
+XMFLOAT3 light_coords = {2.0, 0.0, 0.0};
 //camera stuff
-// Vec3f cam_coords = Vec3f(1.0, 1.0, 1.0);
-//const Vec3f look_at = Vec3f(0.0, 0.0, 0.0);
-//const Vec3f up = Vec3f(0.0, 1.0, 0.0);
+XMFLOAT3 cam_coords = {1.0, 1.0, 1.0};
+const XMFLOAT3 look_at = {0.0, 0.0, 0.0};
+const XMFLOAT3 up = {0.0, 1.0, 0.0};
 // material stuff
 const float ambient_k = 0.1;
 const float diffuse_k = 0.5;
@@ -45,6 +46,7 @@ int Run() {
             MessageBox(nullptr, L"Space detected!", L"Input Test", MB_OK);
         }
     }
+    g_Renderer.RenderFrame();
     return (int)msg.wParam;
 }
 
@@ -55,6 +57,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow){
     //init input device
     g_Input.Initialize(g_Window.GetHWND());
     //catch messege stuff
+    Model mesh("african_head.obj","african_head_diffuse.tga"); // загружаем модель и текстуру
+    g_Renderer.Initialize(width,height,2, g_Window.GetHWND(),mesh);
+    Camera cam(cam_coords, look_at, up);
     int messege = Run();
     return static_cast<int>(messege);
 }

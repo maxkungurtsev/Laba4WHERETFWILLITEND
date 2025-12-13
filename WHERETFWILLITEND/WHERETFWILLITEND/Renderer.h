@@ -62,6 +62,8 @@ private:
     uint8_t* mvp_cb_mapped_ = nullptr;
     uint8_t* light_cb_mapped_ = nullptr;
     ComPtr<ID3D12Resource> texture_;
+    UINT sample_amount_=1;
+    UINT vertex_count_;
 
     // step2
     void CreateGraphicsDevice(UINT width, UINT height, int frame_count);
@@ -70,7 +72,7 @@ private:
     // step3.2
     void AskDescryptorSizes();
     // step4
-    bool check4XMSAA();
+    void check4XMSAA();
     // step5
     void CreateCommandStuff();
     // step6

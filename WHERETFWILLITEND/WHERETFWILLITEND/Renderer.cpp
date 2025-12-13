@@ -24,15 +24,17 @@ void Renderer::AskDescryptorSizes() {
     sampler_descriptor_size_ =device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 };
 
-bool Renderer::check4XMSAA() {
+void Renderer::check4XMSAA() {
     D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msaaQuality{};
     msaaQuality.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     msaaQuality.SampleCount = 4;
     HRESULT hr = device_->CheckFeatureSupport(D3D12_FEATURE_MULTISAMPLE_QUALITY_LEVELS, &msaaQuality, sizeof(msaaQuality));
     if (FAILED(hr)) {
-        return false;
+        throw std::runtime_error("Failed to check 4XMSAA");
     }
-    return msaaQuality.NumQualityLevels > 0;
+    if (msaaQuality.NumQualityLevels > 0) {
+        sample_amount_ = 4;
+    };
 };
 
 void Renderer::CreateCommandStuff() {
@@ -136,10 +138,7 @@ void Renderer::CreateZBuffer()
     depthDesc.DepthOrArraySize = 1;
     depthDesc.MipLevels = 1;
     depthDesc.Format = DXGI_FORMAT_D32_FLOAT;
-    depthDesc.SampleDesc.Count = 1;
-    if (check4XMSAA()){
-    depthDesc.SampleDesc.Count = 4;    
-    }
+    depthDesc.SampleDesc.Count = sample_amount_;
     depthDesc.Flags = D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL;
     //ClearValue
     D3D12_CLEAR_VALUE optClear{};
@@ -372,14 +371,14 @@ void Renderer::CreatePipelineStateObject() {
     psoDesc.NumRenderTargets = 1;
     psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
     psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-    psoDesc.SampleDesc.Count = 1;
+    psoDesc.SampleDesc.Count = sample_amount_;
     device_->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipeline_state_));
 
 };
 
 void Renderer::CreateVertexBuffer(const Model& model){
     const std::vector<Vertex>& vertices = model.GetVertices();
-    UINT vertex_count_ = vertices.size();
+    vertex_count_ = vertices.size();
     UINT bufferSize = vertex_count_ * sizeof(Vertex);
     D3D12_RESOURCE_DESC bufferDesc{};
     bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
@@ -551,7 +550,6 @@ void Renderer::LoadTextureFromTGA( TGAImage& image, UINT textureSlot = 0){
     device_->CreateShaderResourceView(texture_.Get(), &srvDesc, handle);
 }
 
-
 void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd, const Model& mesh) {
     CreateGraphicsDevice(width, height, frame_count);
     CreateFence();
@@ -569,38 +567,64 @@ void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd, c
     CreateVertexBuffer(mesh);
 };
 
-void Renderer::RenderFrame(){
+void Renderer::RenderFrame() {
+    //Reset
     command_allocator_->Reset();
     command_list_->Reset(command_allocator_.Get(), nullptr);
+    //Set viewport/scissor
     command_list_->RSSetViewports(1, &viewport_);
     command_list_->RSSetScissorRects(1, &scissor_rect_);
-    command_list_->RSSetViewports(1, &viewport_);
-    command_list_->RSSetScissorRects(1, &scissor_rect_);
-    D3D12_RESOURCE_BARRIER barrier = {};
-    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    barrier.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-    barrier.Transition.pResource = render_targets_[current_backbuffer_].Get();
-    barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-    barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-    barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-
-    command_list_->ResourceBarrier(1, &barrier);
-
-    // 4. Set render target (RTV + DSV)
+    //Transition render target: PRESENT -> RENDER_TARGET
+    D3D12_RESOURCE_BARRIER barrierRT{};
+    barrierRT.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barrierRT.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+    barrierRT.Transition.pResource = render_targets_[current_backbuffer_].Get();
+    barrierRT.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    barrierRT.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+    barrierRT.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+    command_list_->ResourceBarrier(1, &barrierRT);
+    //Set RTV + DSV
     D3D12_CPU_DESCRIPTOR_HANDLE rtv_handle = rtv_heap_->GetCPUDescriptorHandleForHeapStart();
     rtv_handle.ptr += current_backbuffer_ * rtv_descriptor_size_;
     D3D12_CPU_DESCRIPTOR_HANDLE dsv_handle = dsv_heap_->GetCPUDescriptorHandleForHeapStart();
-     command_list_->OMSetRenderTargets(1, &rtv_handle, FALSE, &dsv_handle);
+    command_list_->OMSetRenderTargets(1, &rtv_handle, FALSE, &dsv_handle);
+    //Clear RTV + DSV
     const float clearColor[] = { 0.2f, 0.4f, 0.6f, 1.0f };
     command_list_->ClearRenderTargetView(rtv_handle, clearColor, 0, nullptr);
-    command_list_->ClearDepthStencilView(dsv_handle,D3D12_CLEAR_FLAG_DEPTH,1.0f, 0, 0, nullptr);
-    std::swap(barrier.Transition.StateBefore, barrier.Transition.StateAfter);
-    command_list_->ResourceBarrier(1, &barrier);
+    command_list_->ClearDepthStencilView(dsv_handle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+    //Set PSO and Root Signature
+    command_list_->SetPipelineState(pipeline_state_.Get());
+    command_list_->SetGraphicsRootSignature(root_signature_.Get());
+    //Set descriptor heaps
+    ID3D12DescriptorHeap* heaps[] = { cbv_srv_uav_heap_.Get(), sampler_heap_.Get() };
+    command_list_->SetDescriptorHeaps(_countof(heaps), heaps);
+    //Set root descriptor tables
+    D3D12_GPU_DESCRIPTOR_HANDLE handle = cbv_srv_uav_heap_->GetGPUDescriptorHandleForHeapStart();
+    command_list_->SetGraphicsRootDescriptorTable(0, handle); // b0 - MVP
+    handle.ptr += cbv_srv_uav_descriptor_size_;
+    command_list_->SetGraphicsRootDescriptorTable(1, handle); // b1 - Light
+    handle.ptr += cbv_srv_uav_descriptor_size_;
+    command_list_->SetGraphicsRootDescriptorTable(2, handle); // t0 - diffuse texture
+    command_list_->SetGraphicsRootDescriptorTable(3, sampler_heap_->GetGPUDescriptorHandleForHeapStart()); // s0
+    //Set input assembler
+    command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    command_list_->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
+    //Draw
+    command_list_->DrawInstanced(vertex_count_, 1, 0, 0);
+    //Transition render target: RENDER_TARGET -> PRESENT
+    D3D12_RESOURCE_BARRIER barrierPresent{};
+    barrierPresent.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barrierPresent.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+    barrierPresent.Transition.pResource = render_targets_[current_backbuffer_].Get();
+    barrierPresent.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    barrierPresent.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+    barrierPresent.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+    command_list_->ResourceBarrier(1, &barrierPresent);
+    //Close and execute
     command_list_->Close();
-    ID3D12CommandList* lists[] = { 
-        command_list_.Get() 
-    };
+    ID3D12CommandList* lists[] = { command_list_.Get() };
     command_queue_->ExecuteCommandLists(1, lists);
-    swap_chain_->Present(1, 0); 
+    //Present swap chain
+    swap_chain_->Present(1, 0);
     current_backbuffer_ = swap_chain_->GetCurrentBackBufferIndex();
 }
