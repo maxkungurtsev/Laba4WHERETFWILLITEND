@@ -6,7 +6,7 @@ void Renderer::CreateGraphicsDevice(UINT width, UINT height, int frame_count) {
     frame_count_= frame_count;
     HRESULT hr = D3D12CreateDevice(nullptr, D3D_FEATURE_LEVEL_11_0, IID_PPV_ARGS(&device_));
     if (FAILED(hr)) {
-        throw std::runtime_error("Failed to create command queue");
+        throw std::runtime_error("Failed to create graphics device");
     }
 };
 
@@ -96,23 +96,28 @@ void Renderer::CreateHeaps() {
     if (FAILED(hr)) {
         throw std::runtime_error("Failed to create DSV heap");
     }
-    desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    hr = device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&cbv_srv_uav_heap_));
+
+    D3D12_DESCRIPTOR_HEAP_DESC cbvDesc{};
+    cbvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+    cbvDesc.NumDescriptors = 256;
+    cbvDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    device_->CreateDescriptorHeap(&cbvDesc, IID_PPV_ARGS(&cbv_srv_uav_heap_));
     if (FAILED(hr)) {
         throw std::runtime_error("Failed to create CBV, SRV and UAV heap");
     }
-    desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
-    hr = device_->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&sampler_heap_));
-    if (FAILED(hr)) {
-        throw std::runtime_error("Failed to create SAMPLER heap");
-    }
+
+    D3D12_DESCRIPTOR_HEAP_DESC sampDesc{};
+    sampDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+    sampDesc.NumDescriptors = 4;
+    sampDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+    device_->CreateDescriptorHeap(&sampDesc, IID_PPV_ARGS(&sampler_heap_));
 };
 
 void Renderer::CreateRTV() {
     render_targets_ = std::vector<ComPtr<ID3D12Resource>> (frame_count_);
-        D3D12_CPU_DESCRIPTOR_HANDLE rtv_handle = rtv_heap_->GetCPUDescriptorHandleForHeapStart();
+    D3D12_CPU_DESCRIPTOR_HANDLE rtv_handle = rtv_heap_->GetCPUDescriptorHandleForHeapStart();
     for (UINT i = 0; i < frame_count_; i++){
-        rtv_handle.ptr = SIZE_T(rtv_handle.ptr + i * rtv_descriptor_size_);
+        rtv_handle.ptr += SIZE_T(i) * rtv_descriptor_size_;
         HRESULT hr = swap_chain_->GetBuffer(i,IID_PPV_ARGS(&render_targets_[i]));
         if (FAILED(hr)){
             throw std::runtime_error("Failed to get swapchain buffer");
@@ -169,29 +174,170 @@ void Renderer::ViewportScissorSetup()
     scissor_rect_.top = 0;
     scissor_rect_.right = width_;
     scissor_rect_.bottom = height_;
-
-    command_list_->RSSetViewports(1, &viewport_);
-    command_list_->RSSetScissorRects(1, &scissor_rect_);
 }
 
-void Renderer::CreateRootSignature() {
-    D3D12_ROOT_SIGNATURE_DESC rootSigDesc = {};
-    rootSigDesc.NumParameters = 0;
-    rootSigDesc.pParameters = nullptr;
-    rootSigDesc.NumStaticSamplers = 0;
-    rootSigDesc.pStaticSamplers = nullptr;
-    rootSigDesc.Flags = D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
-    ComPtr<ID3DBlob> serializedRootSig;
+void Renderer::CreateConstantBuffers(){
+    D3D12_HEAP_PROPERTIES heapProps{};
+    heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+
+    D3D12_RESOURCE_DESC resDesc{};
+    resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    resDesc.Height = 1;
+    resDesc.DepthOrArraySize = 1;
+    resDesc.MipLevels = 1;
+    resDesc.SampleDesc.Count = 1;
+    resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    //MVP
+    resDesc.Width = (sizeof(MVPConstants) + 255) & ~255;
+    device_->CreateCommittedResource(
+        &heapProps,
+        D3D12_HEAP_FLAG_NONE,
+        &resDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&mvp_cb_)
+    );
+    void* mappedData = nullptr;
+    mvp_cb_->Map(0, nullptr, &mappedData);
+    D3D12_CONSTANT_BUFFER_VIEW_DESC mvp_cbv_desc{};
+    mvp_cbv_desc.BufferLocation = mvp_cb_->GetGPUVirtualAddress();
+    mvp_cbv_desc.SizeInBytes = resDesc.Width;
+    D3D12_CPU_DESCRIPTOR_HANDLE handle = cbv_srv_uav_heap_->GetCPUDescriptorHandleForHeapStart();
+    device_->CreateConstantBufferView(&mvp_cbv_desc, handle);
+    //Light
+    resDesc.Width = (sizeof(LightConstants) + 255) & ~255;
+    device_->CreateCommittedResource(
+        &heapProps,
+        D3D12_HEAP_FLAG_NONE,
+        &resDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&light_cb_)
+    );
+    light_cb_->Map(0, nullptr, &mappedData);
+    D3D12_CONSTANT_BUFFER_VIEW_DESC light_cbv_desc{};
+    light_cbv_desc.BufferLocation = light_cb_->GetGPUVirtualAddress();
+    light_cbv_desc.SizeInBytes = resDesc.Width;
+    handle.ptr += cbv_srv_uav_descriptor_size_;
+    device_->CreateConstantBufferView(&light_cbv_desc, handle);
+}
+
+void Renderer::CreateSRVandSampler(){
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MipLevels = 1;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+    srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+    D3D12_CPU_DESCRIPTOR_HANDLE handle = cbv_srv_uav_heap_->GetCPUDescriptorHandleForHeapStart();
+    //since textureslot=0 i skipped handle+=
+    device_->CreateShaderResourceView(texture_.Get(), &srvDesc, handle);
+    D3D12_SAMPLER_DESC sampDesc{};
+    sampDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+    sampDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    sampDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    sampDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    sampDesc.MinLOD = 0;
+    sampDesc.MaxLOD = D3D12_FLOAT32_MAX;
+    sampDesc.MipLODBias = 0.0f;
+    sampDesc.MaxAnisotropy = 1;
+    sampDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+
+    D3D12_CPU_DESCRIPTOR_HANDLE sampHandle = sampler_heap_->GetCPUDescriptorHandleForHeapStart();
+    device_->CreateSampler(&sampDesc, sampHandle);
+
+};
+
+void Renderer::CreateRootSignature(){
+    // CBV b0 (MVP) - VS
+    D3D12_DESCRIPTOR_RANGE1 cbvRangeVS{};
+    cbvRangeVS.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+    cbvRangeVS.NumDescriptors = 1;
+    cbvRangeVS.BaseShaderRegister = 0;
+    cbvRangeVS.RegisterSpace = 0;
+    cbvRangeVS.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC;
+    cbvRangeVS.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    // CBV b1 (Light) - PS
+    D3D12_DESCRIPTOR_RANGE1 cbvRangePS{};
+    cbvRangePS.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
+    cbvRangePS.NumDescriptors = 1;
+    cbvRangePS.BaseShaderRegister = 1;
+    cbvRangePS.RegisterSpace = 0;
+    cbvRangePS.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC;
+    cbvRangePS.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    // SRV t0 (diffuse texture) - PS
+    D3D12_DESCRIPTOR_RANGE1 srvRange{};
+    srvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
+    srvRange.NumDescriptors = 1;
+    srvRange.BaseShaderRegister = 0;
+    srvRange.RegisterSpace = 0;
+    srvRange.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC;
+    srvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    // Sampler s0 - PS
+    D3D12_DESCRIPTOR_RANGE1 samplerRange{};
+    samplerRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
+    samplerRange.NumDescriptors = 1;
+    samplerRange.BaseShaderRegister = 0;
+    samplerRange.RegisterSpace = 0;
+    samplerRange.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
+    samplerRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+    //Root
+    D3D12_ROOT_PARAMETER1 rootParams[4]{};
+    //MVP
+    rootParams[0].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParams[0].DescriptorTable.NumDescriptorRanges = 1;
+    rootParams[0].DescriptorTable.pDescriptorRanges = &cbvRangeVS;
+    rootParams[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+    //Light
+    rootParams[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParams[1].DescriptorTable.NumDescriptorRanges = 1;
+    rootParams[1].DescriptorTable.pDescriptorRanges = &cbvRangePS;
+    rootParams[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    //texture
+    rootParams[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParams[2].DescriptorTable.NumDescriptorRanges = 1;
+    rootParams[2].DescriptorTable.pDescriptorRanges = &srvRange;
+    rootParams[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    //sampler
+    rootParams[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
+    rootParams[3].DescriptorTable.NumDescriptorRanges = 1;
+    rootParams[3].DescriptorTable.pDescriptorRanges = &samplerRange;
+    rootParams[3].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+    //root desc
+    D3D12_VERSIONED_ROOT_SIGNATURE_DESC rootSigDesc{};
+    rootSigDesc.Version = D3D_ROOT_SIGNATURE_VERSION_1_1;
+    rootSigDesc.Desc_1_1.NumParameters = _countof(rootParams);
+    rootSigDesc.Desc_1_1.pParameters = rootParams;
+    rootSigDesc.Desc_1_1.NumStaticSamplers = 0;
+    rootSigDesc.Desc_1_1.pStaticSamplers = nullptr;
+    rootSigDesc.Desc_1_1.Flags =D3D12_ROOT_SIGNATURE_FLAG_ALLOW_INPUT_ASSEMBLER_INPUT_LAYOUT;
+    ComPtr<ID3DBlob> serialized;
     ComPtr<ID3DBlob> error;
-    HRESULT hr = D3D12SerializeRootSignature(&rootSigDesc,D3D_ROOT_SIGNATURE_VERSION_1,&serializedRootSig,&error);
-    if (FAILED(hr)) {
-        if (error) {
+    //serialized smth. hell if i know
+    HRESULT hr = D3D12SerializeVersionedRootSignature(&rootSigDesc,&serialized,&error);
+    if (FAILED(hr))
+    {
+        if (error){
             std::cerr << (char*)error->GetBufferPointer();
         }
         throw std::runtime_error("Failed to serialize root signature");
     }
-    ComPtr<ID3D12RootSignature> root_signature_;
-    device_->CreateRootSignature(0,serializedRootSig->GetBufferPointer(),serializedRootSig->GetBufferSize(),IID_PPV_ARGS(&root_signature_));
+    //actual fcking creation of root signature
+    hr = device_->CreateRootSignature(0,serialized->GetBufferPointer(),serialized->GetBufferSize(),IID_PPV_ARGS(&root_signature_));
+    if (FAILED(hr)){
+        throw std::runtime_error("Failed to create root signature");
+    }
+}
+
+void Renderer::CompileShaders() {
+    ComPtr<ID3DBlob> errorBlob;
+    HRESULT hr = D3DCompileFromFile(L"VertexShader.hlsl",nullptr, nullptr,"main", "vs_5_0",0, 0,&vertex_shader_,&errorBlob);
+    if (FAILED(hr))
+        throw std::runtime_error("Failed to compile vertex shader");
+    hr = D3DCompileFromFile(L"PixelShader.hlsl", nullptr, nullptr, "main", "ps_5_0", 0, 0, &pixel_shader_, &errorBlob);
+    if (FAILED(hr))
+        throw std::runtime_error("Failed to compile pixel shader");
 };
 
 void Renderer::CreatePipelineStateObject() {
@@ -225,64 +371,188 @@ void Renderer::CreatePipelineStateObject() {
     psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
     psoDesc.NumRenderTargets = 1;
     psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
-    psoDesc.DSVFormat = DXGI_FORMAT_D24_UNORM_S8_UINT;
+    psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
     psoDesc.SampleDesc.Count = 1;
-
-    ComPtr<ID3D12PipelineState> pipeline_state_;
     device_->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipeline_state_));
 
 };
 
-void Renderer::CreateVertexBuffer(Model mesh) {
-
-    std::vector<Vec3f> verts;
-    std::vector<Vec2f> textures;
-    std::vector<Vec3f> normals;
-    for (int i = 0; i < mesh.Get_verts_amount(); i++) {
-        verts.push_back(mesh.Get_vert(i));
-    }
-    for (int i = 0; i < mesh.Get_textures_amount(); i++) {
-        textures.push_back(mesh.Get_vertex_texture(i));
-    }
-    for (int i = 0; i < mesh.Get_normals_amount(); i++) {
-        normals.push_back(mesh.Get_normal(i));
-    }
-    D3D12_HEAP_PROPERTIES heapProps = {};
+void Renderer::CreateVertexBuffer(const Model& model){
+    const std::vector<Vertex>& vertices = model.GetVertices();
+    UINT vertex_count_ = vertices.size();
+    UINT bufferSize = vertex_count_ * sizeof(Vertex);
+    D3D12_RESOURCE_DESC bufferDesc{};
+    bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    bufferDesc.Width = bufferSize;
+    bufferDesc.Height = 1;
+    bufferDesc.DepthOrArraySize = 1;
+    bufferDesc.MipLevels = 1;
+    bufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+    bufferDesc.SampleDesc.Count = 1;
+    bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+    D3D12_HEAP_PROPERTIES heapProps{};
     heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
-    heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
-    heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
-
-    D3D12_RESOURCE_DESC resDesc = {};
-    resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    resDesc.Width = sizeof(verts);
-    resDesc.Height = 1;
-    resDesc.DepthOrArraySize = 1;
-    resDesc.MipLevels = 1;
-    resDesc.SampleDesc.Count = 1;
-    resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-
-    device_->CreateCommittedResource(
-        &heapProps,
-        D3D12_HEAP_FLAG_NONE,
-        &resDesc,
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS(&vertex_buffer_)
-    );
-
-    // Копируем данные в буфер
-    void* pData;
-    vertex_buffer_->Map(0, nullptr, &pData);
-    memcpy(pData, verts.data(), verts.size()*sizeof(Vec3f));
+    HRESULT hr=device_->CreateCommittedResource(&heapProps,D3D12_HEAP_FLAG_NONE,&bufferDesc,D3D12_RESOURCE_STATE_GENERIC_READ,nullptr,IID_PPV_ARGS(&vertex_buffer_));
+    if (FAILED(hr))
+        throw std::runtime_error("Failed to create vertex buffer");
+    void* mappedData = nullptr;
+    D3D12_RANGE readRange{ 0, 0 };
+    hr=vertex_buffer_->Map(0, &readRange, &mappedData);
+    if (FAILED(hr))
+        throw std::runtime_error("Failed to fill vertex buffer");
+    memcpy(mappedData, vertices.data(), bufferSize);
     vertex_buffer_->Unmap(0, nullptr);
-
-    // Настройка vertex buffer view
     vertex_buffer_view_.BufferLocation = vertex_buffer_->GetGPUVirtualAddress();
-    vertex_buffer_view_.StrideInBytes = sizeof(verts[0]);
-    vertex_buffer_view_.SizeInBytes = verts.size() * sizeof(Vec3f);
+    vertex_buffer_view_.StrideInBytes = sizeof(Vertex);
+    vertex_buffer_view_.SizeInBytes = bufferSize;
 }
 
-void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd,Model mesh) {
+void Renderer::CreateInputLayout(){
+    input_layout_ =
+    {
+        {
+            "POSITION",
+            0, 
+            DXGI_FORMAT_R32G32B32_FLOAT,
+            0,
+            0, 
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+            0
+        },
+        {
+            "NORMAL",
+            0,
+            DXGI_FORMAT_R32G32B32_FLOAT,
+            0,
+            12,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+            0
+        },
+        {
+            "TEXCOORD",
+            0,
+            DXGI_FORMAT_R32G32_FLOAT,
+            0,
+            24,
+            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
+            0
+        }
+    };
+}
+
+void Renderer::LoadTextureFromTGA( TGAImage& image, UINT textureSlot = 0){
+    const UINT texWidth = image.get_width();
+    const UINT texHeight = image.get_height();
+    const UINT pixelSize = 4;
+    //GPU-texture
+    D3D12_RESOURCE_DESC texDesc{};
+    texDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    texDesc.Width = texWidth;
+    texDesc.Height = texHeight;
+    texDesc.DepthOrArraySize = 1;
+    texDesc.MipLevels = 1;
+    texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    texDesc.SampleDesc.Count = 1;
+    texDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    texDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+    D3D12_HEAP_PROPERTIES heapProps{};
+    heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+
+    HRESULT hr = device_->CreateCommittedResource(
+        &heapProps,
+        D3D12_HEAP_FLAG_NONE,
+        &texDesc,
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        nullptr,
+        IID_PPV_ARGS(&texture_)
+    );
+    if (FAILED(hr)){
+        throw std::runtime_error("Failed to create texture resource");
+    }
+    //upload heap
+    UINT64 uploadBufferSize;
+    device_->GetCopyableFootprints(&texDesc, 0, 1, 0, nullptr, nullptr, nullptr, &uploadBufferSize);
+    D3D12_RESOURCE_DESC uploadDesc{};
+    uploadDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    uploadDesc.Width = uploadBufferSize;
+    uploadDesc.Height = 1;
+    uploadDesc.DepthOrArraySize = 1;
+    uploadDesc.MipLevels = 1;
+    uploadDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    uploadDesc.SampleDesc.Count = 1;
+    D3D12_HEAP_PROPERTIES uploadHeapProps{};
+    uploadHeapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+    ComPtr<ID3D12Resource> textureUploadHeap;
+    hr = device_->CreateCommittedResource(
+        &uploadHeapProps,
+        D3D12_HEAP_FLAG_NONE,
+        &uploadDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&textureUploadHeap)
+    );
+    if (FAILED(hr)){
+        throw std::runtime_error("Failed to create texture upload heap");
+    }
+    //TGA в upload heap
+    void* mappedData = nullptr;
+    D3D12_RANGE readRange{ 0, 0 };
+    textureUploadHeap->Map(0, &readRange, &mappedData);
+
+    for (UINT y = 0; y < texHeight; y++){
+        for (UINT x = 0; x < texWidth; x++){
+            TGAColor color = image.get(x, y);
+            UINT idx = (y * texWidth + x) * pixelSize;
+            reinterpret_cast<BYTE*>(mappedData)[idx + 0] = color.b;
+            reinterpret_cast<BYTE*>(mappedData)[idx + 1] = color.g;
+            reinterpret_cast<BYTE*>(mappedData)[idx + 2] = color.r;
+            reinterpret_cast<BYTE*>(mappedData)[idx + 3] = color.a;
+        }
+    }
+    textureUploadHeap->Unmap(0, nullptr);
+
+    // data to GPU texture
+    D3D12_TEXTURE_COPY_LOCATION dst{};
+    dst.pResource = texture_.Get();
+    dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    dst.SubresourceIndex = 0;
+    D3D12_TEXTURE_COPY_LOCATION src{};
+    src.pResource = textureUploadHeap.Get();
+    src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+    src.PlacedFootprint.Offset = 0;
+    src.PlacedFootprint.Footprint.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    src.PlacedFootprint.Footprint.Width = texWidth;
+    src.PlacedFootprint.Footprint.Height = texHeight;
+    src.PlacedFootprint.Footprint.Depth = 1;
+    src.PlacedFootprint.Footprint.RowPitch = texWidth * pixelSize;
+
+    command_list_->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
+
+    //Barrier: texture to PIXEL_SHADER_RESOURCE
+    D3D12_RESOURCE_BARRIER barrier{};
+    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barrier.Transition.pResource = texture_.Get();
+    barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+    barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+    barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    command_list_->ResourceBarrier(1, &barrier);
+
+    // make SRV
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+    srvDesc.Texture2D.MipLevels = 1;
+    srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+    D3D12_CPU_DESCRIPTOR_HANDLE handle = cbv_srv_uav_heap_->GetCPUDescriptorHandleForHeapStart();
+    handle.ptr += textureSlot * cbv_srv_uav_descriptor_size_;
+    device_->CreateShaderResourceView(texture_.Get(), &srvDesc, handle);
+}
+
+
+void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd, const Model& mesh) {
     CreateGraphicsDevice(width, height, frame_count);
     CreateFence();
     AskDescryptorSizes();
@@ -294,17 +564,16 @@ void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd,Mo
     CreateZBuffer();
     ViewportScissorSetup();
     CreateRootSignature();
+    CompileShaders();
+    CreateInputLayout();
     CreateVertexBuffer(mesh);
-    command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    command_list_->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
 };
 
-<<<<<<< HEAD
 void Renderer::RenderFrame(){
     command_allocator_->Reset();
+    command_list_->Reset(command_allocator_.Get(), nullptr);
     command_list_->RSSetViewports(1, &viewport_);
     command_list_->RSSetScissorRects(1, &scissor_rect_);
-    command_list_->Reset(command_allocator_.Get(), nullptr);
     command_list_->RSSetViewports(1, &viewport_);
     command_list_->RSSetScissorRects(1, &scissor_rect_);
     D3D12_RESOURCE_BARRIER barrier = {};
@@ -335,9 +604,3 @@ void Renderer::RenderFrame(){
     swap_chain_->Present(1, 0); 
     current_backbuffer_ = swap_chain_->GetCurrentBackBufferIndex();
 }
-
-
-=======
-void Renderer::Renderframe() {
-}
->>>>>>> parent of 4acdfb1 (R E N D E R   T I M E)
