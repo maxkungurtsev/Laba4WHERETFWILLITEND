@@ -2,15 +2,9 @@
 #include <windows.h>
 #include "Window.h"
 #include "InputDevice.h"
-<<<<<<< HEAD
 #include "Renderer.h"
-#include "tgaimage.h"
+#include "Model.h"
 #include "Camera.h"
-#include "Shader.h"
-
-=======
->>>>>>> parent of 4acdfb1 (R E N D E R   T I M E)
-
 Window g_Window;
 InputDevice g_Input;
 const int width = 800;
@@ -22,11 +16,11 @@ const TGAColor white = TGAColor(255, 255, 255, 255);
 const TGAColor red = TGAColor(255, 0, 0, 255);
 //light stuff
 const float intensity = 5.0;
-Vec3f light_coords = Vec3f(2.0, 0.0, 0.0);
+//Vec3f light_coords = Vec3f(2.0, 0.0, 0.0);
 //camera stuff
-const Vec3f cam_coords = Vec3f(1.0, 1.0, 1.0);
-const Vec3f look_at = Vec3f(0.0, 0.0, 0.0);
-const Vec3f up = Vec3f(0.0, 1.0, 0.0);
+// Vec3f cam_coords = Vec3f(1.0, 1.0, 1.0);
+//const Vec3f look_at = Vec3f(0.0, 0.0, 0.0);
+//const Vec3f up = Vec3f(0.0, 1.0, 0.0);
 // material stuff
 const float ambient_k = 0.1;
 const float diffuse_k = 0.5;
