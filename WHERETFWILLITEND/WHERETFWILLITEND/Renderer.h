@@ -68,9 +68,15 @@ private:
     LightConstants light_data_;
     ComPtr<ID3D12Resource> texture_;
     UINT sample_amount_=1;
+    UINT msaa_quality_ = 0;
     UINT vertex_count_;
     void* mvp_cb_mapped_;
     void* light_cb_mapped_;
+    //msaa bullsh**
+    ComPtr<ID3D12Resource> msaa_render_target_;
+    ComPtr<ID3D12DescriptorHeap> rtv_msaa_heap_;
+    D3D12_CPU_DESCRIPTOR_HANDLE msaa_rtv_handle_;
+    bool first_frame_ = true;
 
     // step2
     void CreateGraphicsDevice(UINT width, UINT height, int frame_count);
@@ -106,6 +112,8 @@ private:
     void CreateInputLayout();
     void LoadTextureFromTGA(TGAImage& image, UINT textureSlot = 0);
     void EnableDebugLayer();
+    //msaa bullshit
+    void CreateMSAARenderTarget();
 public:
     void Initialize(UINT width, UINT height, int frame_count, HWND hwnd, Model& mesh, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, XMFLOAT3 light_pos, float ambient_k, float diffuse_k, float specular_k, float shiny_k, float intensity);
     void RenderFrame();

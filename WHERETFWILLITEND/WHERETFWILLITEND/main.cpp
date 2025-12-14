@@ -2,7 +2,6 @@
 #include "InputDevice.h"
 #include "Renderer.h"
 #include "Model.h"
-#include "Camera.h"
 Window g_Window;
 InputDevice g_Input;
 Renderer g_Renderer;
