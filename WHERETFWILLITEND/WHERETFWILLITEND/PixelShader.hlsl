@@ -9,6 +9,7 @@ cbuffer Light : register(b1)
 
 struct PS_IN
 {
+    float4 pos : SV_POSITION;
     float3 normal : NORMAL;
     float2 uv : TEXCOORD0;
     float3 worldPos : TEXCOORD1;
@@ -24,5 +25,5 @@ float4 main(PS_IN input) : SV_TARGET
     float spec = pow(max(dot(R, V), 0), 32);
     float4 texColor = diffuseMap.Sample(samplerState, input.uv);
     float4 finalColor = texColor * diff + float4(spec, spec, spec, 0);
-    return finalColor;
+    return float4(input.uv, 0, 1);
 }

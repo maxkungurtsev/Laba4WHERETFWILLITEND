@@ -31,7 +31,7 @@ private:
     ComPtr<ID3D12CommandQueue> command_queue_;
     ComPtr<ID3D12CommandAllocator> command_allocator_;
     ComPtr<ID3D12GraphicsCommandList> command_list_;
-    ComPtr<ID3D12Fence> fence;
+    ComPtr<ID3D12Fence> fence_;
     UINT fence_value_ = 0;
     ComPtr<ID3D12DescriptorHeap> rtv_heap_;
     UINT rtv_descriptor_size_;
@@ -60,11 +60,11 @@ private:
     ComPtr<ID3D12Resource> light_cb_;
     MVPConstants   mvp_data_;
     LightConstants light_data_;
-    uint8_t* mvp_cb_mapped_ = nullptr;
-    uint8_t* light_cb_mapped_ = nullptr;
     ComPtr<ID3D12Resource> texture_;
     UINT sample_amount_=1;
     UINT vertex_count_;
+    void* mvp_cb_mapped_;
+    void* light_cb_mapped_;
 
     // step2
     void CreateGraphicsDevice(UINT width, UINT height, int frame_count);
@@ -91,10 +91,11 @@ private:
     void CreatePipelineStateObject();
     void CreateVertexBuffer(Model& mesh);
     void CompileShaders();
-    void CreateCBV_SRV_Sampler();
+    void CreateCBV_SRV_Sampler(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, XMFLOAT3 light_pos);
     void CreateInputLayout();
     void LoadTextureFromTGA(TGAImage& image, UINT textureSlot = 0);
+    void EnableDebugLayer();
 public:
-    void Initialize(UINT width, UINT height, int frame_count, HWND hwnd, Model& mesh);
+    void Initialize(UINT width, UINT height, int frame_count, HWND hwnd, Model& mesh, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, XMFLOAT3 light_pos);
     void RenderFrame();
 };

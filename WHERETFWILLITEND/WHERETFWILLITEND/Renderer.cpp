@@ -1,5 +1,14 @@
 #include "Renderer.h"
 
+void Renderer::EnableDebugLayer() {
+#if defined(_DEBUG)
+    ComPtr<ID3D12Debug> debugController;
+    if (SUCCEEDED(D3D12GetDebugInterface(IID_PPV_ARGS(&debugController)))) {
+        debugController->EnableDebugLayer();
+    }
+#endif
+}
+
 void Renderer::CreateGraphicsDevice(UINT width, UINT height, int frame_count) {
     width_ = width;
     height_ = height;
@@ -11,7 +20,7 @@ void Renderer::CreateGraphicsDevice(UINT width, UINT height, int frame_count) {
 };
 
 void Renderer::CreateFence() {
-    HRESULT hr = device_->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence));
+    HRESULT hr = device_->CreateFence(0, D3D12_FENCE_FLAG_NONE, IID_PPV_ARGS(&fence_));
     if (FAILED(hr)) {
         throw std::runtime_error("Failed to create fence");
     }
@@ -181,8 +190,8 @@ void Renderer::ViewportScissorSetup()
     scissor_rect_.bottom = height_;
 }
 
-void Renderer::CreateCBV_SRV_Sampler() {
-    // --- CBV: MVP ---
+void Renderer::CreateCBV_SRV_Sampler(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, XMFLOAT3 light_pos) {
+    //CBV MVP
     D3D12_HEAP_PROPERTIES heapProps{};
     heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
     heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
@@ -203,7 +212,7 @@ void Renderer::CreateCBV_SRV_Sampler() {
     resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
     resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
 
-    // Создание ресурса для MVP CBV
+    //resourse MVP CBV
     HRESULT hr = device_->CreateCommittedResource(
         &heapProps,
         D3D12_HEAP_FLAG_NONE,
@@ -212,13 +221,14 @@ void Renderer::CreateCBV_SRV_Sampler() {
         nullptr,
         IID_PPV_ARGS(&mvp_cb_)
     );
-    if (FAILED(hr)) throw std::runtime_error("Failed to create MVP CBV resource");
+    if (FAILED(hr)){
+         throw std::runtime_error("Failed to create MVP CBV resource");
+    }
 
-    // Map для CPU доступа
-    void* mappedData = nullptr;
-    mvp_cb_->Map(0, nullptr, &mappedData);
+    // Map
+    mvp_cb_->Map(0, nullptr, &mvp_cb_mapped_);
 
-    // Создание CBV дескриптора
+    //CBV desc
     D3D12_CONSTANT_BUFFER_VIEW_DESC mvp_cbv_desc{};
     mvp_cbv_desc.BufferLocation = mvp_cb_->GetGPUVirtualAddress();
     mvp_cbv_desc.SizeInBytes = resDesc.Width;
@@ -226,7 +236,7 @@ void Renderer::CreateCBV_SRV_Sampler() {
     D3D12_CPU_DESCRIPTOR_HANDLE handle = cbv_srv_uav_heap_->GetCPUDescriptorHandleForHeapStart();
     device_->CreateConstantBufferView(&mvp_cbv_desc, handle);
 
-    // --- CBV: Light ---
+    //CBV: Light
     resDesc.Width = (sizeof(LightConstants) + 255) & ~255;
     hr = device_->CreateCommittedResource(
         &heapProps,
@@ -237,18 +247,15 @@ void Renderer::CreateCBV_SRV_Sampler() {
         IID_PPV_ARGS(&light_cb_)
     );
     if (FAILED(hr)) throw std::runtime_error("Failed to create Light CBV resource");
-
-    light_cb_->Map(0, nullptr, &mappedData);
+    light_cb_->Map(0, nullptr, &light_cb_mapped_);
 
     D3D12_CONSTANT_BUFFER_VIEW_DESC light_cbv_desc{};
     light_cbv_desc.BufferLocation = light_cb_->GetGPUVirtualAddress();
     light_cbv_desc.SizeInBytes = resDesc.Width;
-
-    // Смещаем дескриптор на слот 1
     handle.ptr += cbv_srv_uav_descriptor_size_;
     device_->CreateConstantBufferView(&light_cbv_desc, handle);
 
-    // --- SRV: Texture ---
+    //SRV Texture
     D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
     srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
     srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -261,22 +268,44 @@ void Renderer::CreateCBV_SRV_Sampler() {
     handle.ptr += 2 * cbv_srv_uav_descriptor_size_; // слот 2
     device_->CreateShaderResourceView(texture_.Get(), &srvDesc, handle);
 
-    // --- Sampler ---
-    D3D12_SAMPLER_DESC sampDesc{};
-    sampDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
-    sampDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-    sampDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-    sampDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
-    sampDesc.MipLODBias = 0.0f;
-    sampDesc.MaxAnisotropy = 1;
-    sampDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_ALWAYS;
-    sampDesc.MinLOD = 0;
-    sampDesc.MaxLOD = D3D12_FLOAT32_MAX;
+    //Sampler
+    D3D12_SAMPLER_DESC samplerDesc{};
+    samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
+    samplerDesc.AddressU = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    samplerDesc.AddressV = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    samplerDesc.AddressW = D3D12_TEXTURE_ADDRESS_MODE_WRAP;
+    samplerDesc.MinLOD = 0;
+    samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
+    samplerDesc.MipLODBias = 0;
+    samplerDesc.MaxAnisotropy = 1;
+    samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER; // если не используется shadow map
+
 
     D3D12_CPU_DESCRIPTOR_HANDLE sampHandle = sampler_heap_->GetCPUDescriptorHandleForHeapStart();
-    device_->CreateSampler(&sampDesc, sampHandle);
-}
+    device_->CreateSampler(&samplerDesc, sampHandle);
+    // filling up MVP
+    MVPConstants mvpData{};
+    // model = identity
+    XMStoreFloat4x4(&mvpData.model, XMMatrixIdentity());
+    // view
+    XMStoreFloat4x4(
+        &mvpData.view,
+        XMMatrixLookAtLH(cam_pos, look_at, up)
+    );
+    // projection
+    XMStoreFloat4x4(&mvpData.projection,XMMatrixPerspectiveFovLH(XM_PIDIV4,float(width_) / float(height_),0.1f,1000.0f));
+    memcpy(mvp_cb_mapped_, &mvpData, sizeof(MVPConstants));
 
+    //filling up light
+    LightConstants lightData{};
+    XMFLOAT3 camera_position;
+    XMStoreFloat3(&camera_position, cam_pos);
+    lightData.lightPos = light_pos;
+    lightData.cameraPos = camera_position;
+
+    memcpy(light_cb_mapped_, &lightData, sizeof(LightConstants));
+
+}
 
 void Renderer::CreateRootSignature() {
     // CBV b0 (MVP) - VS
@@ -361,7 +390,6 @@ void Renderer::CreateRootSignature() {
     }
 }
 
-
 void Renderer::CompileShaders() {
     ComPtr<ID3DBlob> errorBlob;
     HRESULT hr = D3DCompileFromFile(L"VertexShader.hlsl",nullptr, nullptr,"main", "vs_5_0",0, 0,&vertex_shader_,&errorBlob);
@@ -417,7 +445,7 @@ void Renderer::CreatePipelineStateObject() {
     psoDesc.NumRenderTargets = 1;
     psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
     psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-    psoDesc.SampleDesc.Count = 1;
+    psoDesc.SampleDesc.Count = sample_amount_;
     //RasterizerState
     D3D12_RASTERIZER_DESC rasterDesc{};
     rasterDesc.FillMode = D3D12_FILL_MODE_SOLID;
@@ -680,7 +708,8 @@ void Renderer::LoadTextureFromTGA(TGAImage& image, UINT textureSlot){
     device_->CreateShaderResourceView(texture_.Get(), &srvDesc, handle);
 }
 
-void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd, Model& mesh) {
+void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd, Model& mesh, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, XMFLOAT3 light_pos) {
+    EnableDebugLayer();
     CreateGraphicsDevice(width, height, frame_count);
     CreateFence();
     AskDescryptorSizes();
@@ -694,29 +723,27 @@ void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd, M
     CreateRootSignature();
     CompileShaders();
     CreateInputLayout();
-    LoadTextureFromTGA(mesh.GetTexture(),0);
-    CreateCBV_SRV_Sampler();
+    CreateCBV_SRV_Sampler(cam_pos, look_at, up, light_pos);
+    //LoadTextureFromTGA(mesh.GetTexture());
     CreateVertexBuffer(mesh);
     CreatePipelineStateObject();
 }
-
-
 void Renderer::RenderFrame() {
     //Reset
     command_allocator_->Reset();
     command_list_->Reset(command_allocator_.Get(), nullptr);
+    //Transition render target: PRESENT -> RENDER_TARGET
+    D3D12_RESOURCE_BARRIER barrierBegin{};
+    barrierBegin.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barrierBegin.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+    barrierBegin.Transition.pResource = render_targets_[current_backbuffer_].Get();
+    barrierBegin.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    barrierBegin.Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON;
+    barrierBegin.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+    command_list_->ResourceBarrier(1, &barrierBegin);
     //Set viewport/scissor
     command_list_->RSSetViewports(1, &viewport_);
     command_list_->RSSetScissorRects(1, &scissor_rect_);
-    //Transition render target: PRESENT -> RENDER_TARGET
-    D3D12_RESOURCE_BARRIER barrierRT{};
-    barrierRT.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    barrierRT.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-    barrierRT.Transition.pResource = render_targets_[current_backbuffer_].Get();
-    barrierRT.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-    barrierRT.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
-    barrierRT.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-    command_list_->ResourceBarrier(1, &barrierRT);
     //Set RTV + DSV
     D3D12_CPU_DESCRIPTOR_HANDLE rtv_handle = rtv_heap_->GetCPUDescriptorHandleForHeapStart();
     rtv_handle.ptr += current_backbuffer_ * rtv_descriptor_size_;
@@ -746,14 +773,14 @@ void Renderer::RenderFrame() {
     //Draw
     command_list_->DrawInstanced(vertex_count_, 1, 0, 0);
     //Transition render target: RENDER_TARGET -> PRESENT
-    D3D12_RESOURCE_BARRIER barrierPresent{};
-    barrierPresent.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    barrierPresent.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-    barrierPresent.Transition.pResource = render_targets_[current_backbuffer_].Get();
-    barrierPresent.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-    barrierPresent.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-    barrierPresent.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-    command_list_->ResourceBarrier(1, &barrierPresent);
+    D3D12_RESOURCE_BARRIER barrierEnd{};
+    barrierEnd.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barrierEnd.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+    barrierEnd.Transition.pResource = render_targets_[current_backbuffer_].Get();
+    barrierEnd.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    barrierEnd.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+    barrierEnd.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+    command_list_->ResourceBarrier(1, &barrierEnd);
     //Close and execute
     command_list_->Close();
     ID3D12CommandList* lists[] = { command_list_.Get() };
@@ -761,4 +788,14 @@ void Renderer::RenderFrame() {
     //Present swap chain
     swap_chain_->Present(1, 0);
     current_backbuffer_ = swap_chain_->GetCurrentBackBufferIndex();
+    // Синхронизация командного аллокатора
+    UINT64 fenceValue = ++fence_value_;
+    command_queue_->Signal(fence_.Get(), fenceValue);
+    if (fence_->GetCompletedValue() < fenceValue) {
+        HANDLE eventHandle = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+        fence_->SetEventOnCompletion(fenceValue, eventHandle);
+        WaitForSingleObject(eventHandle, INFINITE);
+        CloseHandle(eventHandle);
+    }
+
 }

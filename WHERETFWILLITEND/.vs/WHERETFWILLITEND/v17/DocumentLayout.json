@@ -3,24 +3,32 @@
   "WorkspaceRootPath": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\",
   "Documents": [
     {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\PixelShader.hlsl||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:WHERETFWILLITEND\\PixelShader.hlsl||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Renderer.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Renderer.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Renderer.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Renderer.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Window.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Window.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Model.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Model.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Renderer.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Renderer.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\VertexShader.hlsl||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:WHERETFWILLITEND\\VertexShader.hlsl||{8B382828-6202-11D1-8870-0000F87579D2}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Window.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Window.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -34,32 +42,72 @@
           "Children": [
             {
               "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "VertexShader.hlsl",
+              "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\VertexShader.hlsl",
+              "RelativeDocumentMoniker": "WHERETFWILLITEND\\VertexShader.hlsl",
+              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\VertexShader.hlsl",
+              "RelativeToolTip": "WHERETFWILLITEND\\VertexShader.hlsl",
+              "ViewState": "AgIAAA0AAAAAAAAAAAAmwBYAAAASAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-12-14T08:26:31.703Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "PixelShader.hlsl",
+              "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\PixelShader.hlsl",
+              "RelativeDocumentMoniker": "WHERETFWILLITEND\\PixelShader.hlsl",
+              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\PixelShader.hlsl",
+              "RelativeToolTip": "WHERETFWILLITEND\\PixelShader.hlsl",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABoAAABGAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2025-12-14T05:20:53.093Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
               "DocumentIndex": 3,
+              "Title": "Renderer.h",
+              "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Renderer.h",
+              "RelativeDocumentMoniker": "WHERETFWILLITEND\\Renderer.h",
+              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Renderer.h",
+              "RelativeToolTip": "WHERETFWILLITEND\\Renderer.h",
+              "ViewState": "AgIAAAsAAAAAAAAAAAAAAD4AAAAkAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2025-12-10T06:18:30.559Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
               "Title": "Model.h",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Model.h",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\Model.h",
               "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Model.h",
               "RelativeToolTip": "WHERETFWILLITEND\\Model.h",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAYAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAAlAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-12-13T15:26:48.554Z"
+              "WhenOpened": "2025-12-13T15:26:48.554Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 1,
               "Title": "Renderer.cpp",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Renderer.cpp",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\Renderer.cpp",
               "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Renderer.cpp",
               "RelativeToolTip": "WHERETFWILLITEND\\Renderer.cpp",
-              "ViewState": "AgIAAF0AAAAAAAAAAAAAAHEAAAA/AAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAiwCEAAAACAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2025-12-10T06:21:05.159Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 6,
               "Title": "Window.h",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Window.h",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\Window.h",
@@ -67,32 +115,21 @@
               "RelativeToolTip": "WHERETFWILLITEND\\Window.h",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-12-13T15:26:58.661Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
-              "Title": "Renderer.h",
-              "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Renderer.h",
-              "RelativeDocumentMoniker": "WHERETFWILLITEND\\Renderer.h",
-              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\Renderer.h",
-              "RelativeToolTip": "WHERETFWILLITEND\\Renderer.h",
-              "ViewState": "AgIAAE4AAAAAAAAAAAAkwFwAAAAaAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2025-12-10T06:18:30.559Z",
+              "WhenOpened": "2025-12-13T15:26:58.661Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 4,
+              "DocumentIndex": 5,
               "Title": "main.cpp",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\main.cpp",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\main.cpp",
               "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba4WHERETFWILLITEND\\WHERETFWILLITEND\\WHERETFWILLITEND\\main.cpp",
               "RelativeToolTip": "WHERETFWILLITEND\\main.cpp",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAAUAAAAAAAAAA==",
+              "ViewState": "AgIAADMAAAAAAAAAAAAAAD4AAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-11-28T17:10:42.979Z"
+              "WhenOpened": "2025-11-28T17:10:42.979Z",
+              "EditorCaption": ""
             }
           ]
         },
