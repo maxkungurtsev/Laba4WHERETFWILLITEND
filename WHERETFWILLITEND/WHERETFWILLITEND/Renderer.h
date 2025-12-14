@@ -21,6 +21,12 @@ struct alignas(256) LightConstants{
     float pad1;
     XMFLOAT3 cameraPos;
     float pad2;
+    float ambient_k=0.1f;
+    float diffuse_k=0.5f;
+    float specular_k=0.5f;
+    float shiny_k = 0.8f;
+    float intensity=5.0f;
+    float pad3[3];
 };
 
 class Renderer
@@ -91,11 +97,16 @@ private:
     void CreatePipelineStateObject();
     void CreateVertexBuffer(Model& mesh);
     void CompileShaders();
-    void CreateCBV_SRV_Sampler(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, XMFLOAT3 light_pos);
+    void CreateCBV_SRV_Sampler(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, XMFLOAT3 light_pos,
+        float ambient_k,
+        float diffuse_k,
+        float specular_k,
+        float shiny_k,
+        float intensity);
     void CreateInputLayout();
     void LoadTextureFromTGA(TGAImage& image, UINT textureSlot = 0);
     void EnableDebugLayer();
 public:
-    void Initialize(UINT width, UINT height, int frame_count, HWND hwnd, Model& mesh, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, XMFLOAT3 light_pos);
+    void Initialize(UINT width, UINT height, int frame_count, HWND hwnd, Model& mesh, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, XMFLOAT3 light_pos, float ambient_k, float diffuse_k, float specular_k, float shiny_k, float intensity);
     void RenderFrame();
 };

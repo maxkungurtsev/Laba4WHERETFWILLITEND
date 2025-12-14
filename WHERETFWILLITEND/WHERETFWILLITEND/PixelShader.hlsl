@@ -5,6 +5,11 @@ cbuffer Light : register(b1)
 {
     float3 lightPos;
     float3 cameraPos;
+    float ambient_k;
+    float diffuse_k;
+    float specular_k;
+    float shiny_k;
+    float intensity;
 };
 
 struct PS_IN
@@ -25,5 +30,5 @@ float4 main(PS_IN input) : SV_TARGET
     float spec = pow(max(dot(R, V), 0), 32);
     float4 texColor = diffuseMap.Sample(samplerState, input.uv);
     float4 finalColor = texColor * diff + float4(spec, spec, spec, 0);
-    return float4(input.uv, 0, 1);
+    return finalColor;
 }

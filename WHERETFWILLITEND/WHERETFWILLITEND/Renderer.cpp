@@ -190,7 +190,7 @@ void Renderer::ViewportScissorSetup()
     scissor_rect_.bottom = height_;
 }
 
-void Renderer::CreateCBV_SRV_Sampler(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, XMFLOAT3 light_pos) {
+void Renderer::CreateCBV_SRV_Sampler(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, XMFLOAT3 light_pos, float ambient_k, float diffuse_k, float specular_k, float shiny_k, float intensity){
     //CBV MVP
     D3D12_HEAP_PROPERTIES heapProps{};
     heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
@@ -278,7 +278,7 @@ void Renderer::CreateCBV_SRV_Sampler(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTO
     samplerDesc.MaxLOD = D3D12_FLOAT32_MAX;
     samplerDesc.MipLODBias = 0;
     samplerDesc.MaxAnisotropy = 1;
-    samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER; // если не используется shadow map
+    samplerDesc.ComparisonFunc = D3D12_COMPARISON_FUNC_NEVER;
 
 
     D3D12_CPU_DESCRIPTOR_HANDLE sampHandle = sampler_heap_->GetCPUDescriptorHandleForHeapStart();
@@ -302,9 +302,13 @@ void Renderer::CreateCBV_SRV_Sampler(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTO
     XMStoreFloat3(&camera_position, cam_pos);
     lightData.lightPos = light_pos;
     lightData.cameraPos = camera_position;
-
+    lightData.ambient_k = ambient_k;
+    lightData.diffuse_k = diffuse_k;
+    lightData.specular_k = specular_k;
+    lightData.shiny_k = shiny_k;
+    lightData.intensity = intensity;
+    lightData.pad3[0] = lightData.pad3[1] = lightData.pad3[2] = 0.0f;
     memcpy(light_cb_mapped_, &lightData, sizeof(LightConstants));
-
 }
 
 void Renderer::CreateRootSignature() {
@@ -599,6 +603,8 @@ void Renderer::CreateInputLayout(){
 }
 
 void Renderer::LoadTextureFromTGA(TGAImage& image, UINT textureSlot){
+    command_allocator_->Reset();
+    command_list_->Reset(command_allocator_.Get(), nullptr);
     const UINT texWidth = image.get_width();
     const UINT texHeight = image.get_height();
     const UINT pixelSize = 4;
@@ -706,96 +712,143 @@ void Renderer::LoadTextureFromTGA(TGAImage& image, UINT textureSlot){
     D3D12_CPU_DESCRIPTOR_HANDLE handle = cbv_srv_uav_heap_->GetCPUDescriptorHandleForHeapStart();
     handle.ptr += textureSlot * cbv_srv_uav_descriptor_size_;
     device_->CreateShaderResourceView(texture_.Get(), &srvDesc, handle);
-}
-
-void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd, Model& mesh, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, XMFLOAT3 light_pos) {
-    EnableDebugLayer();
-    CreateGraphicsDevice(width, height, frame_count);
-    CreateFence();
-    AskDescryptorSizes();
-    //check4XMSAA();
-    CreateCommandStuff();
-    CreateSwapChain(hwnd);
-    CreateHeaps();
-    CreateRTV();
-    CreateZBuffer();
-    ViewportScissorSetup();
-    CreateRootSignature();
-    CompileShaders();
-    CreateInputLayout();
-    CreateCBV_SRV_Sampler(cam_pos, look_at, up, light_pos);
-    //LoadTextureFromTGA(mesh.GetTexture());
-    CreateVertexBuffer(mesh);
-    CreatePipelineStateObject();
-}
-void Renderer::RenderFrame() {
-    //Reset
-    command_allocator_->Reset();
-    command_list_->Reset(command_allocator_.Get(), nullptr);
-    //Transition render target: PRESENT -> RENDER_TARGET
-    D3D12_RESOURCE_BARRIER barrierBegin{};
-    barrierBegin.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    barrierBegin.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-    barrierBegin.Transition.pResource = render_targets_[current_backbuffer_].Get();
-    barrierBegin.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-    barrierBegin.Transition.StateBefore = D3D12_RESOURCE_STATE_COMMON;
-    barrierBegin.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
-    command_list_->ResourceBarrier(1, &barrierBegin);
-    //Set viewport/scissor
-    command_list_->RSSetViewports(1, &viewport_);
-    command_list_->RSSetScissorRects(1, &scissor_rect_);
-    //Set RTV + DSV
-    D3D12_CPU_DESCRIPTOR_HANDLE rtv_handle = rtv_heap_->GetCPUDescriptorHandleForHeapStart();
-    rtv_handle.ptr += current_backbuffer_ * rtv_descriptor_size_;
-    D3D12_CPU_DESCRIPTOR_HANDLE dsv_handle = dsv_heap_->GetCPUDescriptorHandleForHeapStart();
-    command_list_->OMSetRenderTargets(1, &rtv_handle, FALSE, &dsv_handle);
-    //Clear RTV + DSV
-    const float clearColor[] = { 0.2f, 0.4f, 0.6f, 1.0f };
-    command_list_->ClearRenderTargetView(rtv_handle, clearColor, 0, nullptr);
-    command_list_->ClearDepthStencilView(dsv_handle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-    //Set PSO and Root Signature
-    command_list_->SetPipelineState(pipeline_state_.Get());
-    command_list_->SetGraphicsRootSignature(root_signature_.Get());
-    //Set descriptor heaps
-    ID3D12DescriptorHeap* heaps[] = { cbv_srv_uav_heap_.Get(), sampler_heap_.Get() };
-    command_list_->SetDescriptorHeaps(_countof(heaps), heaps);
-    //Set root descriptor tables
-    D3D12_GPU_DESCRIPTOR_HANDLE handle = cbv_srv_uav_heap_->GetGPUDescriptorHandleForHeapStart();
-    command_list_->SetGraphicsRootDescriptorTable(0, handle); // b0 - MVP
-    handle.ptr += cbv_srv_uav_descriptor_size_;
-    command_list_->SetGraphicsRootDescriptorTable(1, handle); // b1 - Light
-    handle.ptr += cbv_srv_uav_descriptor_size_;
-    command_list_->SetGraphicsRootDescriptorTable(2, handle); // t0 - diffuse texture
-    command_list_->SetGraphicsRootDescriptorTable(3, sampler_heap_->GetGPUDescriptorHandleForHeapStart()); // s0
-    //Set input assembler
-    command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    command_list_->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
-    //Draw
-    command_list_->DrawInstanced(vertex_count_, 1, 0, 0);
-    //Transition render target: RENDER_TARGET -> PRESENT
-    D3D12_RESOURCE_BARRIER barrierEnd{};
-    barrierEnd.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    barrierEnd.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
-    barrierEnd.Transition.pResource = render_targets_[current_backbuffer_].Get();
-    barrierEnd.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-    barrierEnd.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
-    barrierEnd.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
-    command_list_->ResourceBarrier(1, &barrierEnd);
-    //Close and execute
     command_list_->Close();
     ID3D12CommandList* lists[] = { command_list_.Get() };
     command_queue_->ExecuteCommandLists(1, lists);
-    //Present swap chain
-    swap_chain_->Present(1, 0);
-    current_backbuffer_ = swap_chain_->GetCurrentBackBufferIndex();
-    // Синхронизация командного аллокатора
     UINT64 fenceValue = ++fence_value_;
     command_queue_->Signal(fence_.Get(), fenceValue);
+
     if (fence_->GetCompletedValue() < fenceValue) {
         HANDLE eventHandle = CreateEvent(nullptr, FALSE, FALSE, nullptr);
         fence_->SetEventOnCompletion(fenceValue, eventHandle);
         WaitForSingleObject(eventHandle, INFINITE);
         CloseHandle(eventHandle);
     }
+}
 
+void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd, Model& mesh, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, XMFLOAT3 light_pos,
+    float ambient_k,
+    float diffuse_k,
+    float specular_k,
+    float shiny_k,
+    float intensity) {
+    EnableDebugLayer();
+    CreateGraphicsDevice(width, height, frame_count);
+    CreateFence();
+    AskDescryptorSizes();
+    //check4XMSAA();
+    CreateHeaps();
+    CreateCommandStuff();
+    CreateSwapChain(hwnd);
+    CreateRTV();
+    CreateZBuffer();
+    ViewportScissorSetup();
+    CreateRootSignature();
+    CompileShaders();
+    CreateInputLayout();
+    LoadTextureFromTGA(mesh.GetTexture());
+    CreateCBV_SRV_Sampler(cam_pos, look_at, up, light_pos,ambient_k,diffuse_k,specular_k,shiny_k,intensity);
+    CreateVertexBuffer(mesh);
+    CreatePipelineStateObject();
+}
+void Renderer::RenderFrame() {
+
+    // --- Reset ---
+    command_allocator_->Reset();
+    command_list_->Reset(command_allocator_.Get(), pipeline_state_.Get());
+
+    // --- Transition: PRESENT -> RENDER_TARGET ---
+    D3D12_RESOURCE_BARRIER barrierBegin{};
+    barrierBegin.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barrierBegin.Transition.pResource = render_targets_[current_backbuffer_].Get();
+    barrierBegin.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    barrierBegin.Transition.StateBefore = D3D12_RESOURCE_STATE_PRESENT;
+    barrierBegin.Transition.StateAfter = D3D12_RESOURCE_STATE_RENDER_TARGET;
+    command_list_->ResourceBarrier(1, &barrierBegin);
+
+    // --- Viewport / Scissor ---
+    command_list_->RSSetViewports(1, &viewport_);
+    command_list_->RSSetScissorRects(1, &scissor_rect_);
+
+    // --- RTV / DSV ---
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle =
+        rtv_heap_->GetCPUDescriptorHandleForHeapStart();
+    rtvHandle.ptr += current_backbuffer_ * rtv_descriptor_size_;
+
+    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle =
+        dsv_heap_->GetCPUDescriptorHandleForHeapStart();
+
+    command_list_->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+
+    // --- Clear ---
+    const float clearColor[] = { 0.2f, 0.4f, 0.6f, 1.0f };
+    command_list_->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+    command_list_->ClearDepthStencilView(dsvHandle,D3D12_CLEAR_FLAG_DEPTH,1.0f, 0,0, nullptr);
+
+    // --- PSO + Root Signature ---
+    command_list_->SetPipelineState(pipeline_state_.Get());
+    command_list_->SetGraphicsRootSignature(root_signature_.Get());
+
+    // --- Descriptor heaps ---
+    ID3D12DescriptorHeap* heaps[] = {
+        cbv_srv_uav_heap_.Get(),
+        sampler_heap_.Get()
+    };
+    command_list_->SetDescriptorHeaps(_countof(heaps), heaps);
+
+    // --- Root descriptor tables ---
+    D3D12_GPU_DESCRIPTOR_HANDLE handle =
+        cbv_srv_uav_heap_->GetGPUDescriptorHandleForHeapStart();
+
+    // b0 : MVP CBV
+    command_list_->SetGraphicsRootDescriptorTable(0, handle);
+    handle.ptr += cbv_srv_uav_descriptor_size_;
+
+    // b1 : Light CBV
+    command_list_->SetGraphicsRootDescriptorTable(1, handle);
+    handle.ptr += cbv_srv_uav_descriptor_size_;
+
+    // t0 : Texture SRV
+    command_list_->SetGraphicsRootDescriptorTable(2, handle);
+
+    // s0 : Sampler
+    command_list_->SetGraphicsRootDescriptorTable(
+        3, sampler_heap_->GetGPUDescriptorHandleForHeapStart());
+
+
+    // --- IA ---
+    command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    command_list_->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
+
+    // --- Draw ---
+    command_list_->DrawInstanced(vertex_count_, 1, 0, 0);
+
+    // --- Transition: RENDER_TARGET -> PRESENT ---
+    D3D12_RESOURCE_BARRIER barrierEnd{};
+    barrierEnd.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barrierEnd.Transition.pResource = render_targets_[current_backbuffer_].Get();
+    barrierEnd.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    barrierEnd.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+    barrierEnd.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+    command_list_->ResourceBarrier(1, &barrierEnd);
+
+    // --- Close & Execute ---
+    command_list_->Close();
+    ID3D12CommandList* lists[] = { command_list_.Get() };
+    command_queue_->ExecuteCommandLists(1, lists);
+
+    // --- Present ---
+    swap_chain_->Present(1, 0);
+    current_backbuffer_ = swap_chain_->GetCurrentBackBufferIndex();
+
+    // --- Fence ---
+    UINT64 fenceValue = ++fence_value_;
+    command_queue_->Signal(fence_.Get(), fenceValue);
+
+    if (fence_->GetCompletedValue() < fenceValue) {
+        HANDLE eventHandle = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+        fence_->SetEventOnCompletion(fenceValue, eventHandle);
+        WaitForSingleObject(eventHandle, INFINITE);
+        CloseHandle(eventHandle);
+    }
 }
