@@ -30,5 +30,5 @@ float4 main(PS_IN input) : SV_TARGET
     float spec = pow(max(dot(R, V), 0), 32);
     float4 texColor = diffuseMap.Sample(samplerState, input.uv);
     float4 finalColor = texColor * diff + float4(spec, spec, spec, 0);
-    return finalColor;
+    return float4(input.uv.x, input.uv.y, input.uv.x, 1.0);
 }

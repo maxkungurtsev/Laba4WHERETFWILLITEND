@@ -64,9 +64,9 @@ void Renderer::CreateMSAARenderTarget() {
     D3D12_CLEAR_VALUE optClear{};
     optClear.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     //background color
-    optClear.Color[0] = 0.8f;
-    optClear.Color[1] = 0.8f;
-    optClear.Color[2] = 0.1f;
+    optClear.Color[0] = 0.2f;
+    optClear.Color[1] = 0.4f;
+    optClear.Color[2] = 0.6f;
     optClear.Color[3] = 1.0f;
     D3D12_HEAP_PROPERTIES heapProps{};
     heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;

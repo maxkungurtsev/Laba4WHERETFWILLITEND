@@ -14,7 +14,7 @@ int texture_height = 800;
 const float intensity = 5.0;
 XMFLOAT3 light_coords = {2.0, 0.0, 0.0};
 //camera stuff
-const XMVECTOR cam_coords = {2.0, 2.0, 2.0, 1.0};
+const XMVECTOR cam_coords = {500.0, 500.0, 500.0, 1.0};
 const XMVECTOR look_at = {0.0, 0.0, 0.0, 1.0};
 const XMVECTOR up = {0.0, 1.0, 0.0, 1.0 };
 // material stuff

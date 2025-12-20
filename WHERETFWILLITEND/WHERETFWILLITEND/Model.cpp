@@ -16,6 +16,9 @@ Model::Model(const std::string& filename, const std::string& texture_filename)
             char trash;
             XMFLOAT3 pos;
             iss >> trash >> pos.x >> pos.y >> pos.z;
+            pos.x = pos.x / 10;
+            pos.y = pos.y / 10;
+            pos.z = pos.z / 10;
             positions_.push_back(pos);
         }
         else if (line.rfind("vt ", 0) == 0) {
@@ -28,6 +31,9 @@ Model::Model(const std::string& filename, const std::string& texture_filename)
             char trash1, trash2;
             XMFLOAT3 n;
             iss >> trash1 >> trash2 >> n.x >> n.y >> n.z;
+            n.x = n.x / 10;
+            n.y = n.y / 10;
+            n.z = n.z / 10;
             normals_.push_back(n);
         }
         else if (line.rfind("f ", 0) == 0) {

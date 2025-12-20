@@ -21,7 +21,7 @@ bool Window::Create(HINSTANCE hInstance, int nCmdShow){
     if (!RegisterClassEx(&wc))
         return false;
 
-    RECT WindowRect = { 0,0,1280,720 };
+    RECT WindowRect = { 0,0,800,800 };
     AdjustWindowRect(&WindowRect, WS_OVERLAPPEDWINDOW, FALSE);
 
     m_hWnd = CreateWindowEx(
