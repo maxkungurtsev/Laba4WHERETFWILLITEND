@@ -26,6 +26,8 @@ struct alignas(256) LightConstants{
     float specular_k=0.5f;
     float shiny_k = 0.8f;
     float intensity=5.0f;
+    float pad4 = 0.0;
+    float time;
     float pad3[3];
 };
 
@@ -112,5 +114,5 @@ private:
     void CreateMSAARenderTarget();
 public:
     void Initialize(UINT width, UINT height, int frame_count, HWND hwnd, Model& mesh, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, XMFLOAT3 light_pos);
-    void RenderFrame(Model& mesh);
+    void RenderFrame(Model& mesh, float time);
 };

@@ -2,6 +2,7 @@
 #include "InputDevice.h"
 #include "Renderer.h"
 #include "Model.h"
+#include <chrono>
 Window g_Window;
 InputDevice g_Input;
 Renderer g_Renderer;
@@ -25,6 +26,9 @@ const float shiny_k = 32;
 int Run(Model &mesh) {
     MSG msg = {};
     bool running = true;
+    using clock = std::chrono::high_resolution_clock;
+    auto lastTime = clock::now();
+    float time = 0;
     while (running) {
         while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
             if (msg.message == WM_QUIT) {
@@ -40,7 +44,12 @@ int Run(Model &mesh) {
         else if (g_Input.IsKeyDown(VK_SPACE)) {
             MessageBox(nullptr, L"Space detected!", L"Input Test", MB_OK);
         }
-       g_Renderer.RenderFrame(mesh);
+       auto currentTime = clock::now();
+       float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
+       lastTime = currentTime;
+       time += deltaTime;
+       time = std::fmod(time, 4.0f);
+       g_Renderer.RenderFrame(mesh, time);
     }
     return (int)msg.wParam;
 }

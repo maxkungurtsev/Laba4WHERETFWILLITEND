@@ -13,6 +13,7 @@ cbuffer Light : register(b1)
     float shiny_k;
     float intensity;
     float pad3;
+    float time;
 };
 
 struct PS_IN
@@ -31,9 +32,8 @@ float4 main(PS_IN input) : SV_TARGET
     float diff = max(dot(N, L), 0)*diffuse_k;
     float3 R = reflect(-L, N);
     float spec = specular_k*pow(max(dot(R, V), 0), shiny_k);
-    float2 uv = frac(input.uv);
+    float2 uv = frac(input.uv+time);
     float4 texColor = diffuseMap.Sample(samplerState, uv);
     float4 finalColor = texColor* (diff + ambient_k) + float4(spec, spec, spec, 0);
     return finalColor;
-    û
 }

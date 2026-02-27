@@ -441,6 +441,7 @@ void Renderer::CreateCBV_SRV_Sampler(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTO
     lightData.shiny_k = 32;
     lightData.intensity = 10;
     lightData.pad3[0] = lightData.pad3[1] = lightData.pad3[2] = 0.0f;
+    lightData.time = 0.0;
     memcpy(light_cb_mapped_, &lightData, sizeof(LightConstants));
 }
 
@@ -746,7 +747,7 @@ void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd, M
     CompileShaders();
     CreatePipelineStateObject();
 }
-void Renderer::RenderFrame(Model& mesh) {
+void Renderer::RenderFrame(Model& mesh, float time) {
     //Reset
     command_allocator_->Reset();
     command_list_->Reset(command_allocator_.Get(), pipeline_state_.Get());
@@ -821,9 +822,13 @@ void Renderer::RenderFrame(Model& mesh) {
     command_list_->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
 
     //Draw
+    LightConstants lightData{};
+    lightData.time = time;
+    OutputDebugStringA(std::to_string(time).c_str());
+    OutputDebugStringA(" ");
     for (const auto& submesh : mesh.GetSubMeshes()) {
         // Set the SRV for this submesh's material
-        LightConstants lightData{};
+        
         MaterialData material = mesh.GetMaterials()[submesh.materialIndex];
         lightData.ambient_k = material.ambient_k.x;
         lightData.diffuse_k = material.diffuse_k.x;
