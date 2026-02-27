@@ -66,12 +66,13 @@ private:
     ComPtr<ID3D12Resource> light_cb_;
     MVPConstants   mvp_data_;
     LightConstants light_data_;
-    ComPtr<ID3D12Resource> texture_;
+    std::vector<ComPtr<ID3D12Resource>> textures_;
     UINT sample_amount_=1;
     UINT msaa_quality_ = 0;
     UINT vertex_count_;
     void* mvp_cb_mapped_;
     void* light_cb_mapped_;
+    TGAImage dummy_;
     //msaa bullsh**
     ComPtr<ID3D12Resource> msaa_render_target_;
     ComPtr<ID3D12DescriptorHeap> rtv_msaa_heap_;
@@ -91,7 +92,7 @@ private:
     // step6
     void CreateSwapChain(HWND hwnd);
     // step7
-    void CreateHeaps();
+    void CreateHeaps(int textures_amount);
     // step8
     void CreateRTV();
     // step9
@@ -99,22 +100,17 @@ private:
     // step10
     void ViewportScissorSetup();
     // graphic pipeline bull****
-    void CreateRootSignature();
+    void CreateRootSignature(int textures_amount);
     void CreatePipelineStateObject();
     void CreateVertexBuffer(Model& mesh);
     void CompileShaders();
-    void CreateCBV_SRV_Sampler(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, XMFLOAT3 light_pos,
-        float ambient_k,
-        float diffuse_k,
-        float specular_k,
-        float shiny_k,
-        float intensity);
+    void CreateCBV_SRV_Sampler(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, Model mesh, XMFLOAT3 light_pos);
     void CreateInputLayout();
     void LoadTextureFromTGA(TGAImage& image, UINT textureSlot = 0);
     void EnableDebugLayer();
     //msaa bullshit
     void CreateMSAARenderTarget();
 public:
-    void Initialize(UINT width, UINT height, int frame_count, HWND hwnd, Model& mesh, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, XMFLOAT3 light_pos, float ambient_k, float diffuse_k, float specular_k, float shiny_k, float intensity);
-    void RenderFrame();
+    void Initialize(UINT width, UINT height, int frame_count, HWND hwnd, Model& mesh, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, XMFLOAT3 light_pos);
+    void RenderFrame(Model& mesh);
 };

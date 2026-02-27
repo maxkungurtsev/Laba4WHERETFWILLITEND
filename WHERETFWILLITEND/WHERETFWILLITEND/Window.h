@@ -9,5 +9,4 @@ private:
 public:
     bool Create(HINSTANCE hInstance, int nCmdShow);
     HWND GetHWND() const { return m_hWnd; }
-
 };

@@ -1,115 +1,99 @@
 #include "Model.h"
-#include <fstream>
-#include <sstream>
-
-Model::Model(const std::string& filename, const std::string& texture_filename)
-{
-    std::ifstream in(filename);
-    if (!in.is_open()) {
-        std::cerr << "Couldn't open file: " << filename << '\n';
-        return;
-    }
-    std::string line;
-    while (std::getline(in, line)) {
-        std::istringstream iss(line);
-        if (line.rfind("v ", 0) == 0) {
-            char trash;
-            XMFLOAT3 pos;
-            iss >> trash >> pos.x >> pos.y >> pos.z;
-            pos.x = pos.x / 10;
-            pos.y = pos.y / 10;
-            pos.z = pos.z / 10;
-            positions_.push_back(pos);
-        }
-        else if (line.rfind("vt ", 0) == 0) {
-            char trash1, trash2;
-            XMFLOAT2 uv;
-            iss >> trash1 >> trash2 >> uv.x >> uv.y;
-            texcoords_.push_back(uv);
-        }
-        else if (line.rfind("vn ", 0) == 0) {
-            char trash1, trash2;
-            XMFLOAT3 n;
-            iss >> trash1 >> trash2 >> n.x >> n.y >> n.z;
-            n.x = n.x / 10;
-            n.y = n.y / 10;
-            n.z = n.z / 10;
-            normals_.push_back(n);
-        }
-        else if (line.rfind("f ", 0) == 0) {
-            char trash;
-            iss >> trash;
-
-            for (int i = 0; i < 3; i++) {
-                int v, vt, vn;
-                char slash;
-
-                iss >> v >> slash >> vt >> slash >> vn;
-
-                Vertex vert;
-                vert.position = positions_[v - 1];
-                vert.uv = texcoords_[vt - 1];
-                vert.normal = normals_[vn - 1];
-
-                vertices_.push_back(vert);
-            }
-        }
-    }
-
-    in.close();
-    std::cout << "Loaded model: "<< vertices_.size()<<" vertices\n";
-    if (!diffuse_texture_.read_tga_file(texture_filename.c_str())) {
-        std::cerr << "Couldn't load texture: " << texture_filename << '\n';
-    }
-}
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+#include <Windows.h>
 Model::Model(const std::string& filename)
 {
-    std::ifstream in(filename);
-    if (!in.is_open()) {
-        std::cerr << "Couldn't open file: " << filename << '\n';
+    Assimp::Importer importer;
+    const aiScene* scene = importer.ReadFile(
+        filename,
+        aiProcess_Triangulate |
+        aiProcess_GenNormals |
+        aiProcess_FlipUVs);
+    if (!scene || !scene->HasMeshes()){
         return;
     }
-    std::string line;
-    while (std::getline(in, line)) {
-        std::istringstream iss(line);
-        if (line.rfind("v ", 0) == 0) {
-            char trash;
-            XMFLOAT3 pos;
-            iss >> trash >> pos.x >> pos.y >> pos.z;
-            positions_.push_back(pos);
-        }
-        else if (line.rfind("vt ", 0) == 0) {
-            char trash1, trash2;
-            XMFLOAT2 uv;
-            iss >> trash1 >> trash2 >> uv.x >> uv.y;
-            texcoords_.push_back(uv);
-        }
-        else if (line.rfind("vn ", 0) == 0) {
-            char trash1, trash2;
-            XMFLOAT3 n;
-            iss >> trash1 >> trash2 >> n.x >> n.y >> n.z;
-            normals_.push_back(n);
-        }
-        else if (line.rfind("f ", 0) == 0) {
-            char trash;
-            iss >> trash;
-
-            for (int i = 0; i < 3; i++) {
-                int v, vt, vn;
-                char slash;
-
-                iss >> v >> slash >> vt >> slash >> vn;
-
-                Vertex vert;
-                vert.position = positions_[v - 1];
-                vert.uv = texcoords_[vt - 1];
-                vert.normal = normals_[vn - 1];
-
-                vertices_.push_back(vert);
-            }
+    vertices_.clear();
+    materials_.clear();
+    submeshes_.clear();
+    //mats
+    materials_.resize(scene->mNumMaterials);
+    for (unsigned i = 0; i < scene->mNumMaterials; ++i){
+        aiMaterial* mat = scene->mMaterials[i];
+        MaterialData& outMat = materials_[i];
+        aiColor3D color;
+        // ambient
+        if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_AMBIENT, color))
+            outMat.ambient_k = { color.r, color.g, color.b };
+        // diffuse
+        if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_DIFFUSE, color))
+            outMat.diffuse_k = { color.r, color.g, color.b };
+        // specular
+        if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_SPECULAR, color))
+            outMat.specular_k = { color.r, color.g, color.b };
+        // shiny
+        float shininess = 0;
+        if (AI_SUCCESS == mat->Get(AI_MATKEY_SHININESS, shininess))
+            outMat.shiny_k = shininess;
+        // diffuse texture
+        if (mat->GetTextureCount(aiTextureType_DIFFUSE) > 0)
+        {
+            aiString path;
+            mat->GetTexture(aiTextureType_DIFFUSE, 0, &path);
+            outMat.diffuseTexPath = path.C_Str();
+            outMat.hasDiffuseTexture = true;
+            outMat.diffuseTexture.read_tga_file(std::string("bean.tga").c_str());
         }
     }
-
-    in.close();
-    std::cout << "Loaded model: " << vertices_.size() << " vertices\n";
+    // meshs
+    for (unsigned m = 0; m < scene->mNumMeshes; ++m){
+        aiMesh* mesh = scene->mMeshes[m];
+        SubMesh part;
+        part.startVertex = vertices_.size();
+        part.materialIndex = mesh->mMaterialIndex;
+        //verts
+        for (unsigned i = 0; i < mesh->mNumVertices; ++i){
+            Vertex v{};
+            v.position = {
+                mesh->mVertices[i].x,
+                mesh->mVertices[i].y,
+                mesh->mVertices[i].z
+            };
+            if (mesh->HasNormals())
+            {
+                v.normal = {
+                    mesh->mNormals[i].x,
+                    mesh->mNormals[i].y,
+                    mesh->mNormals[i].z
+                };
+            }
+            if (mesh->mTextureCoords[0])
+            {
+                v.uv = {
+                    mesh->mTextureCoords[0][i].x,
+                    mesh->mTextureCoords[0][i].y
+                };
+            }
+            vertices_.push_back(v);
+        }
+        part.vertexCount = vertices_.size() - part.startVertex;
+        submeshes_.push_back(part);
+    }
+}
+void Model::buildVertices()
+{
+    size_t vertexCount = positions_.size();
+    if (normals_.size() < positions_.size())
+        normals_.resize(positions_.size(), XMFLOAT3{ 0.0f, 0.0f, 0.0f });
+    if (texcoords_.size() < positions_.size())
+        texcoords_.resize(positions_.size(), XMFLOAT2{ 0.0f, 0.0f });
+    vertices_.reserve(vertexCount);
+    for (size_t i = 0; i < vertexCount; ++i){
+        Vertex v;
+        v.position = positions_[i];
+        v.normal = normals_[i];
+        v.uv = texcoords_[i];
+        vertices_.push_back(v);
+    }
 }

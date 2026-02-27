@@ -126,7 +126,7 @@ void Renderer::CreateSwapChain(HWND hwnd){
     tempSwapChain.As(&swap_chain_);
 }
 
-void Renderer::CreateHeaps(){
+void Renderer::CreateHeaps(int textures_amount){
     D3D12_DESCRIPTOR_HEAP_DESC desc{};
     desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
     desc.NumDescriptors = frame_count_;
@@ -144,7 +144,7 @@ void Renderer::CreateHeaps(){
     }
     D3D12_DESCRIPTOR_HEAP_DESC cbvDesc{};
     cbvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    cbvDesc.NumDescriptors = 3;
+    cbvDesc.NumDescriptors = 2+ textures_amount;
     cbvDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     hr = device_->CreateDescriptorHeap(&cbvDesc, IID_PPV_ARGS(&cbv_srv_uav_heap_));
     if (FAILED(hr)) {
@@ -230,7 +230,125 @@ void Renderer::ViewportScissorSetup(){
     scissor_rect_.bottom = height_;
 }
 
-void Renderer::CreateCBV_SRV_Sampler(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, XMFLOAT3 light_pos, float ambient_k, float diffuse_k, float specular_k, float shiny_k, float intensity){
+void Renderer::LoadTextureFromTGA(TGAImage& image, UINT textureSlot){
+    command_allocator_->Reset();
+    command_list_->Reset(command_allocator_.Get(), nullptr);
+    const UINT texWidth = image.get_width();
+    const UINT texHeight = image.get_height();
+    const UINT pixelSize = 4;
+
+    //GPU-texture
+    D3D12_RESOURCE_DESC texDesc{};
+    texDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
+    texDesc.Width = texWidth;
+    texDesc.Height = texHeight;
+    texDesc.DepthOrArraySize = 1;
+    texDesc.MipLevels = 1;
+    texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    texDesc.SampleDesc.Count = 1;
+    texDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
+    texDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+    D3D12_HEAP_PROPERTIES heapProps{};
+    heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+    HRESULT hr = device_->CreateCommittedResource(
+        &heapProps,
+        D3D12_HEAP_FLAG_NONE,
+        &texDesc,
+        D3D12_RESOURCE_STATE_COPY_DEST,
+        nullptr,
+        IID_PPV_ARGS(&textures_[textureSlot])
+    );
+    if (FAILED(hr)){
+        throw std::runtime_error("Failed to create texture resource");
+    }
+    //upload heap
+    UINT64 uploadBufferSize;
+    device_->GetCopyableFootprints(&texDesc, 0, 1, 0, nullptr, nullptr, nullptr, &uploadBufferSize);
+    D3D12_RESOURCE_DESC uploadDesc{};
+    uploadDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    uploadDesc.Width = uploadBufferSize;
+    uploadDesc.Height = 1;
+    uploadDesc.DepthOrArraySize = 1;
+    uploadDesc.MipLevels = 1;
+    uploadDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    uploadDesc.SampleDesc.Count = 1;
+    D3D12_HEAP_PROPERTIES uploadHeapProps{};
+    uploadHeapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+    ComPtr<ID3D12Resource> textureUploadHeap;
+    hr = device_->CreateCommittedResource(
+        &uploadHeapProps,
+        D3D12_HEAP_FLAG_NONE,
+        &uploadDesc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&textureUploadHeap)
+    );
+    if (FAILED(hr)){
+        throw std::runtime_error("Failed to create texture upload heap");
+    }
+    //TGA â upload heap
+    void* mappedData = nullptr;
+    D3D12_RANGE readRange{ 0, 0 };
+    textureUploadHeap->Map(0, &readRange, &mappedData);
+    for (UINT y = 0; y < texHeight; y++){
+        for (UINT x = 0; x < texWidth; x++){
+            TGAColor color = image.get(x, y);
+            UINT idx = (y * texWidth + x) * pixelSize;
+            reinterpret_cast<BYTE*>(mappedData)[idx + 0] = color.b;
+            reinterpret_cast<BYTE*>(mappedData)[idx + 1] = color.g;
+            reinterpret_cast<BYTE*>(mappedData)[idx + 2] = color.r;
+            reinterpret_cast<BYTE*>(mappedData)[idx + 3] = color.a;
+        }
+    }
+    textureUploadHeap->Unmap(0, nullptr);
+    // data to GPU texture
+    D3D12_TEXTURE_COPY_LOCATION dst{};
+    dst.pResource = textures_[textureSlot].Get();
+    dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+    dst.SubresourceIndex = 0;
+    D3D12_TEXTURE_COPY_LOCATION src{};
+    src.pResource = textureUploadHeap.Get();
+    src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+    src.PlacedFootprint.Offset = 0;
+    src.PlacedFootprint.Footprint.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    src.PlacedFootprint.Footprint.Width = texWidth;
+    src.PlacedFootprint.Footprint.Height = texHeight;
+    src.PlacedFootprint.Footprint.Depth = 1;
+    src.PlacedFootprint.Footprint.RowPitch = texWidth * pixelSize;
+    command_list_->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
+    //Barrier: texture to PIXEL_SHADER_RESOURCE
+    D3D12_RESOURCE_BARRIER barrier{};
+    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    barrier.Transition.pResource = textures_[textureSlot].Get();
+    barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+    barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+    barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    command_list_->ResourceBarrier(1, &barrier);
+    // make SRV
+    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+    srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+    srvDesc.Texture2D.MostDetailedMip = 0;
+    srvDesc.Texture2D.MipLevels = 1;
+    srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+    D3D12_CPU_DESCRIPTOR_HANDLE handle = cbv_srv_uav_heap_->GetCPUDescriptorHandleForHeapStart();
+    handle.ptr += (textureSlot+2) * cbv_srv_uav_descriptor_size_;
+    device_->CreateShaderResourceView(textures_[textureSlot].Get(), &srvDesc, handle);
+    command_list_->Close();
+    ID3D12CommandList* lists[] = { command_list_.Get() };
+    command_queue_->ExecuteCommandLists(1, lists);
+    UINT64 fenceValue = ++fence_value_;
+    command_queue_->Signal(fence_.Get(), fenceValue);
+    if (fence_->GetCompletedValue() < fenceValue) {
+        HANDLE eventHandle = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+        fence_->SetEventOnCompletion(fenceValue, eventHandle);
+        WaitForSingleObject(eventHandle, INFINITE);
+        CloseHandle(eventHandle);
+    }
+}
+
+void Renderer::CreateCBV_SRV_Sampler(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, Model mesh, XMFLOAT3 light_pos){
     //CBV MVP
     D3D12_HEAP_PROPERTIES heapProps{};
     heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
@@ -276,16 +394,19 @@ void Renderer::CreateCBV_SRV_Sampler(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTO
     handle.ptr += cbv_srv_uav_descriptor_size_;
     device_->CreateConstantBufferView(&light_cbv_desc, handle);
     //SRV Texture
-    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MostDetailedMip = 0;
-    srvDesc.Texture2D.MipLevels = 1;
-    srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-    handle = cbv_srv_uav_heap_->GetCPUDescriptorHandleForHeapStart();
-    handle.ptr += 2 * cbv_srv_uav_descriptor_size_;
-    device_->CreateShaderResourceView(texture_.Get(), &srvDesc, handle);
+    textures_.resize(mesh.GetMaterials().size());
+    for (int i = 0; i < mesh.GetMaterials().size(); i++) {
+        D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+        srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+        srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+        srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MostDetailedMip = 0;
+        srvDesc.Texture2D.MipLevels = 1;
+        srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+        handle = cbv_srv_uav_heap_->GetCPUDescriptorHandleForHeapStart();
+        handle.ptr += (2+i) * cbv_srv_uav_descriptor_size_;
+    }
+
     //Sampler
     D3D12_SAMPLER_DESC samplerDesc{};
     samplerDesc.Filter = D3D12_FILTER_MIN_MAG_MIP_LINEAR;
@@ -314,16 +435,16 @@ void Renderer::CreateCBV_SRV_Sampler(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTO
     XMStoreFloat3(&camera_position, cam_pos);
     lightData.lightPos = light_pos;
     lightData.cameraPos = camera_position;
-    lightData.ambient_k = ambient_k;
-    lightData.diffuse_k = diffuse_k;
-    lightData.specular_k = specular_k;
-    lightData.shiny_k = shiny_k;
-    lightData.intensity = intensity;
+    lightData.ambient_k = 0.3;
+    lightData.diffuse_k = 0.5;
+    lightData.specular_k = 0.8;
+    lightData.shiny_k = 32;
+    lightData.intensity = 10;
     lightData.pad3[0] = lightData.pad3[1] = lightData.pad3[2] = 0.0f;
     memcpy(light_cb_mapped_, &lightData, sizeof(LightConstants));
 }
 
-void Renderer::CreateRootSignature() {
+void Renderer::CreateRootSignature(int textures_amount) {
     // CBV b0 (MVP) - VS
     D3D12_DESCRIPTOR_RANGE1 cbvRangeVS{};
     cbvRangeVS.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
@@ -343,10 +464,10 @@ void Renderer::CreateRootSignature() {
     // SRV t0 (diffuseMap) - PS
     D3D12_DESCRIPTOR_RANGE1 srvRange{};
     srvRange.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
-    srvRange.NumDescriptors = 1;
+    srvRange.NumDescriptors = textures_amount;
     srvRange.BaseShaderRegister = 0; // t0
     srvRange.RegisterSpace = 0;
-    srvRange.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC;
+    srvRange.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
     srvRange.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
     // Sampler s0 - PS
     D3D12_DESCRIPTOR_RANGE1 samplerRange{};
@@ -532,7 +653,7 @@ void Renderer::CreatePipelineStateObject() {
         throw std::runtime_error(oss2.str());
     }
 };
-
+///////////////
 void Renderer::CreateVertexBuffer(Model& model){
     const std::vector<Vertex>& vertices = model.GetVertices();
     vertex_count_ = vertices.size();
@@ -597,150 +718,35 @@ void Renderer::CreateInputLayout(){
     };
 }
 
-void Renderer::LoadTextureFromTGA(TGAImage& image, UINT textureSlot){
-    command_allocator_->Reset();
-    command_list_->Reset(command_allocator_.Get(), nullptr);
-    const UINT texWidth = image.get_width();
-    const UINT texHeight = image.get_height();
-    const UINT pixelSize = 4;
-    //GPU-texture
-    D3D12_RESOURCE_DESC texDesc{};
-    texDesc.Dimension = D3D12_RESOURCE_DIMENSION_TEXTURE2D;
-    texDesc.Width = texWidth;
-    texDesc.Height = texHeight;
-    texDesc.DepthOrArraySize = 1;
-    texDesc.MipLevels = 1;
-    texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    texDesc.SampleDesc.Count = 1;
-    texDesc.Layout = D3D12_TEXTURE_LAYOUT_UNKNOWN;
-    texDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-    D3D12_HEAP_PROPERTIES heapProps{};
-    heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
-    HRESULT hr = device_->CreateCommittedResource(
-        &heapProps,
-        D3D12_HEAP_FLAG_NONE,
-        &texDesc,
-        D3D12_RESOURCE_STATE_COPY_DEST,
-        nullptr,
-        IID_PPV_ARGS(&texture_)
-    );
-    if (FAILED(hr)){
-        throw std::runtime_error("Failed to create texture resource");
-    }
-    //upload heap
-    UINT64 uploadBufferSize;
-    device_->GetCopyableFootprints(&texDesc, 0, 1, 0, nullptr, nullptr, nullptr, &uploadBufferSize);
-    D3D12_RESOURCE_DESC uploadDesc{};
-    uploadDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-    uploadDesc.Width = uploadBufferSize;
-    uploadDesc.Height = 1;
-    uploadDesc.DepthOrArraySize = 1;
-    uploadDesc.MipLevels = 1;
-    uploadDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-    uploadDesc.SampleDesc.Count = 1;
-    D3D12_HEAP_PROPERTIES uploadHeapProps{};
-    uploadHeapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
-    ComPtr<ID3D12Resource> textureUploadHeap;
-    hr = device_->CreateCommittedResource(
-        &uploadHeapProps,
-        D3D12_HEAP_FLAG_NONE,
-        &uploadDesc,
-        D3D12_RESOURCE_STATE_GENERIC_READ,
-        nullptr,
-        IID_PPV_ARGS(&textureUploadHeap)
-    );
-    if (FAILED(hr)){
-        throw std::runtime_error("Failed to create texture upload heap");
-    }
-    //TGA â upload heap
-    void* mappedData = nullptr;
-    D3D12_RANGE readRange{ 0, 0 };
-    textureUploadHeap->Map(0, &readRange, &mappedData);
-    for (UINT y = 0; y < texHeight; y++){
-        for (UINT x = 0; x < texWidth; x++){
-            TGAColor color = image.get(x, y);
-            UINT idx = (y * texWidth + x) * pixelSize;
-            reinterpret_cast<BYTE*>(mappedData)[idx + 0] = color.b;
-            reinterpret_cast<BYTE*>(mappedData)[idx + 1] = color.g;
-            reinterpret_cast<BYTE*>(mappedData)[idx + 2] = color.r;
-            reinterpret_cast<BYTE*>(mappedData)[idx + 3] = color.a;
-        }
-    }
-    textureUploadHeap->Unmap(0, nullptr);
-    // data to GPU texture
-    D3D12_TEXTURE_COPY_LOCATION dst{};
-    dst.pResource = texture_.Get();
-    dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-    dst.SubresourceIndex = 0;
-    D3D12_TEXTURE_COPY_LOCATION src{};
-    src.pResource = textureUploadHeap.Get();
-    src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
-    src.PlacedFootprint.Offset = 0;
-    src.PlacedFootprint.Footprint.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    src.PlacedFootprint.Footprint.Width = texWidth;
-    src.PlacedFootprint.Footprint.Height = texHeight;
-    src.PlacedFootprint.Footprint.Depth = 1;
-    src.PlacedFootprint.Footprint.RowPitch = texWidth * pixelSize;
-    command_list_->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
-    //Barrier: texture to PIXEL_SHADER_RESOURCE
-    D3D12_RESOURCE_BARRIER barrier{};
-    barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
-    barrier.Transition.pResource = texture_.Get();
-    barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
-    barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
-    barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-    command_list_->ResourceBarrier(1, &barrier);
-    // make SRV
-    D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
-    srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
-    srvDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MostDetailedMip = 0;
-    srvDesc.Texture2D.MipLevels = 1;
-    srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-    D3D12_CPU_DESCRIPTOR_HANDLE handle = cbv_srv_uav_heap_->GetCPUDescriptorHandleForHeapStart();
-    handle.ptr += textureSlot * cbv_srv_uav_descriptor_size_;
-    device_->CreateShaderResourceView(texture_.Get(), &srvDesc, handle);
-    command_list_->Close();
-    ID3D12CommandList* lists[] = { command_list_.Get() };
-    command_queue_->ExecuteCommandLists(1, lists);
-    UINT64 fenceValue = ++fence_value_;
-    command_queue_->Signal(fence_.Get(), fenceValue);
-    if (fence_->GetCompletedValue() < fenceValue) {
-        HANDLE eventHandle = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-        fence_->SetEventOnCompletion(fenceValue, eventHandle);
-        WaitForSingleObject(eventHandle, INFINITE);
-        CloseHandle(eventHandle);
-    }
-}
 
-void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd, Model& mesh, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, XMFLOAT3 light_pos,
-    float ambient_k,
-    float diffuse_k,
-    float specular_k,
-    float shiny_k,
-    float intensity) {
+void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd, Model& mesh, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, XMFLOAT3 light_pos){
+    dummy_.read_tga_file("dummy.tga");
     EnableDebugLayer();
     CreateGraphicsDevice(width, height, frame_count);
     CreateFence();
     check4XMSAA();
     AskDescryptorSizes();
-    CreateHeaps();
+    CreateHeaps(mesh.GetMaterials().size());
     CreateCommandStuff();
     CreateSwapChain(hwnd);
     CreateRTV();
     CreateMSAARenderTarget();
     CreateZBuffer();
     ViewportScissorSetup();
-    CreateRootSignature();
-    CompileShaders();
+    CreateRootSignature(mesh.GetMaterials().size());
     CreateInputLayout();
-    LoadTextureFromTGA(mesh.GetTexture());
-    CreateCBV_SRV_Sampler(cam_pos, look_at, up, light_pos,ambient_k,diffuse_k,specular_k,shiny_k,intensity);
+    CreateCBV_SRV_Sampler(cam_pos, look_at, up, mesh,light_pos);
+    for (int i = 0; i < mesh.GetMaterials().size(); i++) {
+        TGAImage image = mesh.GetMaterials()[i].diffuseTexture;
+       if (not(mesh.GetMaterials()[i].hasDiffuseTexture)) {
+            image = dummy_; }
+        LoadTextureFromTGA(image, i);
+    }
     CreateVertexBuffer(mesh);
+    CompileShaders();
     CreatePipelineStateObject();
 }
-void Renderer::RenderFrame() {
+void Renderer::RenderFrame(Model& mesh) {
     //Reset
     command_allocator_->Reset();
     command_list_->Reset(command_allocator_.Get(), pipeline_state_.Get());
@@ -815,8 +821,27 @@ void Renderer::RenderFrame() {
     command_list_->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
 
     //Draw
-    command_list_->DrawInstanced(vertex_count_, 1, 0, 0);
-
+    for (const auto& submesh : mesh.GetSubMeshes()) {
+        // Set the SRV for this submesh's material
+        LightConstants lightData{};
+        MaterialData material = mesh.GetMaterials()[submesh.materialIndex];
+        lightData.ambient_k = material.ambient_k.x;
+        lightData.diffuse_k = material.diffuse_k.x;
+        lightData.specular_k = material.specular_k.x;
+        lightData.shiny_k = material.shiny_k;
+        lightData.pad3[0] = lightData.pad3[1] = lightData.pad3[2] = 0.0f;
+        memcpy(light_cb_mapped_, &lightData, sizeof(LightConstants));
+        D3D12_GPU_DESCRIPTOR_HANDLE texHandle = cbv_srv_uav_heap_->GetGPUDescriptorHandleForHeapStart();
+        texHandle.ptr += (2+ submesh.materialIndex)* cbv_srv_uav_descriptor_size_;
+        command_list_->SetGraphicsRootDescriptorTable(2, texHandle);
+        // Draw
+        command_list_->DrawInstanced(
+            static_cast<UINT>(submesh.vertexCount),
+            1,
+            static_cast<UINT>(submesh.startVertex),
+            0
+        );
+    }
     //Resolve MSAA rt RENDER_TARGET-> RESOLVE_SOURCE
     D3D12_RESOURCE_BARRIER preResolveBarrier = {
         D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,

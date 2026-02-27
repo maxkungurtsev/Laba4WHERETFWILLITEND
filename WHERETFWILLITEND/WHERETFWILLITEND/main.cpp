@@ -11,18 +11,18 @@ const int depth = 1000;
 int texture_width = 800;
 int texture_height = 800;
 //light stuff
-const float intensity = 5.0;
-XMFLOAT3 light_coords = {2.0, 0.0, 0.0};
+const float intensity = 0.1;
+XMFLOAT3 light_coords = {10.0, 10.0, 10.0};
 //camera stuff
-const XMVECTOR cam_coords = {500.0, 500.0, 500.0, 1.0};
-const XMVECTOR look_at = {0.0, 0.0, 0.0, 1.0};
+const XMVECTOR cam_coords = {-7.5, 0.0, 5.0, 1.0};
+const XMVECTOR look_at = {-3.0, -1.0, 0.0, 1.0};
 const XMVECTOR up = {0.0, 1.0, 0.0, 1.0 };
 // material stuff
-const float ambient_k = 0.1;
+const float ambient_k = 0.3;
 const float diffuse_k = 0.5;
-const float specular_k = 0.5;
-const float shiny_k = 0.8;
-int Run() {
+const float specular_k = 0.8;
+const float shiny_k = 32;
+int Run(Model &mesh) {
     MSG msg = {};
     bool running = true;
     while (running) {
@@ -40,7 +40,7 @@ int Run() {
         else if (g_Input.IsKeyDown(VK_SPACE)) {
             MessageBox(nullptr, L"Space detected!", L"Input Test", MB_OK);
         }
-       g_Renderer.RenderFrame();
+       g_Renderer.RenderFrame(mesh);
     }
     return (int)msg.wParam;
 }
@@ -52,9 +52,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow){
     //init input device
     g_Input.Initialize(g_Window.GetHWND());
     //catch messege stuff
-    Model mesh("african_head.obj","african_head_diffuse.tga"); // загружаем модель и текстуру
-    g_Renderer.Initialize(width,height,2, g_Window.GetHWND(),mesh, cam_coords, look_at, up, light_coords, ambient_k, diffuse_k, specular_k, shiny_k, intensity);
+    Model mesh("bean.obj"); // загружаем модель и материалы и текстуры и вообще пздц
+    g_Renderer.Initialize(width,height,2, g_Window.GetHWND(),mesh, cam_coords, look_at, up, light_coords);
 
-    int messege = Run();
+    int messege = Run(mesh);
     return static_cast<int>(messege);
 }

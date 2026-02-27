@@ -4,12 +4,15 @@ SamplerState samplerState : register(s0);
 cbuffer Light : register(b1)
 {
     float3 lightPos;
+    float pad;
     float3 cameraPos;
+    float pad1;
     float ambient_k;
     float diffuse_k;
     float specular_k;
     float shiny_k;
     float intensity;
+    float pad3;
 };
 
 struct PS_IN
@@ -25,10 +28,12 @@ float4 main(PS_IN input) : SV_TARGET
     float3 N = normalize(input.normal);
     float3 L = normalize(lightPos - input.worldPos);
     float3 V = normalize(cameraPos - input.worldPos);
-    float diff = max(dot(N, L), 0);
+    float diff = max(dot(N, L), 0)*diffuse_k;
     float3 R = reflect(-L, N);
-    float spec = pow(max(dot(R, V), 0), 32);
-    float4 texColor = diffuseMap.Sample(samplerState, input.uv);
-    float4 finalColor = texColor * diff + float4(spec, spec, spec, 0);
-    return float4(input.uv.x, input.uv.y, input.uv.x, 1.0);
+    float spec = specular_k*pow(max(dot(R, V), 0), shiny_k);
+    float2 uv = frac(input.uv);
+    float4 texColor = diffuseMap.Sample(samplerState, uv);
+    float4 finalColor = texColor* (diff + ambient_k) + float4(spec, spec, spec, 0);
+    return finalColor;
+    û
 }
