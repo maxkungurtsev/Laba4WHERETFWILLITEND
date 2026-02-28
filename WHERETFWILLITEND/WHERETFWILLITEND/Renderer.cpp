@@ -356,6 +356,7 @@ void Renderer::CreateCBV_SRV_Sampler(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTO
     heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
     heapProps.CreationNodeMask = 1;
     heapProps.VisibleNodeMask = 1;
+
     D3D12_RESOURCE_DESC resDesc{};
     resDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
     resDesc.Alignment = 0;
@@ -435,9 +436,9 @@ void Renderer::CreateCBV_SRV_Sampler(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTO
     XMStoreFloat3(&camera_position, cam_pos);
     lightData.lightPos = light_pos;
     lightData.cameraPos = camera_position;
-    lightData.ambient_k = 0.3;
-    lightData.diffuse_k = 0.5;
-    lightData.specular_k = 0.8;
+    lightData.ambient_k = XMFLOAT4(0.1f, 0.1f, 0.1f, 0.1f);
+    lightData.diffuse_k = XMFLOAT4(0.3f, 0.3f, 0.3f, 0.3f);
+    lightData.specular_k = XMFLOAT4(0.8f, 0.8f, 0.8f, 0.8f);
     lightData.shiny_k = 32;
     lightData.intensity = 10;
     lightData.pad3[0] = lightData.pad3[1] = lightData.pad3[2] = 0.0f;
@@ -529,6 +530,17 @@ void Renderer::CompileShaders() {
             OutputDebugStringA("Shader compile failed, but no error message was produced.");
         }
         throw std::runtime_error("Failed to compile vertex shader");
+    }
+    hr = D3DCompileFromFile(L"VertexShader_anim_.hlsl", nullptr, nullptr, "main", "vs_5_0", 0, 0, &vertex_shader_anim_, &errorBlob);
+    if (FAILED(hr)) {
+        if (errorBlob) {
+            std::cerr << "Shader compile error: ";
+            OutputDebugStringA((char*)errorBlob->GetBufferPointer());
+        }
+        else {
+            OutputDebugStringA("Shader compile failed, but no error message was produced.");
+        }
+        throw std::runtime_error("Failed to compile vertex shader with animation");
     }
     hr = D3DCompileFromFile(L"PixelShader.hlsl", nullptr, nullptr, "main", "ps_5_0", 0, 0, &pixel_shader_, &errorBlob);
     if (FAILED(hr)){
@@ -654,6 +666,121 @@ void Renderer::CreatePipelineStateObject() {
         throw std::runtime_error(oss2.str());
     }
 };
+void Renderer::CreatePipelineStateObjectAnim() {
+    D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
+    psoDesc.InputLayout = { input_layout_.data(), (UINT)input_layout_.size() };
+    psoDesc.pRootSignature = root_signature_.Get();
+    psoDesc.VS = { vertex_shader_anim_->GetBufferPointer(), vertex_shader_anim_->GetBufferSize() };
+    psoDesc.PS = { pixel_shader_->GetBufferPointer(), pixel_shader_->GetBufferSize() };
+    psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
+    psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+    psoDesc.RasterizerState.FrontCounterClockwise = FALSE;
+    psoDesc.RasterizerState.DepthClipEnable = TRUE;
+    psoDesc.BlendState.AlphaToCoverageEnable = FALSE;
+    psoDesc.BlendState.IndependentBlendEnable = FALSE;
+    const D3D12_RENDER_TARGET_BLEND_DESC defaultBlend = { FALSE,FALSE,
+        D3D12_BLEND_ONE,D3D12_BLEND_ZERO,D3D12_BLEND_OP_ADD,
+        D3D12_BLEND_ONE,D3D12_BLEND_ZERO,D3D12_BLEND_OP_ADD,
+        D3D12_LOGIC_OP_NOOP,
+        D3D12_COLOR_WRITE_ENABLE_ALL
+    };
+    for (int i = 0; i < 8; ++i) {
+        psoDesc.BlendState.RenderTarget[i] = defaultBlend;
+    }
+    psoDesc.DepthStencilState.DepthEnable = TRUE;
+    psoDesc.DepthStencilState.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+    psoDesc.DepthStencilState.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+    psoDesc.DepthStencilState.StencilEnable = FALSE;
+    psoDesc.SampleMask = UINT_MAX;
+    psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
+    psoDesc.NumRenderTargets = 1;
+    psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+    psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
+    psoDesc.SampleDesc.Count = sample_amount_;
+    psoDesc.SampleDesc.Quality = msaa_quality_;
+    //RasterizerState
+    D3D12_RASTERIZER_DESC rasterDesc{};
+    rasterDesc.FillMode = D3D12_FILL_MODE_SOLID;
+    rasterDesc.CullMode = D3D12_CULL_MODE_BACK;
+    rasterDesc.FrontCounterClockwise = FALSE;
+    rasterDesc.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
+    rasterDesc.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
+    rasterDesc.SlopeScaledDepthBias = D3D12_DEFAULT_SLOPE_SCALED_DEPTH_BIAS;
+    rasterDesc.DepthClipEnable = TRUE;
+    rasterDesc.MultisampleEnable = FALSE;
+    rasterDesc.AntialiasedLineEnable = FALSE;
+    rasterDesc.ForcedSampleCount = 0;
+    rasterDesc.ConservativeRaster = D3D12_CONSERVATIVE_RASTERIZATION_MODE_OFF;
+    psoDesc.RasterizerState = rasterDesc;
+    //blend state
+    D3D12_BLEND_DESC blendDesc{};
+    blendDesc.AlphaToCoverageEnable = FALSE;
+    blendDesc.IndependentBlendEnable = FALSE;
+    D3D12_RENDER_TARGET_BLEND_DESC rtBlend{};
+    rtBlend.BlendEnable = FALSE;
+    rtBlend.LogicOpEnable = FALSE;
+    rtBlend.SrcBlend = D3D12_BLEND_ONE;
+    rtBlend.DestBlend = D3D12_BLEND_ZERO;
+    rtBlend.BlendOp = D3D12_BLEND_OP_ADD;
+    rtBlend.SrcBlendAlpha = D3D12_BLEND_ONE;
+    rtBlend.DestBlendAlpha = D3D12_BLEND_ZERO;
+    rtBlend.BlendOpAlpha = D3D12_BLEND_OP_ADD;
+    rtBlend.LogicOp = D3D12_LOGIC_OP_NOOP;
+    rtBlend.RenderTargetWriteMask = D3D12_COLOR_WRITE_ENABLE_ALL;
+    for (int i = 0; i < 8; ++i) {
+        blendDesc.RenderTarget[i] = rtBlend;
+    }
+    psoDesc.BlendState = blendDesc;
+    //DepthStencilState
+    D3D12_DEPTH_STENCIL_DESC depthDesc{};
+    depthDesc.DepthEnable = TRUE;
+    depthDesc.DepthWriteMask = D3D12_DEPTH_WRITE_MASK_ALL;
+    depthDesc.DepthFunc = D3D12_COMPARISON_FUNC_LESS;
+    depthDesc.StencilEnable = FALSE;
+    depthDesc.StencilReadMask = D3D12_DEFAULT_STENCIL_READ_MASK;
+    depthDesc.StencilWriteMask = D3D12_DEFAULT_STENCIL_WRITE_MASK;
+    depthDesc.FrontFace.StencilFailOp = D3D12_STENCIL_OP_KEEP;
+    depthDesc.FrontFace.StencilDepthFailOp = D3D12_STENCIL_OP_KEEP;
+    depthDesc.FrontFace.StencilPassOp = D3D12_STENCIL_OP_KEEP;
+    depthDesc.FrontFace.StencilFunc = D3D12_COMPARISON_FUNC_ALWAYS;
+    depthDesc.BackFace = depthDesc.FrontFace;
+    psoDesc.DepthStencilState = depthDesc;
+    // D E B U G  T I M E
+    if (!root_signature_) OutputDebugStringA("root_signature_ == null\n");
+    if (!vertex_shader_anim_) OutputDebugStringA("vertex_shader_ == null\n");
+    if (!pixel_shader_) OutputDebugStringA("pixel_shader_ == null\n");
+    {
+        std::ostringstream ss;
+        ss << "VS size: " << (vertex_shader_anim_ ? vertex_shader_anim_->GetBufferSize() : 0)
+            << ", PS size: " << (pixel_shader_ ? pixel_shader_->GetBufferSize() : 0) << "\n";
+        OutputDebugStringA(ss.str().c_str());
+    }
+    if (input_layout_.empty()) OutputDebugStringA("input_layout_ empty\n");
+    {
+        std::ostringstream s2;
+        s2 << "RTVFormat: " << psoDesc.RTVFormats[0] << " DSVFormat: " << psoDesc.DSVFormat << " SampleCount: " << psoDesc.SampleDesc.Count << "\n";
+        OutputDebugStringA(s2.str().c_str());
+    }
+    std::ostringstream oss;
+    oss << "Creating PSO with parameters:\n";
+    oss << "NumRenderTargets: " << psoDesc.NumRenderTargets << "\n";
+    oss << "RTVFormats[0]: " << psoDesc.RTVFormats[0] << "\n";
+    oss << "DSVFormat: " << psoDesc.DSVFormat << "\n";
+    oss << "SampleCount: " << psoDesc.SampleDesc.Count << "\n";
+    oss << "InputLayout.Elements: " << psoDesc.InputLayout.NumElements << "\n";
+    oss << "RootSignature: " << (psoDesc.pRootSignature ? "valid" : "nullptr") << "\n";
+    oss << "VS Size: " << psoDesc.VS.BytecodeLength << "\n";
+    oss << "PS Size: " << psoDesc.PS.BytecodeLength << "\n";
+    OutputDebugStringA(oss.str().c_str());
+
+    HRESULT hr = device_->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipeline_state_anim_));
+    if (FAILED(hr)) {
+        std::ostringstream oss2;
+        oss2 << "CreateGraphicsPipelineState failed. HRESULT = 0x" << std::hex << hr << "\n";
+        OutputDebugStringA(oss2.str().c_str());
+        throw std::runtime_error(oss2.str());
+    }
+};
 ///////////////
 void Renderer::CreateVertexBuffer(Model& model){
     const std::vector<Vertex>& vertices = model.GetVertices();
@@ -741,16 +868,23 @@ void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd, M
         TGAImage image = mesh.GetMaterials()[i].diffuseTexture;
        if (not(mesh.GetMaterials()[i].hasDiffuseTexture)) {
             image = dummy_; }
+       if (image.get_height()==0 or image.get_width() == 0) {
+           image = dummy_;
+           OutputDebugStringA(mesh.GetMaterials()[i].diffuseTexPath.c_str());
+       }
+
         LoadTextureFromTGA(image, i);
     }
     CreateVertexBuffer(mesh);
     CompileShaders();
     CreatePipelineStateObject();
+    CreatePipelineStateObjectAnim();
 }
-void Renderer::RenderFrame(Model& mesh, float time) {
+void Renderer::RenderFrame(Model& mesh, float time, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up) {
     //Reset
     command_allocator_->Reset();
     command_list_->Reset(command_allocator_.Get(), pipeline_state_.Get());
+    //command_list_->Reset(command_allocator_.Get(), pipeline_state_anim_.Get());
     //resourse barriers
     D3D12_RESOURCE_BARRIER barriersBegin[2];
     UINT barrierCount = 0;
@@ -823,19 +957,29 @@ void Renderer::RenderFrame(Model& mesh, float time) {
 
     //Draw
     LightConstants lightData{};
-    lightData.time = time;
-    OutputDebugStringA(std::to_string(time).c_str());
-    OutputDebugStringA(" ");
+    MVPConstants mvpData{};
+    XMStoreFloat4x4(&mvpData.model, XMMatrixIdentity());
+    // view
+    XMStoreFloat4x4(&mvpData.view, XMMatrixLookAtLH(cam_pos, look_at, up));
+    // projection
+    XMStoreFloat4x4(&mvpData.projection, XMMatrixPerspectiveFovLH(XM_PIDIV4, float(width_) / float(height_), 0.1f, 1000.0f));
     for (const auto& submesh : mesh.GetSubMeshes()) {
         // Set the SRV for this submesh's material
-        
         MaterialData material = mesh.GetMaterials()[submesh.materialIndex];
-        lightData.ambient_k = material.ambient_k.x;
-        lightData.diffuse_k = material.diffuse_k.x;
-        lightData.specular_k = material.specular_k.x;
+        lightData.ambient_k = XMFLOAT4(material.ambient_k.x, material.ambient_k.y, material.ambient_k.z, 1.0f);
+        lightData.diffuse_k = XMFLOAT4(material.diffuse_k.x, material.diffuse_k.y, material.diffuse_k.z, 1.0f);
+        lightData.specular_k = XMFLOAT4(material.specular_k.x, material.specular_k.y, material.specular_k.z, 1.0f);
         lightData.shiny_k = material.shiny_k;
         lightData.pad3[0] = lightData.pad3[1] = lightData.pad3[2] = 0.0f;
         memcpy(light_cb_mapped_, &lightData, sizeof(LightConstants));
+        mvpData.time = time;
+        memcpy(mvp_cb_mapped_, &mvpData, sizeof(MVPConstants));
+        if (material.diffuseTexPath=="textures/sponza_thorn_diff.tga" or material.diffuseTexPath == "textures/vase_plant.tga")
+        {
+            command_list_->SetPipelineState(pipeline_state_anim_.Get());
+        }else{
+           command_list_->SetPipelineState(pipeline_state_.Get());
+        }
         D3D12_GPU_DESCRIPTOR_HANDLE texHandle = cbv_srv_uav_heap_->GetGPUDescriptorHandleForHeapStart();
         texHandle.ptr += (2+ submesh.materialIndex)* cbv_srv_uav_descriptor_size_;
         command_list_->SetGraphicsRootDescriptorTable(2, texHandle);

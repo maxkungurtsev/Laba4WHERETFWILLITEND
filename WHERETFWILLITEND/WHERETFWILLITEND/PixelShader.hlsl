@@ -7,9 +7,9 @@ cbuffer Light : register(b1)
     float pad;
     float3 cameraPos;
     float pad1;
-    float ambient_k;
-    float diffuse_k;
-    float specular_k;
+    float4 ambient_k;
+    float4 diffuse_k;
+    float4 specular_k;
     float shiny_k;
     float intensity;
     float pad3;
@@ -29,11 +29,11 @@ float4 main(PS_IN input) : SV_TARGET
     float3 N = normalize(input.normal);
     float3 L = normalize(lightPos - input.worldPos);
     float3 V = normalize(cameraPos - input.worldPos);
-    float diff = max(dot(N, L), 0)*diffuse_k;
+    float4 diff = diffuse_k * max(dot(N, L), 0);
     float3 R = reflect(-L, N);
-    float spec = specular_k*pow(max(dot(R, V), 0), shiny_k);
-    float2 uv = frac(input.uv+time)*2;
+    float4 spec = specular_k * pow(max(dot(R, V), 0), shiny_k);
+    float2 uv = input.uv+time;
     float4 texColor = diffuseMap.Sample(samplerState, uv);
-    float4 finalColor = texColor* (diff + ambient_k) + float4(spec, spec, spec, 0);
-    return finalColor;
+    float3 finalRGB = texColor * (ambient_k + diff) + spec +float3(0.1, 0.1, 0.1);
+    return float4(finalRGB, texColor.a);
 }

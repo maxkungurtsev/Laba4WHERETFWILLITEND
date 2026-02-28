@@ -13,10 +13,10 @@ int texture_width = 800;
 int texture_height = 800;
 //light stuff
 const float intensity = 0.1;
-XMFLOAT3 light_coords = {10.0, 10.0, 10.0};
+XMFLOAT3 light_coords = {0.0, 10.0, 10.0};
 //camera stuff
-const XMVECTOR cam_coords = {-7.5, 0.0, 5.0, 1.0};
-const XMVECTOR look_at = {-3.0, -1.0, 0.0, 1.0};
+const XMVECTOR cam_coords = {0.0, 2.0, -5.0, 1.0};
+const XMVECTOR look_at = {5.0, 5.0, 0.0, 1.0};
 const XMVECTOR up = {0.0, 1.0, 0.0, 1.0 };
 // material stuff
 const float ambient_k = 0.3;
@@ -49,7 +49,7 @@ int Run(Model &mesh) {
        lastTime = currentTime;
        time += deltaTime;
        time = std::fmod(time, 4.0f);
-       g_Renderer.RenderFrame(mesh, time);
+       g_Renderer.RenderFrame(mesh, time, cam_coords, look_at, up);
     }
     return (int)msg.wParam;
 }
@@ -61,7 +61,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow){
     //init input device
     g_Input.Initialize(g_Window.GetHWND());
     //catch messege stuff
-    Model mesh("bean.obj"); // загружаем модель и материалы и текстуры и вообще пздц
+    Model mesh("sponza.obj"); // загружаем модель и материалы и текстуры и вообще пздц
     g_Renderer.Initialize(width,height,2, g_Window.GetHWND(),mesh, cam_coords, look_at, up, light_coords);
 
     int messege = Run(mesh);

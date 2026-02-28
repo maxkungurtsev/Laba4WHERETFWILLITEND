@@ -43,7 +43,7 @@ Model::Model(const std::string& filename)
             mat->GetTexture(aiTextureType_DIFFUSE, 0, &path);
             outMat.diffuseTexPath = path.C_Str();
             outMat.hasDiffuseTexture = true;
-            outMat.diffuseTexture.read_tga_file(std::string("bean.tga").c_str());
+            outMat.diffuseTexture.read_tga_file(outMat.diffuseTexPath.c_str());
         }
     }
     // meshs

@@ -3,6 +3,8 @@ cbuffer MVP : register(b0)
     float4x4 model;
     float4x4 view;
     float4x4 projection;
+    float time;
+    float pad[3];
 };
 
 struct VS_IN {
@@ -21,6 +23,7 @@ struct VS_OUT {
 VS_OUT main(VS_IN input)
 {
     VS_OUT output;
+    
     float4 worldPosition = mul(model, float4(input.pos,1.0));
     output.pos = mul(projection, mul(view, worldPosition));
     output.worldPos = worldPosition.xyz;

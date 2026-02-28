@@ -15,20 +15,22 @@ struct alignas(256) MVPConstants{
     XMFLOAT4X4 model;
     XMFLOAT4X4 view;
     XMFLOAT4X4 projection;
+    float time;
+    float pad[3];
 };
 struct alignas(256) LightConstants{
     XMFLOAT3 lightPos;
     float pad1;
     XMFLOAT3 cameraPos;
     float pad2;
-    float ambient_k=0.1f;
-    float diffuse_k=0.5f;
-    float specular_k=0.5f;
+    XMFLOAT4 ambient_k= XMFLOAT4(0.1f, 0.1f, 0.1f, 0.1f);
+    XMFLOAT4 diffuse_k= XMFLOAT4(0.1f, 0.1f, 0.1f, 0.1f);
+    XMFLOAT4 specular_k=XMFLOAT4(0.1f, 0.1f, 0.1f, 0.1f);
     float shiny_k = 0.8f;
     float intensity=5.0f;
     float pad4 = 0.0;
     float time;
-    float pad3[3];
+    float pad3[3] = {0.0,0.0,0.0};
 };
 
 class Renderer
@@ -59,10 +61,12 @@ private:
     UINT current_backbuffer_ = 0;
     ComPtr<ID3D12RootSignature> root_signature_;
     ComPtr<ID3D12PipelineState> pipeline_state_;
+    ComPtr<ID3D12PipelineState> pipeline_state_anim_;
     std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout_;
     ComPtr<ID3D12Resource> vertex_buffer_;
     D3D12_VERTEX_BUFFER_VIEW vertex_buffer_view_;
     ComPtr<ID3DBlob> vertex_shader_;
+    ComPtr<ID3DBlob> vertex_shader_anim_;
     ComPtr<ID3DBlob> pixel_shader_;
     ComPtr<ID3D12Resource> mvp_cb_;
     ComPtr<ID3D12Resource> light_cb_;
@@ -104,6 +108,7 @@ private:
     // graphic pipeline bull****
     void CreateRootSignature(int textures_amount);
     void CreatePipelineStateObject();
+    void CreatePipelineStateObjectAnim();
     void CreateVertexBuffer(Model& mesh);
     void CompileShaders();
     void CreateCBV_SRV_Sampler(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, Model mesh, XMFLOAT3 light_pos);
@@ -114,5 +119,5 @@ private:
     void CreateMSAARenderTarget();
 public:
     void Initialize(UINT width, UINT height, int frame_count, HWND hwnd, Model& mesh, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, XMFLOAT3 light_pos);
-    void RenderFrame(Model& mesh, float time);
+    void RenderFrame(Model& mesh, float time, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up);
 };
