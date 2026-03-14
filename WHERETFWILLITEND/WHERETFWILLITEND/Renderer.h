@@ -1,41 +1,10 @@
 #pragma once
-#include <d3d12.h> 
-#include <dxgi1_6.h>
-#include <windows.h>
-#include <wrl.h>  
-#include <d3dcompiler.h>
-#include <iostream>
-#include <vector>
-#include <sstream>
-#include "Window.h"
-#include "Model.h"
-using Microsoft::WRL::ComPtr;
-
-struct alignas(256) MVPConstants{
-    XMFLOAT4X4 model;
-    XMFLOAT4X4 view;
-    XMFLOAT4X4 projection;
-    float time;
-    float pad[3];
-};
-struct alignas(256) LightConstants{
-    XMFLOAT3 lightPos;
-    float pad1;
-    XMFLOAT3 cameraPos;
-    float pad2;
-    XMFLOAT4 ambient_k= XMFLOAT4(0.1f, 0.1f, 0.1f, 0.1f);
-    XMFLOAT4 diffuse_k= XMFLOAT4(0.1f, 0.1f, 0.1f, 0.1f);
-    XMFLOAT4 specular_k=XMFLOAT4(0.1f, 0.1f, 0.1f, 0.1f);
-    float shiny_k = 0.8f;
-    float intensity=5.0f;
-    float pad4 = 0.0;
-    float time;
-    float pad3[3] = {0.0,0.0,0.0};
-};
+#include "RenderingSystem.h"
 
 class Renderer
 {
 private:
+    RenderingSystem render_system_;
     ComPtr<ID3D12Device> device_;
     ComPtr<IDXGISwapChain3> swap_chain_;
     ComPtr<ID3D12CommandQueue> command_queue_;

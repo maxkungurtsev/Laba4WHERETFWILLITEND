@@ -848,37 +848,12 @@ void Renderer::CreateInputLayout(){
 
 
 void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd, Model& mesh, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, XMFLOAT3 light_pos){
-    dummy_.read_tga_file("dummy.tga");
     EnableDebugLayer();
     CreateGraphicsDevice(width, height, frame_count);
     CreateFence();
-    check4XMSAA();
-    AskDescryptorSizes();
-    CreateHeaps(mesh.GetMaterials().size());
     CreateCommandStuff();
     CreateSwapChain(hwnd);
-    CreateRTV();
-    CreateMSAARenderTarget();
-    CreateZBuffer();
-    ViewportScissorSetup();
-    CreateRootSignature(mesh.GetMaterials().size());
-    CreateInputLayout();
-    CreateCBV_SRV_Sampler(cam_pos, look_at, up, mesh,light_pos);
-    for (int i = 0; i < mesh.GetMaterials().size(); i++) {
-        TGAImage image = mesh.GetMaterials()[i].diffuseTexture;
-       if (not(mesh.GetMaterials()[i].hasDiffuseTexture)) {
-            image = dummy_; }
-       if (image.get_height()==0 or image.get_width() == 0) {
-           image = dummy_;
-           OutputDebugStringA(mesh.GetMaterials()[i].diffuseTexPath.c_str());
-       }
-
-        LoadTextureFromTGA(image, i);
-    }
-    CreateVertexBuffer(mesh);
-    CompileShaders();
-    CreatePipelineStateObject();
-    CreatePipelineStateObjectAnim();
+    render_system_.Initialize(width, height_, frame_count, mesh, cam_pos, look_at, up, light_pos, device_, swap_chain_, command_queue_, command_allocator_, fence_, fence_value_);
 }
 void Renderer::RenderFrame(Model& mesh, float time, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up) {
     //Reset
@@ -899,112 +874,10 @@ void Renderer::RenderFrame(Model& mesh, float time, XMVECTOR cam_pos, XMVECTOR l
             D3D12_RESOURCE_STATE_RESOLVE_DEST
         }
     };
-    //MSAA rt RESOLVE_SOURCE -> RENDER_TARGET
-    if (!first_frame_) {
-        barriersBegin[barrierCount++] = {
-            D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
-            D3D12_RESOURCE_BARRIER_FLAG_NONE,
-            {
-                msaa_render_target_.Get(),
-                D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
-                D3D12_RESOURCE_STATE_RESOLVE_SOURCE,
-                D3D12_RESOURCE_STATE_RENDER_TARGET
-            }
-        };
-    }
     command_list_->ResourceBarrier(barrierCount, barriersBegin);
-    //Viewport / Scissor
-    command_list_->RSSetViewports(1, &viewport_);
-    command_list_->RSSetScissorRects(1, &scissor_rect_);
-    //RTV / DSV (MSAA rt instead of back buffer)
-    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsv_heap_->GetCPUDescriptorHandleForHeapStart();
-    command_list_->OMSetRenderTargets(1, &msaa_rtv_handle_, FALSE, &dsvHandle);
-    //Clear MSAA rt and DSV
-    const float clearColor[] = { 0.2f, 0.4f, 0.6f, 1.0f };
-    command_list_->ClearRenderTargetView(msaa_rtv_handle_, clearColor, 0, nullptr);
-    command_list_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-    //PSO Root Signature
-    command_list_->SetPipelineState(pipeline_state_.Get());
-    command_list_->SetGraphicsRootSignature(root_signature_.Get());
-    //Descriptor heaps
-    ID3D12DescriptorHeap* heaps[] = {
-        cbv_srv_uav_heap_.Get(),
-        sampler_heap_.Get()
-    };
-    command_list_->SetDescriptorHeaps(_countof(heaps), heaps);
-    //Root descriptor tables
-    D3D12_GPU_DESCRIPTOR_HANDLE handle =
-        cbv_srv_uav_heap_->GetGPUDescriptorHandleForHeapStart();
+    
+    render_system_.RenderFrame(mesh,time, cam_pos, look_at, up);
 
-    //MVP CBV
-    command_list_->SetGraphicsRootDescriptorTable(0, handle);
-    handle.ptr += cbv_srv_uav_descriptor_size_;
-
-    //Light CBV
-    command_list_->SetGraphicsRootDescriptorTable(1, handle);
-    handle.ptr += cbv_srv_uav_descriptor_size_;
-
-    //Texture SRV
-    command_list_->SetGraphicsRootDescriptorTable(2, handle);
-
-    //Sampler
-    command_list_->SetGraphicsRootDescriptorTable(
-        3, sampler_heap_->GetGPUDescriptorHandleForHeapStart());
-
-    //IA
-    command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    command_list_->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
-
-    //Draw
-    LightConstants lightData{};
-    MVPConstants mvpData{};
-    XMStoreFloat4x4(&mvpData.model, XMMatrixIdentity());
-    // view
-    XMStoreFloat4x4(&mvpData.view, XMMatrixLookAtLH(cam_pos, look_at, up));
-    // projection
-    XMStoreFloat4x4(&mvpData.projection, XMMatrixPerspectiveFovLH(XM_PIDIV4, float(width_) / float(height_), 0.1f, 1000.0f));
-    for (const auto& submesh : mesh.GetSubMeshes()) {
-        // Set the SRV for this submesh's material
-        MaterialData material = mesh.GetMaterials()[submesh.materialIndex];
-        lightData.ambient_k = XMFLOAT4(material.ambient_k.x, material.ambient_k.y, material.ambient_k.z, 1.0f);
-        lightData.diffuse_k = XMFLOAT4(material.diffuse_k.x, material.diffuse_k.y, material.diffuse_k.z, 1.0f);
-        lightData.specular_k = XMFLOAT4(material.specular_k.x, material.specular_k.y, material.specular_k.z, 1.0f);
-        lightData.shiny_k = material.shiny_k;
-        lightData.pad3[0] = lightData.pad3[1] = lightData.pad3[2] = 0.0f;
-        memcpy(light_cb_mapped_, &lightData, sizeof(LightConstants));
-        mvpData.time = time;
-        memcpy(mvp_cb_mapped_, &mvpData, sizeof(MVPConstants));
-        if (material.diffuseTexPath=="textures/sponza_thorn_diff.tga" or material.diffuseTexPath == "textures/vase_plant.tga")
-        {
-            command_list_->SetPipelineState(pipeline_state_anim_.Get());
-        }else{
-           command_list_->SetPipelineState(pipeline_state_.Get());
-        }
-        D3D12_GPU_DESCRIPTOR_HANDLE texHandle = cbv_srv_uav_heap_->GetGPUDescriptorHandleForHeapStart();
-        texHandle.ptr += (2+ submesh.materialIndex)* cbv_srv_uav_descriptor_size_;
-        command_list_->SetGraphicsRootDescriptorTable(2, texHandle);
-        // Draw
-        command_list_->DrawInstanced(
-            static_cast<UINT>(submesh.vertexCount),
-            1,
-            static_cast<UINT>(submesh.startVertex),
-            0
-        );
-    }
-    //Resolve MSAA rt RENDER_TARGET-> RESOLVE_SOURCE
-    D3D12_RESOURCE_BARRIER preResolveBarrier = {
-        D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
-        D3D12_RESOURCE_BARRIER_FLAG_NONE,
-        {
-            msaa_render_target_.Get(),
-            D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
-            D3D12_RESOURCE_STATE_RENDER_TARGET,
-            D3D12_RESOURCE_STATE_RESOLVE_SOURCE
-        }
-    };
-    command_list_->ResourceBarrier(1, &preResolveBarrier);
-    // Resolve -> back buffer
-    command_list_->ResolveSubresource(render_targets_[current_backbuffer_].Get(),0,msaa_render_target_.Get(),0, DXGI_FORMAT_R8G8B8A8_UNORM);
     //barrier back buffer RESOLVE_DEST -> PRESENT
     D3D12_RESOURCE_BARRIER postResolveBarrier = {
         D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
@@ -1037,6 +910,4 @@ void Renderer::RenderFrame(Model& mesh, float time, XMVECTOR cam_pos, XMVECTOR l
         WaitForSingleObject(eventHandle, INFINITE);
         CloseHandle(eventHandle);
     }
-
-    first_frame_ = false;
 }
