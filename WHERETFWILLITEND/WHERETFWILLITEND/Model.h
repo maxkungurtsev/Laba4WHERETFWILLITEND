@@ -28,6 +28,7 @@ struct SubMesh
     size_t vertexCount;
     size_t materialIndex;
 };
+
 class Model
 {
 public:
