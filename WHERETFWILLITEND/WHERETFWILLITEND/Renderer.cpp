@@ -144,7 +144,8 @@ void Renderer::CreateHeaps(int textures_amount){
     }
     D3D12_DESCRIPTOR_HEAP_DESC cbvDesc{};
     cbvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
-    cbvDesc.NumDescriptors = 2+ textures_amount;
+    // MAY BE ERROR CAUSE HARDCODED AMOUNT BUT I DONT GIVE A FUUUUUUUUUUUCK
+    cbvDesc.NumDescriptors = 100;
     cbvDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
     hr = device_->CreateDescriptorHeap(&cbvDesc, IID_PPV_ARGS(&cbv_srv_uav_heap_));
     if (FAILED(hr)) {
@@ -158,6 +159,7 @@ void Renderer::CreateHeaps(int textures_amount){
     if (FAILED(hr)) {
         throw std::runtime_error("Failed to create Sampler heap");
     }
+    /* not sure bout that one tho
     D3D12_DESCRIPTOR_HEAP_DESC msaaRtvDesc{};
     msaaRtvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
     msaaRtvDesc.NumDescriptors = 1; // 1 RTV for MSAA RT
@@ -167,6 +169,7 @@ void Renderer::CreateHeaps(int textures_amount){
     if (FAILED(hr)) {
         throw std::runtime_error("Failed to create MSAA RTV heap");
     }
+    */
 };
 
 void Renderer::CreateRTV() {
@@ -852,13 +855,13 @@ void Renderer::Initialize(UINT width, UINT height, int frame_count, HWND hwnd, M
     EnableDebugLayer();
     CreateGraphicsDevice(width, height, frame_count);
     CreateFence();
-    check4XMSAA();
+    //check4XMSAA();
     AskDescryptorSizes();
     CreateHeaps(mesh.GetMaterials().size());
     CreateCommandStuff();
     CreateSwapChain(hwnd);
     CreateRTV();
-    CreateMSAARenderTarget();
+    //CreateMSAARenderTarget();
     CreateZBuffer();
     ViewportScissorSetup();
     CreateRootSignature(mesh.GetMaterials().size());
