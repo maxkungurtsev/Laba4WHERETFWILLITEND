@@ -21,6 +21,9 @@ struct MaterialData
     std::string diffuseTexPath;
     bool hasDiffuseTexture = false;
     TGAImage diffuseTexture;
+    std::string normalTexPath;
+    bool hasNormalTexture = false;
+    TGAImage NormalTexture;
 };
 struct SubMesh
 {

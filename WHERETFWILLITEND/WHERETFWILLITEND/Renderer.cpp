@@ -173,7 +173,7 @@ void Renderer::CreateHeaps(int textures_amount){
 };
 
 void Renderer::CreateRTV() {
-    render_targets_ = std::vector<ComPtr<ID3D12Resource>> (frame_count_);
+    render_targets_ = std::vector<ComPtr<ID3D12Resource>> (frame_count_); 
     D3D12_CPU_DESCRIPTOR_HANDLE rtv_handle = rtv_heap_->GetCPUDescriptorHandleForHeapStart();
     for (UINT i = 0; i < frame_count_; i++){
         rtv_handle.ptr += SIZE_T(i) * rtv_descriptor_size_;
@@ -431,7 +431,7 @@ void Renderer::CreateCBV_SRV_Sampler(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTO
     // view
     XMStoreFloat4x4(&mvpData.view,XMMatrixLookAtLH(cam_pos, look_at, up));
     // projection
-    XMStoreFloat4x4(&mvpData.projection,XMMatrixPerspectiveFovLH(XM_PIDIV4,float(width_) / float(height_),0.1f,1000.0f));
+    XMStoreFloat4x4(&mvpData.projection,XMMatrixPerspectiveFovLH(XM_PIDIV4,float(width_) / float(height_),0.1f,10000.0f));
     memcpy(mvp_cb_mapped_, &mvpData, sizeof(MVPConstants));
     //filling up light
     LightConstants lightData{};
@@ -488,14 +488,17 @@ void Renderer::CreateRootSignature(int textures_amount) {
     rootParams[0].DescriptorTable.NumDescriptorRanges = 1;
     rootParams[0].DescriptorTable.pDescriptorRanges = &cbvRangeVS;
     rootParams[0].ShaderVisibility = D3D12_SHADER_VISIBILITY_VERTEX;
+
     rootParams[1].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParams[1].DescriptorTable.NumDescriptorRanges = 1;
     rootParams[1].DescriptorTable.pDescriptorRanges = &cbvRangePS;
     rootParams[1].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
     rootParams[2].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParams[2].DescriptorTable.NumDescriptorRanges = 1;
     rootParams[2].DescriptorTable.pDescriptorRanges = &srvRange;
     rootParams[2].ShaderVisibility = D3D12_SHADER_VISIBILITY_PIXEL;
+
     rootParams[3].ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
     rootParams[3].DescriptorTable.NumDescriptorRanges = 1;
     rootParams[3].DescriptorTable.pDescriptorRanges = &samplerRange;

@@ -1,0 +1,93 @@
+#include "Heaps.h"
+#include "Gdevice.h"
+void GHeaps::CreateGHeaps(int num_descriptors, std::shared_ptr<Gdevice> device) {
+		device_ = device;
+		rtv_descriptor_size_ = device_->GetDXDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
+		dsv_descriptor_size_ = device_->GetDXDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
+		cbv_srv_uav_descriptor_size_ = device_->GetDXDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
+		sampler_descriptor_size_ = device_->GetDXDevice()->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
+		D3D12_DESCRIPTOR_HEAP_DESC desc{};
+		desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_RTV;
+		desc.NumDescriptors = num_descriptors;
+		desc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_NONE;
+		desc.NodeMask = 0;
+		HRESULT hr = device_->GetDXDevice()->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&rtv_heap_));
+		if (FAILED(hr)) {
+			throw std::runtime_error("Failed to create RTV heap");
+		}
+		desc.NumDescriptors = num_descriptors;
+		desc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_DSV;
+		hr = device_->GetDXDevice()->CreateDescriptorHeap(&desc, IID_PPV_ARGS(&dsv_heap_));
+		if (FAILED(hr)) {
+			throw std::runtime_error("Failed to create DSV heap");
+		}
+		D3D12_DESCRIPTOR_HEAP_DESC cbvDesc{};
+		cbvDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV;
+		cbvDesc.NumDescriptors = num_descriptors;
+		cbvDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		hr = device_->GetDXDevice()->CreateDescriptorHeap(&cbvDesc, IID_PPV_ARGS(&cbv_srv_uav_heap_));
+		if (FAILED(hr)) {
+			throw std::runtime_error("Failed to create CBV, SRV and UAV heap");
+		}
+		D3D12_DESCRIPTOR_HEAP_DESC sampDesc{};
+		sampDesc.Type = D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER;
+		sampDesc.NumDescriptors = num_descriptors;
+		sampDesc.Flags = D3D12_DESCRIPTOR_HEAP_FLAG_SHADER_VISIBLE;
+		hr = device_->GetDXDevice()->CreateDescriptorHeap(&sampDesc, IID_PPV_ARGS(&sampler_heap_));
+		if (FAILED(hr)) {
+			throw std::runtime_error("Failed to create Sampler heap");
+		}
+}
+ComPtr<ID3D12DescriptorHeap> GHeaps::GetRTVHeap() {
+	return rtv_heap_;
+}
+ComPtr<ID3D12DescriptorHeap> GHeaps::GetDSVHeap() {
+	return dsv_heap_;
+}
+ComPtr<ID3D12DescriptorHeap> GHeaps::GetCBV_SRV_UAV_Heap() {
+	return cbv_srv_uav_heap_;
+}
+ComPtr<ID3D12DescriptorHeap> GHeaps::GetSamplerHeap() {
+	return sampler_heap_;
+}
+
+// In the begining God created SRV, CBV and RTV.
+D3D12_CPU_DESCRIPTOR_HANDLE GHeaps::CreateSRV_CPU(DXGI_FORMAT Format, ComPtr<ID3D12Resource> resourse) {
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = Format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+	D3D12_CPU_DESCRIPTOR_HANDLE handle = cbv_srv_uav_heap_->GetCPUDescriptorHandleForHeapStart();
+	handle.ptr += (cbv_srv_uav_amount_ * cbv_srv_uav_descriptor_size_);
+	cbv_srv_uav_amount_++;
+	device_->GetDXDevice()->CreateShaderResourceView(resourse.Get(), &srvDesc, handle);
+	return handle;
+};
+D3D12_CPU_DESCRIPTOR_HANDLE GHeaps::CreateCBV_CPU(ComPtr<ID3D12Resource> resourse, UINT size_in_bytes) {
+	//CBV desc
+	D3D12_CONSTANT_BUFFER_VIEW_DESC cbv_desc{};
+	cbv_desc.BufferLocation = resourse->GetGPUVirtualAddress();
+	cbv_desc.SizeInBytes = size_in_bytes; 
+	D3D12_CPU_DESCRIPTOR_HANDLE handle = cbv_srv_uav_heap_->GetCPUDescriptorHandleForHeapStart();
+	handle.ptr += (cbv_srv_uav_amount_ * cbv_srv_uav_descriptor_size_);
+	cbv_srv_uav_amount_++;
+	device_->GetDXDevice()->CreateConstantBufferView(&cbv_desc, handle);
+	return handle;
+}
+D3D12_CPU_DESCRIPTOR_HANDLE GHeaps::CreateRTV_CPU(ComPtr<ID3D12Resource> resourse) {
+	D3D12_CPU_DESCRIPTOR_HANDLE rtv_handle = rtv_heap_->GetCPUDescriptorHandleForHeapStart();
+	rtv_handle.ptr += (rtv_amount_ * rtv_descriptor_size_);
+	rtv_amount_++;
+	device_->GetDXDevice()->CreateRenderTargetView(resourse.Get(), nullptr, rtv_handle);
+	return rtv_handle;
+}
+
+D3D12_CPU_DESCRIPTOR_HANDLE GHeaps::CreateDSV_CPU(ComPtr<ID3D12Resource> resourse) {
+	D3D12_CPU_DESCRIPTOR_HANDLE handle = dsv_heap_->GetCPUDescriptorHandleForHeapStart();
+	handle.ptr += (dsv_amount_ * dsv_descriptor_size_);
+	device_->GetDXDevice()->CreateDepthStencilView(resourse.Get(), nullptr, handle);
+	return handle;
+};

@@ -126,17 +126,40 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Graphics\CBuffer.cpp" />
+    <ClCompile Include="Graphics\CMD.cpp" />
+    <ClCompile Include="Graphics\Gdevice.cpp" />
+    <ClCompile Include="Graphics\GFence.cpp" />
+    <ClCompile Include="Graphics\GResourse.cpp" />
+    <ClCompile Include="Graphics\GTexture.cpp" />
+    <ClCompile Include="Graphics\Heaps.cpp" />
+    <ClCompile Include="Graphics\RenderTarget.cpp" />
+    <ClCompile Include="Graphics\RootSignature.cpp" />
+    <ClCompile Include="Graphics\ZBuffer.cpp" />
     <ClCompile Include="InputDevice.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Model.cpp" />
+    <ClCompile Include="NEWRenderer.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="tgaimage.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="helper_classes.h" />
+    <ClInclude Include="Graphics\CBuffer.h" />
+    <ClInclude Include="Graphics\CMD.h" />
+    <ClInclude Include="Graphics\GBuffer.h" />
+    <ClInclude Include="Graphics\Gdevice.h" />
+    <ClInclude Include="Graphics\GFence.h" />
+    <ClInclude Include="Graphics\GResourse.h" />
+    <ClInclude Include="Graphics\GTexture.h" />
+    <ClInclude Include="Graphics\Heaps.h" />
+    <ClInclude Include="Graphics\PSO.h" />
+    <ClInclude Include="Graphics\RenderTarget.h" />
+    <ClInclude Include="Graphics\RootSignature.h" />
+    <ClInclude Include="Graphics\ZBuffer.h" />
     <ClInclude Include="InputDevice.h" />
     <ClInclude Include="Model.h" />
+    <ClInclude Include="NEWRenderer.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="tgaimage.h" />
     <ClInclude Include="Window.h" />

@@ -45,6 +45,14 @@ Model::Model(const std::string& filename)
             outMat.hasDiffuseTexture = true;
             outMat.diffuseTexture.read_tga_file(outMat.diffuseTexPath.c_str());
         }
+        if (mat->GetTextureCount(aiTextureType_NORMALS) > 0)
+        {
+            aiString path;
+            mat->GetTexture(aiTextureType_DIFFUSE, 0, &path);
+            outMat.normalTexPath = path.C_Str();
+            outMat.hasNormalTexture = true;
+            outMat.NormalTexture.read_tga_file(outMat.diffuseTexPath.c_str());
+        }
     }
     // meshs
     for (unsigned m = 0; m < scene->mNumMeshes; ++m){
