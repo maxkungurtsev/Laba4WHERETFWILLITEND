@@ -29,7 +29,7 @@ public:
 		resDesc.SampleDesc.Quality = 0;
 		resDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 		resDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
-		device->CreateID3DResourse(heapProps, resDesc, cb_);
+		device->CreateID3DResourse(heapProps, resDesc, cb_, D3D12_RESOURCE_STATE_GENERIC_READ);
 		//mapping
 		cb_->Map(0, nullptr, &cb_data_mapped_);
 		//CBV desc

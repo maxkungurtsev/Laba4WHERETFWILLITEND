@@ -2,9 +2,9 @@
 #include "Gdevice.h"
 CMD::CMD(ComPtr<ID3D12Device> device, D3D12_COMMAND_LIST_TYPE type) {
 	device_ = device;
+	CreateCMDAllocator(type);
 	CreateCMDList(type);
 	CreateCMDQueue(type);
-	CreateCMDAllocator(type);
 }
 void CMD::CreateCMDList(D3D12_COMMAND_LIST_TYPE type) {
 	HRESULT hr = device_->CreateCommandList(0, type, command_allocator_.Get(), nullptr, IID_PPV_ARGS(&command_list_));

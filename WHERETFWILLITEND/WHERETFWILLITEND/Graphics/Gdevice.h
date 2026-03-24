@@ -24,5 +24,5 @@ public:
 	Gdevice(UINT width, UINT height, int num_descriptors);
 	ComPtr<ID3D12Device> GetDXDevice();
 	void ViewportScissorSetup();
-	void CreateID3DResourse(D3D12_HEAP_PROPERTIES& heapProps, D3D12_RESOURCE_DESC& resdesc, ComPtr<ID3D12Resource> resourse, D3D12_CLEAR_VALUE* clear_value = nullptr);
+	void CreateID3DResourse(D3D12_HEAP_PROPERTIES& heapProps, D3D12_RESOURCE_DESC& resdesc, ComPtr<ID3D12Resource>& resourse, D3D12_RESOURCE_STATES initial_state, D3D12_CLEAR_VALUE* clear_value = nullptr);
 };

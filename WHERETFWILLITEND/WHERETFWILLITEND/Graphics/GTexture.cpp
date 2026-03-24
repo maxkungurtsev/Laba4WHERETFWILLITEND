@@ -22,7 +22,7 @@ GTexture::GTexture(TGAImage image, std::string& name, std::shared_ptr<Gdevice> d
 		&uploadHeapProps,
 		D3D12_HEAP_FLAG_NONE,
 		&uploadDesc,
-		D3D12_RESOURCE_STATE_COPY_DEST,
+		D3D12_RESOURCE_STATE_GENERIC_READ,
 		nullptr,
 		IID_PPV_ARGS(&textureUploadHeap)
 	);
@@ -98,6 +98,7 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 	D3D12_CLEAR_VALUE clear_value;
 	D3D12_CLEAR_VALUE* clear_value_pointer=nullptr;
 	D3D12_RESOURCE_DESC desc;
+	D3D12_RESOURCE_STATES initial_state= D3D12_RESOURCE_STATE_COPY_DEST;
 	switch (usage) {
 	case TextureUsage::Albedo:
 		heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
@@ -136,7 +137,8 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 		heapProps.CreationNodeMask = 1;
 		heapProps.VisibleNodeMask = 1;
 		clear_value_pointer = &clear_value;
+		initial_state = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 		break;
 	}
-	Gresourse_ = std::make_shared<GResourse>(desc, heapProps, name, device, clear_value_pointer);
+	Gresourse_ = std::make_shared<GResourse>(desc, heapProps, name, device,D3D12_RESOURCE_STATE_COPY_DEST, clear_value_pointer);
 }
