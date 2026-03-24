@@ -1,11 +1,11 @@
 #include "RootSignature.h"
-void RootSignature::AddParameter(Type type, int descriptor_amount, D3D12_SHADER_VISIBILITY visibility){
+void RootSignature::AddParameter(Type type, int descriptor_amount, D3D12_SHADER_VISIBILITY visibility, int base_register){
 		D3D12_DESCRIPTOR_RANGE1 range{};
 	switch (type) {
 	case Type::cbv:
 		range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
 		range.NumDescriptors = descriptor_amount;
-		range.BaseShaderRegister = base_shader_register_cbv_;
+		range.BaseShaderRegister = max(base_register,base_shader_register_cbv_);
 		range.RegisterSpace = 0;
 		range.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC;
 		range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
@@ -15,7 +15,7 @@ void RootSignature::AddParameter(Type type, int descriptor_amount, D3D12_SHADER_
 	case Type::srv:
 		range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SRV;
 		range.NumDescriptors = descriptor_amount;
-		range.BaseShaderRegister = base_shader_register_srv_;
+		range.BaseShaderRegister = max(base_register, base_shader_register_srv_);
 		range.RegisterSpace = 0;
 		range.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
 		range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
@@ -25,7 +25,7 @@ void RootSignature::AddParameter(Type type, int descriptor_amount, D3D12_SHADER_
 	case Type::sampler:
 		range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
 		range.NumDescriptors = descriptor_amount;
-		range.BaseShaderRegister = base_shader_register_sampler_;
+		range.BaseShaderRegister = max(base_register, base_shader_register_sampler_);
 		range.RegisterSpace = 0;
 		range.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
 		range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;

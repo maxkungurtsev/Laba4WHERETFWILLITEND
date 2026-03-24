@@ -32,7 +32,7 @@ void Renderer::AskDescryptorSizes() {
     cbv_srv_uav_descriptor_size_ =device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_CBV_SRV_UAV);
     sampler_descriptor_size_ =device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_SAMPLER);
 };
-
+/*
 void Renderer::check4XMSAA() {
     D3D12_FEATURE_DATA_MULTISAMPLE_QUALITY_LEVELS msaaQuality{};
     msaaQuality.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
@@ -47,6 +47,7 @@ void Renderer::check4XMSAA() {
     };
 };
 //mental disorder
+
 void Renderer::CreateMSAARenderTarget() {
     //f*** old rt
     msaa_render_target_.Reset();
@@ -82,7 +83,7 @@ void Renderer::CreateMSAARenderTarget() {
     msaa_rtv_handle_ = rtv_msaa_heap_->GetCPUDescriptorHandleForHeapStart();
     device_->CreateRenderTargetView(msaa_render_target_.Get(), nullptr, msaa_rtv_handle_);
 }
-
+*/
 void Renderer::CreateCommandStuff() {
     D3D12_COMMAND_QUEUE_DESC queueDesc{};
     queueDesc.Type = D3D12_COMMAND_LIST_TYPE_DIRECT;
@@ -924,10 +925,10 @@ void Renderer::RenderFrame(Model& mesh, float time, XMVECTOR cam_pos, XMVECTOR l
     command_list_->RSSetScissorRects(1, &scissor_rect_);
     //RTV / DSV (MSAA rt instead of back buffer)
     D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = dsv_heap_->GetCPUDescriptorHandleForHeapStart();
-    command_list_->OMSetRenderTargets(1, &msaa_rtv_handle_, FALSE, &dsvHandle);
+    //command_list_->OMSetRenderTargets(1, &msaa_rtv_handle_, FALSE, &dsvHandle);
     //Clear MSAA rt and DSV
     const float clearColor[] = { 0.2f, 0.4f, 0.6f, 1.0f };
-    command_list_->ClearRenderTargetView(msaa_rtv_handle_, clearColor, 0, nullptr);
+   // command_list_->ClearRenderTargetView(msaa_rtv_handle_, clearColor, 0, nullptr);
     command_list_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
     //PSO Root Signature
     command_list_->SetPipelineState(pipeline_state_.Get());

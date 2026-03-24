@@ -64,7 +64,7 @@ LRESULT CALLBACK Window::WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPar
     return DefWindowProc(hWnd, msg, wParam, lParam);
 }
 
-void Window::CreateSwapChain(std::shared_ptr<Gdevice> device) {
+ComPtr<IDXGISwapChain3> Window::CreateSwapChain(std::shared_ptr<Gdevice> device) {
     swap_chain_.Reset();
     DXGI_SWAP_CHAIN_DESC1 swap_chain_desc{};
     swap_chain_desc.Width = device->width_;
@@ -81,4 +81,5 @@ void Window::CreateSwapChain(std::shared_ptr<Gdevice> device) {
     if (FAILED(hr))
         throw std::runtime_error("Failed to create SwapChain");
     tempSwapChain.As(&swap_chain_);
+    return swap_chain_;
 }

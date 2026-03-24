@@ -3,7 +3,7 @@
 #include <vector>
 #include <string>
 #include <DirectXMath.h>
-#include "tgaimage.h"
+#include "Graphics\GTexture.h"
 
 using namespace DirectX;
 struct Vertex
@@ -20,10 +20,10 @@ struct MaterialData
     float shiny_k = 32.0f;
     std::string diffuseTexPath;
     bool hasDiffuseTexture = false;
-    TGAImage diffuseTexture;
+    std::shared_ptr<GTexture> diffuseTexture;
     std::string normalTexPath;
     bool hasNormalTexture = false;
-    TGAImage NormalTexture;
+    std::shared_ptr<GTexture> NormalTexture;
 };
 struct SubMesh
 {
@@ -34,11 +34,12 @@ struct SubMesh
 class Model
 {
 public:
-    Model(const std::string& model_filename);
+    Model(const std::string& model_filename, std::shared_ptr<Gdevice> device);
     const std::vector<Vertex>& GetVertices() const {return vertices_;}
     std::vector<MaterialData>& GetMaterials() {return materials_;}
     const std::vector<SubMesh>& GetSubMeshes() const {return submeshes_;}
 private:
+    TGAImage dummy_;
     std::vector<XMFLOAT3> positions_;
     std::vector<XMFLOAT2> texcoords_;
     std::vector<XMFLOAT3> normals_;

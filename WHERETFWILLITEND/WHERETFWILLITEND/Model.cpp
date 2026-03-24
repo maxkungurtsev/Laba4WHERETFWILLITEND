@@ -3,9 +3,10 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include <Windows.h>
-Model::Model(const std::string& filename)
+Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
 {
     Assimp::Importer importer;
+    dummy_.read_tga_file("dummy.tga");
     const aiScene* scene = importer.ReadFile(
         filename,
         aiProcess_Triangulate |
@@ -43,7 +44,13 @@ Model::Model(const std::string& filename)
             mat->GetTexture(aiTextureType_DIFFUSE, 0, &path);
             outMat.diffuseTexPath = path.C_Str();
             outMat.hasDiffuseTexture = true;
-            outMat.diffuseTexture.read_tga_file(outMat.diffuseTexPath.c_str());
+            TGAImage image;
+            image.read_tga_file(outMat.diffuseTexPath.c_str());
+            outMat.diffuseTexture = std::make_shared<GTexture>(image, path, device, TextureUsage::Albedo);
+        }
+        else {
+            outMat.diffuseTexture = std::make_shared<GTexture>(dummy_, "diffuse texture missing", device, TextureUsage::Albedo);
+            OutputDebugStringA(("diffuse tecxture for material " + std::to_string(i) + " is missing").c_str());
         }
         if (mat->GetTextureCount(aiTextureType_NORMALS) > 0)
         {
@@ -51,7 +58,13 @@ Model::Model(const std::string& filename)
             mat->GetTexture(aiTextureType_DIFFUSE, 0, &path);
             outMat.normalTexPath = path.C_Str();
             outMat.hasNormalTexture = true;
-            outMat.NormalTexture.read_tga_file(outMat.diffuseTexPath.c_str());
+            TGAImage image;
+            image.read_tga_file(outMat.normalTexPath.c_str());
+            outMat.diffuseTexture = std::make_shared<GTexture>(image, path, device, TextureUsage::Normalmap);
+        }
+        else {
+            outMat.diffuseTexture = std::make_shared<GTexture>(dummy_, "normal texture missing", device, TextureUsage::Normalmap);
+            OutputDebugStringA(("normal tecxture for material " + std::to_string(i) + " is missing").c_str());
         }
     }
     // meshs

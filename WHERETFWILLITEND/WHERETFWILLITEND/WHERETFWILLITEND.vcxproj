@@ -126,7 +126,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="Graphics\CBuffer.cpp" />
     <ClCompile Include="Graphics\CMD.cpp" />
     <ClCompile Include="Graphics\Gdevice.cpp" />
     <ClCompile Include="Graphics\GFence.cpp" />

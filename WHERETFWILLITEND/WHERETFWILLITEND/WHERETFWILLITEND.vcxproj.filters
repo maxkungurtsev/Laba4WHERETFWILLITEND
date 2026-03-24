@@ -51,9 +51,6 @@
     <ClCompile Include="Graphics\GFence.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Graphics\CBuffer.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="Graphics\RenderTarget.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>

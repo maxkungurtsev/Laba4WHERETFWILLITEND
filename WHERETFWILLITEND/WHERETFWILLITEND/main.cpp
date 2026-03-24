@@ -56,14 +56,14 @@ int Run(Model &mesh) {
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow){
     //init window and check if it actually worked
-    if (!g_Window.Create(hInstance, nCmdShow))
+    //if (!g_Window.Create(hInstance, nCmdShow))
         return 0;
     //init input device
-    g_Input.Initialize(g_Window.GetHWND());
+    //g_Input.Initialize(g_Window.GetHWND());
     //catch messege stuff
-    Model mesh("sponza.obj"); // загружаем модель и материалы и текстуры и вообще пздц
-    g_Renderer.Initialize(width,height,2, g_Window.GetHWND(),mesh, cam_coords, look_at, up, light_coords);
+    //Model mesh("sponza.obj"); // загружаем модель и материалы и текстуры и вообще пздц
+    //g_Renderer.Initialize(width,height,2, g_Window.GetHWND(),mesh, cam_coords, look_at, up, light_coords);
 
-    int messege = Run(mesh);
-    return static_cast<int>(messege);
+    //int messege = Run(mesh);
+    //return static_cast<int>(messege);
 }

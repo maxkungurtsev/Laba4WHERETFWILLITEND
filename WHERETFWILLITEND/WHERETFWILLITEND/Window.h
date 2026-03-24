@@ -11,5 +11,5 @@ private:
 public:
     bool Create(HINSTANCE hInstance, int nCmdShow);
     HWND GetHWND() const { return m_hWnd; }
-    void CreateSwapChain(std::shared_ptr<Gdevice> device);
+    ComPtr<IDXGISwapChain3> CreateSwapChain(std::shared_ptr<Gdevice> device);
 };

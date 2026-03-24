@@ -51,6 +51,12 @@ ComPtr<ID3D12DescriptorHeap> GHeaps::GetSamplerHeap() {
 	return sampler_heap_;
 }
 
+
+int GHeaps::GetRTVHeapDescriptorSize() {return rtv_descriptor_size_; }
+int GHeaps::GetDSVHeapDescriptorSize() { return dsv_descriptor_size_; }
+int GHeaps::GetCBV_SRV_UAV_HeapDescriptorSize() { return cbv_srv_uav_descriptor_size_; }
+int GHeaps::GetSamplerHeapDescriptorSize() { return sampler_descriptor_size_; }
+
 // In the begining God created SRV, CBV and RTV.
 D3D12_CPU_DESCRIPTOR_HANDLE GHeaps::CreateSRV_CPU(DXGI_FORMAT Format, ComPtr<ID3D12Resource> resourse) {
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
@@ -84,7 +90,6 @@ D3D12_CPU_DESCRIPTOR_HANDLE GHeaps::CreateRTV_CPU(ComPtr<ID3D12Resource> resours
 	device_->GetDXDevice()->CreateRenderTargetView(resourse.Get(), nullptr, rtv_handle);
 	return rtv_handle;
 }
-
 D3D12_CPU_DESCRIPTOR_HANDLE GHeaps::CreateDSV_CPU(ComPtr<ID3D12Resource> resourse) {
 	D3D12_CPU_DESCRIPTOR_HANDLE handle = dsv_heap_->GetCPUDescriptorHandleForHeapStart();
 	handle.ptr += (dsv_amount_ * dsv_descriptor_size_);
