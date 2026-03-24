@@ -26,7 +26,7 @@ private:
 	int cbv_srv_uav_descriptor_size_;
 	int sampler_descriptor_size_;
 public:
-	void CreateGHeaps(int num_descriptors, ComPtr<ID3D12Device> device);
+	GHeaps(int num_descriptors, ComPtr<ID3D12Device> device);
 	ComPtr<ID3D12DescriptorHeap> GetRTVHeap();
 	ComPtr<ID3D12DescriptorHeap> GetDSVHeap();
 	ComPtr<ID3D12DescriptorHeap> GetCBV_SRV_UAV_Heap();

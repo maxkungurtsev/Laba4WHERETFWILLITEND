@@ -1,6 +1,6 @@
 #include "CMD.h"
 #include "Gdevice.h"
-void CMD::CreateCMD(ComPtr<ID3D12Device> device, D3D12_COMMAND_LIST_TYPE type) {
+CMD::CMD(ComPtr<ID3D12Device> device, D3D12_COMMAND_LIST_TYPE type) {
 	device_ = device;
 	CreateCMDList(type);
 	CreateCMDQueue(type);

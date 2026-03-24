@@ -12,7 +12,7 @@ public:
 	ComPtr<ID3D12CommandAllocator> command_allocator_;
 	ComPtr<ID3D12GraphicsCommandList> command_list_;
 	ComPtr<ID3D12Device> device_;
-	void CreateCMD(ComPtr<ID3D12Device> device, D3D12_COMMAND_LIST_TYPE type = D3D12_COMMAND_LIST_TYPE_DIRECT);
+	CMD(ComPtr<ID3D12Device> device, D3D12_COMMAND_LIST_TYPE type = D3D12_COMMAND_LIST_TYPE_DIRECT);
 	void ResetAllocator();
 private:
 	void CreateCMDList(D3D12_COMMAND_LIST_TYPE type);

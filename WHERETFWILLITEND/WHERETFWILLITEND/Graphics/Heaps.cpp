@@ -1,6 +1,6 @@
 #include "Heaps.h"
 #include "Gdevice.h"
-void GHeaps::CreateGHeaps(int num_descriptors, ComPtr<ID3D12Device> device) {
+GHeaps::GHeaps(int num_descriptors, ComPtr<ID3D12Device> device) {
 		device_ = device;
 		rtv_descriptor_size_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_RTV);
 		dsv_descriptor_size_ = device_->GetDescriptorHandleIncrementSize(D3D12_DESCRIPTOR_HEAP_TYPE_DSV);
