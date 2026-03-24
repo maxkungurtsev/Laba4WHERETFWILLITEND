@@ -57,7 +57,7 @@ int GHeaps::GetCBV_SRV_UAV_HeapDescriptorSize() { return cbv_srv_uav_descriptor_
 int GHeaps::GetSamplerHeapDescriptorSize() { return sampler_descriptor_size_; }
 
 // In the begining God created SRV, CBV and RTV.
-Handle GHeaps::CreateSRV_CPU(DXGI_FORMAT Format, ComPtr<ID3D12Resource> resourse) {
+Handle GHeaps::CreateSRV_CPU(DXGI_FORMAT Format, ComPtr<ID3D12Resource>& resourse) {
 	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.Format = Format;
@@ -76,7 +76,7 @@ Handle GHeaps::CreateSRV_CPU(DXGI_FORMAT Format, ComPtr<ID3D12Resource> resourse
 	device_->CreateShaderResourceView(resourse.Get(), &srvDesc, cpu_handle);
 	return handle;
 };
-Handle GHeaps::CreateCBV_CPU(ComPtr<ID3D12Resource> resourse, UINT size_in_bytes) {
+Handle GHeaps::CreateCBV_CPU(ComPtr<ID3D12Resource>& resourse, UINT size_in_bytes) {
 	//CBV desc
 	D3D12_CONSTANT_BUFFER_VIEW_DESC cbv_desc{};
 	cbv_desc.BufferLocation = resourse->GetGPUVirtualAddress();
@@ -92,7 +92,7 @@ Handle GHeaps::CreateCBV_CPU(ComPtr<ID3D12Resource> resourse, UINT size_in_bytes
 	device_->CreateConstantBufferView(&cbv_desc, cpu_handle);
 	return handle;
 }
-Handle GHeaps::CreateRTV_CPU(ComPtr<ID3D12Resource> resourse) {
+Handle GHeaps::CreateRTV_CPU(ComPtr<ID3D12Resource>& resourse) {
 	Handle handle;
 	D3D12_CPU_DESCRIPTOR_HANDLE cpu_rtv_handle = rtv_heap_->GetCPUDescriptorHandleForHeapStart();
 	cpu_rtv_handle.ptr += (rtv_amount_ * rtv_descriptor_size_);
@@ -104,11 +104,15 @@ Handle GHeaps::CreateRTV_CPU(ComPtr<ID3D12Resource> resourse) {
 	device_->CreateRenderTargetView(resourse.Get(), nullptr, cpu_rtv_handle);
 	return handle;
 }
-Handle GHeaps::CreateDSV_CPU(ComPtr<ID3D12Resource> resourse) {
+Handle GHeaps::CreateDSV_CPU(ComPtr<ID3D12Resource>& resourse) {
+	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
+	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
+	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
+	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
 	Handle handle;
 	D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle = dsv_heap_->GetCPUDescriptorHandleForHeapStart();
 	cpu_handle.ptr += (dsv_amount_ * dsv_descriptor_size_);
-	device_->CreateDepthStencilView(resourse.Get(), nullptr, cpu_handle);
+	device_->CreateDepthStencilView(resourse.Get(), &dsvDesc, cpu_handle);
 	handle.cpu_ = cpu_handle;
 	D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle = dsv_heap_->GetGPUDescriptorHandleForHeapStart();
 	gpu_handle.ptr += (dsv_amount_ * dsv_descriptor_size_);

@@ -35,9 +35,9 @@ public:
 	int GetDSVHeapDescriptorSize();
 	int GetCBV_SRV_UAV_HeapDescriptorSize();
 	int GetSamplerHeapDescriptorSize();
-	Handle CreateSRV_CPU(DXGI_FORMAT Format, ComPtr<ID3D12Resource> resourse);
-	Handle CreateDSV_CPU(ComPtr<ID3D12Resource> resourse);
-	Handle CreateRTV_CPU(ComPtr<ID3D12Resource> resourse);
-	Handle CreateCBV_CPU(ComPtr<ID3D12Resource> resourse, UINT size_in_bytes);
+	Handle CreateSRV_CPU(DXGI_FORMAT Format, ComPtr<ID3D12Resource>& resourse);
+	Handle CreateDSV_CPU(ComPtr<ID3D12Resource>& resourse);
+	Handle CreateRTV_CPU(ComPtr<ID3D12Resource>& resourse);
+	Handle CreateCBV_CPU(ComPtr<ID3D12Resource>& resourse, UINT size_in_bytes);
 	Handle MakeSampler();
 };

@@ -136,7 +136,7 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 		heapProps.CreationNodeMask = 1;
 		heapProps.VisibleNodeMask = 1;
 		clear_value_pointer = &clear_value;
-		srv_format = DXGI_FORMAT_D32_FLOAT;
+		srv_format = DXGI_FORMAT_R32_FLOAT;
 		break;
 	}
 	Gresourse_ = std::make_shared<GResourse>(desc, srv_format, heapProps, name, device,initial_states_[index], clear_value_pointer);
