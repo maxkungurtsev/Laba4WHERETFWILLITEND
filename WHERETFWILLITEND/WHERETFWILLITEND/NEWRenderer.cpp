@@ -155,8 +155,8 @@ NewRenderer::NewRenderer(UINT width, UINT height, int frame_count, Window* hwnd,
     frame_count_ = frame_count;
 	//device, cmd, fence, heaps, viewport, scissor
 	device_ = std::make_shared<Gdevice>(width, height, 100+frame_count);
-    mesh_ = std::make_shared<Model>(mesh_path, device_);
     swap_chain_=hwnd->CreateSwapChain(device_);
+    mesh_ = std::make_shared<Model>(mesh_path, device_);
     CreateBackbuffer();
 	//g buffer
     g_buffer_ = std::make_shared<GBuffer>(width, height, device_);

@@ -45,6 +45,7 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
             outMat.hasDiffuseTexture = true;
             TGAImage image;
             image.read_tga_file(outMat.diffuseTexPath.c_str());
+
             OutputDebugStringA(("diffuse tecxture for material " + std::to_string(i) + " exists").c_str());
             outMat.diffuseTexture = std::make_shared<GTexture>(image, outMat.diffuseTexPath, device, TextureUsage::Albedo);
         }

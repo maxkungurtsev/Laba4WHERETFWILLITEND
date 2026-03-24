@@ -1,4 +1,5 @@
 #include "Gdevice.h"
+#include <sstream>
 void Gdevice::ViewportScissorSetup() {
     viewport_ = {};
     viewport_.TopLeftX = 0;
@@ -19,7 +20,10 @@ ComPtr<ID3D12Device> Gdevice::GetDXDevice() {
 void Gdevice::CreateID3DResourse(D3D12_HEAP_PROPERTIES& heapProps, D3D12_RESOURCE_DESC& resdesc, ComPtr<ID3D12Resource>& resourse, D3D12_RESOURCE_STATES initial_state, D3D12_CLEAR_VALUE* clear_value) {
     HRESULT hr = device_->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resdesc, initial_state, clear_value, IID_PPV_ARGS(resourse.ReleaseAndGetAddressOf()));
     if (FAILED(hr)) {
-        throw std::runtime_error(("Resourse creation error"));
+        std::ostringstream ss;
+        ss << "CreateTexture FAILED: 0x" << std::hex << hr << "\n";
+        OutputDebugStringA(ss.str().c_str());
+        throw std::runtime_error(ss.str());
     }
 }
 

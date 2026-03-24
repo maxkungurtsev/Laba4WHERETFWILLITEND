@@ -45,6 +45,7 @@ GTexture::GTexture(TGAImage image, std::string& name, std::shared_ptr<Gdevice> d
 	}
 	textureUploadHeap->Unmap(0, nullptr);
 	// data to GPU texture
+	int index = static_cast<int>(usage);
 	D3D12_TEXTURE_COPY_LOCATION dst{};
 	dst.pResource = Gresourse_->GetResourse().Get();
 	dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
@@ -53,16 +54,16 @@ GTexture::GTexture(TGAImage image, std::string& name, std::shared_ptr<Gdevice> d
 	src.pResource = textureUploadHeap.Get();
 	src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
 	src.PlacedFootprint.Offset = 0;
-	src.PlacedFootprint.Footprint.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
+	src.PlacedFootprint.Footprint.Format = formats[index];
 	src.PlacedFootprint.Footprint.Width = width_;
 	src.PlacedFootprint.Footprint.Height = height_;
 	src.PlacedFootprint.Footprint.Depth = 1;
-	src.PlacedFootprint.Footprint.RowPitch = width_ * 4;
+	src.PlacedFootprint.Footprint.RowPitch = (width_ * 4 + 255) & ~255;
 	device->cmd_->command_list_->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
 	D3D12_RESOURCE_BARRIER barrier{};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barrier.Transition.pResource = Gresourse_->GetResourse().Get();
-	barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+	barrier.Transition.StateBefore = initial_states_[index];
 	barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
 	barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 	device->cmd_->command_list_->ResourceBarrier(1, &barrier);
@@ -98,7 +99,7 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 	D3D12_CLEAR_VALUE clear_value;
 	D3D12_CLEAR_VALUE* clear_value_pointer=nullptr;
 	D3D12_RESOURCE_DESC desc;
-	D3D12_RESOURCE_STATES initial_state= D3D12_RESOURCE_STATE_COPY_DEST;
+	int index = static_cast<int>(usage);
 	switch (usage) {
 	case TextureUsage::Albedo:
 		heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
@@ -106,7 +107,7 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 		heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
 		heapProps.CreationNodeMask = 1;
 		heapProps.VisibleNodeMask = 1;
-		desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_B8G8R8A8_UNORM,
+		desc = CD3DX12_RESOURCE_DESC::Tex2D(formats[index],
 			width, height, 1, 1, 1, 0,
 			D3D12_RESOURCE_FLAG_NONE,
 			D3D12_TEXTURE_LAYOUT_UNKNOWN, 0);
@@ -117,13 +118,13 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 		heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
 		heapProps.CreationNodeMask = 1;
 		heapProps.VisibleNodeMask = 1;
-		desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_B8G8R8A8_UNORM,
+		desc = CD3DX12_RESOURCE_DESC::Tex2D(formats[index],
 			width, height,1, 1, 1, 0,
 			D3D12_RESOURCE_FLAG_NONE,
 			D3D12_TEXTURE_LAYOUT_UNKNOWN, 0);
 		break;
 	case TextureUsage::Depth:
-		desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_D32_FLOAT,
+		desc = CD3DX12_RESOURCE_DESC::Tex2D(formats[index],
 			width,height,1,1,device->sample_amount_,device->msaa_quality_,
 			D3D12_RESOURCE_FLAG_ALLOW_DEPTH_STENCIL);
 		//ClearValue
@@ -137,8 +138,7 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 		heapProps.CreationNodeMask = 1;
 		heapProps.VisibleNodeMask = 1;
 		clear_value_pointer = &clear_value;
-		initial_state = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 		break;
 	}
-	Gresourse_ = std::make_shared<GResourse>(desc, heapProps, name, device,initial_state, clear_value_pointer);
+	Gresourse_ = std::make_shared<GResourse>(desc, heapProps, name, device,initial_states_[index], clear_value_pointer);
 }
