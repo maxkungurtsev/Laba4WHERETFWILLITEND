@@ -6,7 +6,7 @@ Zbuffer::Zbuffer(TGAImage image, std::string& name, std::shared_ptr<Gdevice> dev
 	handle_ = device->heaps_->CreateDSV_CPU(z_buffer_->GetResourse()->GetResourse());
 }
 Zbuffer::Zbuffer(UINT width, UINT height, std::string& name, std::shared_ptr<Gdevice> device, TextureUsage usage) {
-	z_buffer_ = std::make_shared<GTexture>(width, height, name, device, usage);
+	z_buffer_ = std::make_shared<GTexture>(width, height, name, device, usage, D3D12_RESOURCE_FLAG_NONE);
 	handle_ = device->heaps_->CreateDSV_CPU(z_buffer_->GetResourse()->GetResourse());
 }
 Zbuffer::Zbuffer(std::shared_ptr<GResourse> Gresourse, TextureUsage usage) {

@@ -110,7 +110,7 @@ Handle GHeaps::CreateDSV_CPU(ComPtr<ID3D12Resource> resourse) {
 	cpu_handle.ptr += (dsv_amount_ * dsv_descriptor_size_);
 	device_->CreateDepthStencilView(resourse.Get(), nullptr, cpu_handle);
 	handle.cpu_ = cpu_handle;
-	D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle = cbv_srv_uav_heap_->GetGPUDescriptorHandleForHeapStart();
+	D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle = dsv_heap_->GetGPUDescriptorHandleForHeapStart();
 	gpu_handle.ptr += (dsv_amount_ * dsv_descriptor_size_);
 	handle.gpu_ = gpu_handle;
 	dsv_amount_++;
