@@ -108,7 +108,7 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 		heapProps.VisibleNodeMask = 1;
 		desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_B8G8R8A8_UNORM,
 			width, height, 1, 1, 1, 0,
-			D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
+			D3D12_RESOURCE_FLAG_NONE,
 			D3D12_TEXTURE_LAYOUT_UNKNOWN, 0);
 		break;
 	case TextureUsage::Normalmap:
@@ -117,9 +117,9 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 		heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
 		heapProps.CreationNodeMask = 1;
 		heapProps.VisibleNodeMask = 1;
-		desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_R16G16B16A16_FLOAT,
+		desc = CD3DX12_RESOURCE_DESC::Tex2D(DXGI_FORMAT_B8G8R8A8_UNORM,
 			width, height,1, 1, 1, 0,
-			D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET,
+			D3D12_RESOURCE_FLAG_NONE,
 			D3D12_TEXTURE_LAYOUT_UNKNOWN, 0);
 		break;
 	case TextureUsage::Depth:
@@ -140,5 +140,5 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 		initial_state = D3D12_RESOURCE_STATE_DEPTH_WRITE;
 		break;
 	}
-	Gresourse_ = std::make_shared<GResourse>(desc, heapProps, name, device,D3D12_RESOURCE_STATE_COPY_DEST, clear_value_pointer);
+	Gresourse_ = std::make_shared<GResourse>(desc, heapProps, name, device,initial_state, clear_value_pointer);
 }

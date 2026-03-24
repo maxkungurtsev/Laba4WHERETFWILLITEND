@@ -17,7 +17,7 @@ ComPtr<ID3D12Device> Gdevice::GetDXDevice() {
     return device_;
 };
 void Gdevice::CreateID3DResourse(D3D12_HEAP_PROPERTIES& heapProps, D3D12_RESOURCE_DESC& resdesc, ComPtr<ID3D12Resource>& resourse, D3D12_RESOURCE_STATES initial_state, D3D12_CLEAR_VALUE* clear_value) {
-    HRESULT hr = device_->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resdesc, D3D12_RESOURCE_STATE_GENERIC_READ, clear_value, IID_PPV_ARGS(resourse.ReleaseAndGetAddressOf()));
+    HRESULT hr = device_->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &resdesc, initial_state, clear_value, IID_PPV_ARGS(resourse.ReleaseAndGetAddressOf()));
     if (FAILED(hr)) {
         throw std::runtime_error(("Resourse creation error"));
     }
