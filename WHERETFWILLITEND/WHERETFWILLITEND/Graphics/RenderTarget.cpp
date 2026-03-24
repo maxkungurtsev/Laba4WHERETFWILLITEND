@@ -4,7 +4,7 @@ RenderTarget::RenderTarget(TGAImage image, std::string& name, std::shared_ptr<Gd
 	handle_ = device->heaps_->CreateRTV_CPU(texture_->GetResourse()->GetResourse());
 }
 RenderTarget::RenderTarget(UINT width, UINT height, std::string& name, std::shared_ptr<Gdevice> device, TextureUsage usage) {
-	texture_= std::make_shared<GTexture>(width, height, name, device, usage);
+	texture_= std::make_shared<GTexture>(width, height, name, device, usage, D3D12_RESOURCE_FLAG_ALLOW_RENDER_TARGET);
 	handle_ = device->heaps_->CreateRTV_CPU(texture_->GetResourse()->GetResourse());
 }
 RenderTarget::RenderTarget(std::shared_ptr<GResourse> Gresourse, TextureUsage usage) {

@@ -1,9 +1,7 @@
 #include "GTexture.h"
 
 GTexture::GTexture(TGAImage image, std::string& name, std::shared_ptr<Gdevice> device, TextureUsage usage) {
-	width_ = image.get_width();
-	height_ = image.get_height();
-	FillData(width_, height_, name, device, usage);
+	FillData(image.get_width(), image.get_height(), name, device, usage);
 	device->cmd_->ResetAllocator();
 	UINT64 uploadBufferSize;
 	device->GetDXDevice()->GetCopyableFootprints(&(Gresourse_->GetResDesc()), 0, 1, 0, nullptr, nullptr, nullptr, &uploadBufferSize);
@@ -79,8 +77,8 @@ GTexture::GTexture(TGAImage image, std::string& name, std::shared_ptr<Gdevice> d
 		CloseHandle(eventHandle);
 	}
 };
-GTexture::GTexture(UINT width, UINT height, std::string& name, std::shared_ptr<Gdevice> device, TextureUsage usage) {
-	FillData(width, height, name, device, usage);
+GTexture::GTexture(UINT width, UINT height, std::string& name, std::shared_ptr<Gdevice> device, TextureUsage usage, D3D12_RESOURCE_FLAGS flag) {
+	FillData(width, height, name, device, usage, flag);
 };
 GTexture::GTexture(std::shared_ptr<GResourse> Gresourse, TextureUsage usage):Gresourse_(Gresourse){
 	usage_ = usage;
@@ -89,7 +87,7 @@ GTexture::GTexture(std::shared_ptr<GResourse> Gresourse, TextureUsage usage):Gre
 std::shared_ptr<GResourse> GTexture::GetResourse() {
 	return Gresourse_;
 }
-void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_ptr<Gdevice> device, TextureUsage usage) {
+void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_ptr<Gdevice> device, TextureUsage usage, D3D12_RESOURCE_FLAGS flag) {
 	width_ = width;
 	height_ = height;
 	D3D12_HEAP_PROPERTIES heapProps{};
@@ -106,7 +104,7 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 		heapProps.VisibleNodeMask = 1;
 		desc = CD3DX12_RESOURCE_DESC::Tex2D(formats[index],
 			width, height, 1, 1, 1, 0,
-			D3D12_RESOURCE_FLAG_NONE,
+			flag,
 			D3D12_TEXTURE_LAYOUT_UNKNOWN, 0);
 		break;
 	case TextureUsage::Normalmap:
@@ -117,7 +115,7 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 		heapProps.VisibleNodeMask = 1;
 		desc = CD3DX12_RESOURCE_DESC::Tex2D(formats[index],
 			width, height,1, 1, 1, 0,
-			D3D12_RESOURCE_FLAG_NONE,
+			flag,
 			D3D12_TEXTURE_LAYOUT_UNKNOWN, 0);
 		break;
 	case TextureUsage::Depth:
@@ -139,5 +137,5 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 	}
 	OutputDebugStringA(name.c_str());
 	Gresourse_ = std::make_shared<GResourse>(desc, heapProps, name, device,initial_states_[index], clear_value_pointer);
-	OutputDebugStringA("Created" + '\n');
+	//OutputDebugStringA("Created" + '\n');
 }

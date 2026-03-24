@@ -1,4 +1,77 @@
-﻿  NEWRenderer.cpp
+﻿  GBuffer.cpp
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(476,61): error C2661: RenderTarget::RenderTarget: нет перегруженной функции, принимающей 6 аргументов
+  (компиляция исходного файла "Graphics/GBuffer.cpp")
+      C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(476,61):
+      при попытке сопоставить список аргументов "(UINT, UINT, std::string, std::shared_ptr<_Ty>, _Ty, _Ty)"
+          with
+          [
+              _Ty=Gdevice
+          ]
+          and
+          [
+              _Ty=TextureUsage
+          ]
+          and
+          [
+              _Ty=D3D12_RESOURCE_FLAGS
+          ]
+      C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(476,61):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\GBuffer.cpp(5,17):
+          выполняется компиляция ссылки на экземпляр шаблон функции "std::shared_ptr<RenderTarget> std::make_shared<RenderTarget,UINT&,UINT&,std::string&,std::shared_ptr<_Ty>&,TextureUsage,D3D12_RESOURCE_FLAGS>(UINT &,UINT &,std::string &,std::shared_ptr<_Ty> &,TextureUsage &&,D3D12_RESOURCE_FLAGS &&)"
+          with
+          [
+              _Ty=Gdevice
+          ]
+          C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\memory(2913,46):
+          выполняется компиляция ссылки на экземпляр шаблон функции "std::_Ref_count_obj2<RenderTarget>::_Ref_count_obj2<UINT&,UINT&,std::string&,std::shared_ptr<_Ty>&,TextureUsage,D3D12_RESOURCE_FLAGS>(UINT &,UINT &,std::string &,std::shared_ptr<_Ty> &,TextureUsage &&,D3D12_RESOURCE_FLAGS &&)"
+          with
+          [
+              _Ty=Gdevice
+          ]
+          C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\memory(2100,18):
+          выполняется компиляция ссылки на экземпляр шаблон функции "void std::_Construct_in_place<_Ty,UINT&,UINT&,std::string&,std::shared_ptr<Gdevice>&,TextureUsage,D3D12_RESOURCE_FLAGS>(_Ty &,UINT &,UINT &,std::string &,std::shared_ptr<Gdevice> &,TextureUsage &&,D3D12_RESOURCE_FLAGS &&) noexcept(false)"
+          with
+          [
+              _Ty=RenderTarget
+          ]
+  
+  RenderTarget.cpp
+  ZBuffer.cpp
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(476,61): error C2661: GTexture::GTexture: нет перегруженной функции, принимающей 5 аргументов
+  (компиляция исходного файла "Graphics/ZBuffer.cpp")
+      C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(476,61):
+      при попытке сопоставить список аргументов "(UINT, UINT, std::string, std::shared_ptr<_Ty>, TextureUsage)"
+          with
+          [
+              _Ty=Gdevice
+          ]
+      C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(476,61):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\ZBuffer.cpp(9,19):
+          выполняется компиляция ссылки на экземпляр шаблон функции "std::shared_ptr<GTexture> std::make_shared<GTexture,UINT&,UINT&,std::string&,std::shared_ptr<_Ty>&,TextureUsage&>(UINT &,UINT &,std::string &,std::shared_ptr<_Ty> &,TextureUsage &)"
+          with
+          [
+              _Ty=Gdevice
+          ]
+          C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\memory(2913,46):
+          выполняется компиляция ссылки на экземпляр шаблон функции "std::_Ref_count_obj2<GTexture>::_Ref_count_obj2<UINT&,UINT&,std::string&,std::shared_ptr<_Ty>&,TextureUsage&>(UINT &,UINT &,std::string &,std::shared_ptr<_Ty> &,TextureUsage &)"
+          with
+          [
+              _Ty=Gdevice
+          ]
+          C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\memory(2100,18):
+          выполняется компиляция ссылки на экземпляр шаблон функции "void std::_Construct_in_place<_Ty,UINT&,UINT&,std::string&,std::shared_ptr<Gdevice>&,TextureUsage&>(_Ty &,UINT &,UINT &,std::string &,std::shared_ptr<Gdevice> &,TextureUsage &) noexcept(false)"
+          with
+          [
+              _Ty=GTexture
+          ]
+  
+  main.cpp
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\main.cpp(15,25): warning C4305: инициализация: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\main.cpp(22,25): warning C4305: инициализация: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\main.cpp(24,26): warning C4305: инициализация: усечение из "double" в "float"
+  NEWRenderer.cpp
 C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\NEWRenderer.cpp(5,24): warning C4018: <: несоответствие типов со знаком и без знака
 C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\NEWRenderer.cpp(51,32): warning C4244: =: преобразование "int" в "float", возможна потеря данных
 C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\NEWRenderer.cpp(58,27): warning C4305: =: усечение из "double" в "float"
@@ -26,6 +99,4 @@ C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWIL
 C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\CBuffer.h(39,55): warning C4244: аргумент: преобразование "UINT64" в "UINT", возможна потеря данных
   (компиляция исходного файла "NEWRenderer.cpp")
   
-  WHERETFWILLITEND.vcxproj -> C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\x64\Debug\WHERETFWILLITEND.exe
-  "pwsh.exe" не является внутренней или внешней
-  командой, исполняемой программой или пакетным файлом.
+  Создание кода...
