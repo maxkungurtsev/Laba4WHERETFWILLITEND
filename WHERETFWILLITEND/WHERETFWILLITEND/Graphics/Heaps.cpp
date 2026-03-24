@@ -70,7 +70,7 @@ Handle GHeaps::CreateSRV_CPU(DXGI_FORMAT Format, ComPtr<ID3D12Resource> resourse
 	cpu_handle.ptr += (cbv_srv_uav_amount_ * cbv_srv_uav_descriptor_size_);
 	handle.cpu_ = cpu_handle;
 	D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle = cbv_srv_uav_heap_->GetGPUDescriptorHandleForHeapStart();
-	cpu_handle.ptr += (cbv_srv_uav_amount_ * cbv_srv_uav_descriptor_size_);
+	gpu_handle.ptr += (cbv_srv_uav_amount_ * cbv_srv_uav_descriptor_size_);
 	handle.gpu_ = gpu_handle;
 	cbv_srv_uav_amount_++;
 	device_->CreateShaderResourceView(resourse.Get(), &srvDesc, cpu_handle);
@@ -86,7 +86,7 @@ Handle GHeaps::CreateCBV_CPU(ComPtr<ID3D12Resource> resourse, UINT size_in_bytes
 	cpu_handle.ptr += (cbv_srv_uav_amount_ * cbv_srv_uav_descriptor_size_);
 	handle.cpu_ = cpu_handle;
 	D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle = cbv_srv_uav_heap_->GetGPUDescriptorHandleForHeapStart();
-	cpu_handle.ptr += (cbv_srv_uav_amount_ * cbv_srv_uav_descriptor_size_);
+	gpu_handle.ptr += (cbv_srv_uav_amount_ * cbv_srv_uav_descriptor_size_);
 	handle.gpu_ = gpu_handle;
 	cbv_srv_uav_amount_++;
 	device_->CreateConstantBufferView(&cbv_desc, cpu_handle);
@@ -111,7 +111,7 @@ Handle GHeaps::CreateDSV_CPU(ComPtr<ID3D12Resource> resourse) {
 	device_->CreateDepthStencilView(resourse.Get(), nullptr, cpu_handle);
 	handle.cpu_ = cpu_handle;
 	D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle = cbv_srv_uav_heap_->GetGPUDescriptorHandleForHeapStart();
-	cpu_handle.ptr += (dsv_amount_ * dsv_descriptor_size_);
+	gpu_handle.ptr += (dsv_amount_ * dsv_descriptor_size_);
 	handle.gpu_ = gpu_handle;
 	dsv_amount_++;
 	return handle;

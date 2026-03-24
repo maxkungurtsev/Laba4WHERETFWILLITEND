@@ -46,13 +46,13 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
             TGAImage image;
             image.read_tga_file(outMat.diffuseTexPath.c_str());
 
-            OutputDebugStringA(("diffuse tecxture for material " + std::to_string(i) + " exists").c_str());
+            OutputDebugStringA(("diffuse texture for material " + std::to_string(i) + " exists"+'\n').c_str());
             outMat.diffuseTexture = std::make_shared<GTexture>(image, outMat.diffuseTexPath, device, TextureUsage::Albedo);
         }
         else {
             outMat.diffuseTexPath = "diffuse texture missing";
             outMat.diffuseTexture = std::make_shared<GTexture>(dummy_, outMat.diffuseTexPath, device, TextureUsage::Albedo);
-            OutputDebugStringA(("diffuse tecxture for material " + std::to_string(i) + " is missing").c_str());
+            OutputDebugStringA(("diffuse texture for material " + std::to_string(i) + " is missing" + '\n').c_str());
         }
     }
     // normal textures
@@ -67,12 +67,15 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
             outMat.hasNormalTexture = true;
             TGAImage image;
             image.read_tga_file(outMat.normalTexPath.c_str());
+            OutputDebugStringA(("Normal texture for material " + std::to_string(i) + " exists"+'\n').c_str());
             outMat.NormalTexture = std::make_shared<GTexture>(image, outMat.normalTexPath, device, TextureUsage::Normalmap);
         }
         else {
+            // for sponza normal path is just not there
             outMat.normalTexPath = "normal texture missing";
             outMat.NormalTexture = std::make_shared<GTexture>(dummy_, outMat.normalTexPath, device, TextureUsage::Normalmap);
-            OutputDebugStringA(("normal tecxture for material " + std::to_string(i) + " is missing").c_str());
+            OutputDebugStringA(("normal texture for material " + std::to_string(i) + " is missing" + '\n').c_str());
+           // OutputDebugStringA((outMat.normalTexPath + '\n').c_str());
         }
     }
     // meshs

@@ -70,20 +70,17 @@ GTexture::GTexture(TGAImage image, std::string& name, std::shared_ptr<Gdevice> d
 	device->cmd_->command_list_->Close();
 	ID3D12CommandList* lists[] = { device->cmd_->command_list_.Get() };
 	device->cmd_->command_queue_->ExecuteCommandLists(1, lists);
-	UINT64 fenceValue = (device->fence_->GetFenceValue());
-	fenceValue++;
-	device->cmd_->command_queue_->Signal(device->fence_->GetFence().Get(), fenceValue);
-	if (device->fence_->GetFence()->GetCompletedValue() < fenceValue) {
+	device->fence_->IncrementFenceValue();
+	device->cmd_->command_queue_->Signal(device->fence_->GetFence().Get(), device->fence_->GetFenceValue());
+	if (device->fence_->GetFence()->GetCompletedValue() < device->fence_->GetFenceValue()) {
 		HANDLE eventHandle = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-		device->fence_->GetFence()->SetEventOnCompletion(fenceValue, eventHandle);
+		device->fence_->GetFence()->SetEventOnCompletion(device->fence_->GetFenceValue(), eventHandle);
 		WaitForSingleObject(eventHandle, INFINITE);
 		CloseHandle(eventHandle);
 	}
 };
 GTexture::GTexture(UINT width, UINT height, std::string& name, std::shared_ptr<Gdevice> device, TextureUsage usage) {
-	width_ = width;
-	height_ = height;
-	FillData(width_, height_, name, device, usage);
+	FillData(width, height, name, device, usage);
 };
 GTexture::GTexture(std::shared_ptr<GResourse> Gresourse, TextureUsage usage):Gresourse_(Gresourse){
 	usage_ = usage;
@@ -140,5 +137,7 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 		clear_value_pointer = &clear_value;
 		break;
 	}
+	OutputDebugStringA(name.c_str());
 	Gresourse_ = std::make_shared<GResourse>(desc, heapProps, name, device,initial_states_[index], clear_value_pointer);
+	OutputDebugStringA("Created" + '\n');
 }

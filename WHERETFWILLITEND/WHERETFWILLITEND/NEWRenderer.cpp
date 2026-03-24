@@ -154,15 +154,19 @@ void NewRenderer::CompileShader(std::wstring path, ComPtr<ID3DBlob> shader) {
 NewRenderer::NewRenderer(UINT width, UINT height, int frame_count, Window* hwnd, std::string mesh_path, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, int time) {
     frame_count_ = frame_count;
 	//device, cmd, fence, heaps, viewport, scissor
-	device_ = std::make_shared<Gdevice>(width, height, 100+frame_count);
+	device_ = std::make_shared<Gdevice>(width, height, 200+frame_count);
     swap_chain_=hwnd->CreateSwapChain(device_);
     mesh_ = std::make_shared<Model>(mesh_path, device_);
+    OutputDebugStringA("model loaded"+'\n');
     CreateBackbuffer();
 	//g buffer
     g_buffer_ = std::make_shared<GBuffer>(width, height, device_);
+    OutputDebugStringA("g buffer created" + '\n');
     Sampler_handle_ = device_->heaps_->MakeSampler();
+    OutputDebugStringA("sampler made" + '\n');
     // make root signs
     CreateGeomRootSign(mesh_->GetMaterials().size());
+    OutputDebugStringA("geom root sign made" + '\n');
     CreateLightRootSign();
     CreateInputLayout();
     cbuffer_ = std::make_shared<Cbuffer<PassConstants>>(device_);
