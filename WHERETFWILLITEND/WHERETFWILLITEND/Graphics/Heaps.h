@@ -6,9 +6,13 @@
 #include <iostream>
 using Microsoft::WRL::ComPtr;
 class Gdevice;
+struct Handle {
+	D3D12_CPU_DESCRIPTOR_HANDLE cpu_;
+	D3D12_GPU_DESCRIPTOR_HANDLE gpu_;
+};
 class GHeaps {
 private:
-	std::shared_ptr<Gdevice> device_;
+	ComPtr<ID3D12Device> device_;
 	ComPtr<ID3D12DescriptorHeap> rtv_heap_;
 	int rtv_amount_ = 0;
 	ComPtr<ID3D12DescriptorHeap> dsv_heap_;
@@ -22,7 +26,7 @@ private:
 	int cbv_srv_uav_descriptor_size_;
 	int sampler_descriptor_size_;
 public:
-	void CreateGHeaps(int num_descriptors, std::shared_ptr<Gdevice> device);
+	void CreateGHeaps(int num_descriptors, ComPtr<ID3D12Device> device);
 	ComPtr<ID3D12DescriptorHeap> GetRTVHeap();
 	ComPtr<ID3D12DescriptorHeap> GetDSVHeap();
 	ComPtr<ID3D12DescriptorHeap> GetCBV_SRV_UAV_Heap();
@@ -31,9 +35,9 @@ public:
 	int GetDSVHeapDescriptorSize();
 	int GetCBV_SRV_UAV_HeapDescriptorSize();
 	int GetSamplerHeapDescriptorSize();
-	D3D12_CPU_DESCRIPTOR_HANDLE CreateSRV_CPU(DXGI_FORMAT Format, ComPtr<ID3D12Resource> resourse);
-	D3D12_CPU_DESCRIPTOR_HANDLE CreateDSV_CPU(ComPtr<ID3D12Resource> resourse);
-	D3D12_CPU_DESCRIPTOR_HANDLE CreateRTV_CPU(ComPtr<ID3D12Resource> resourse);
-	D3D12_CPU_DESCRIPTOR_HANDLE CreateCBV_CPU(ComPtr<ID3D12Resource> resourse, UINT size_in_bytes);
-	D3D12_CPU_DESCRIPTOR_HANDLE CreateSampler();
+	Handle CreateSRV_CPU(DXGI_FORMAT Format, ComPtr<ID3D12Resource> resourse);
+	Handle CreateDSV_CPU(ComPtr<ID3D12Resource> resourse);
+	Handle CreateRTV_CPU(ComPtr<ID3D12Resource> resourse);
+	Handle CreateCBV_CPU(ComPtr<ID3D12Resource> resourse, UINT size_in_bytes);
+	Handle MakeSampler();
 };

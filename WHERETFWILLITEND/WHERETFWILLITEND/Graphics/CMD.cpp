@@ -1,13 +1,13 @@
 #include "CMD.h"
 #include "Gdevice.h"
-void CMD::CreateCMD(std::shared_ptr<Gdevice> device, D3D12_COMMAND_LIST_TYPE type) {
+void CMD::CreateCMD(ComPtr<ID3D12Device> device, D3D12_COMMAND_LIST_TYPE type) {
 	device_ = device;
 	CreateCMDList(type);
 	CreateCMDQueue(type);
 	CreateCMDAllocator(type);
 }
 void CMD::CreateCMDList(D3D12_COMMAND_LIST_TYPE type) {
-	HRESULT hr = device_->GetDXDevice()->CreateCommandList(0, type, command_allocator_.Get(), nullptr, IID_PPV_ARGS(&command_list_));
+	HRESULT hr = device_->CreateCommandList(0, type, command_allocator_.Get(), nullptr, IID_PPV_ARGS(&command_list_));
 	if (FAILED(hr)) {
 		throw std::runtime_error("Failed to create command list");
 	}
@@ -18,13 +18,13 @@ void CMD::CreateCMDQueue(D3D12_COMMAND_LIST_TYPE type) {
 	queueDesc.Priority = D3D12_COMMAND_QUEUE_PRIORITY_NORMAL;
 	queueDesc.Flags = D3D12_COMMAND_QUEUE_FLAG_NONE;
 	queueDesc.NodeMask = 0;
-	HRESULT hr = device_->GetDXDevice()->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&command_queue_));
+	HRESULT hr = device_->CreateCommandQueue(&queueDesc, IID_PPV_ARGS(&command_queue_));
 	if (FAILED(hr)) {
 		throw std::runtime_error("Failed to create command queue");
 	}
 }
 void CMD::CreateCMDAllocator(D3D12_COMMAND_LIST_TYPE type) {
-	HRESULT hr = device_->GetDXDevice()->CreateCommandAllocator(type, IID_PPV_ARGS(&command_allocator_));
+	HRESULT hr = device_->CreateCommandAllocator(type, IID_PPV_ARGS(&command_allocator_));
 	if (FAILED(hr)) {
 		throw std::runtime_error("Failed to create command allocator");
 	}

@@ -37,21 +37,21 @@ void NewRenderer::CreateLightRootSign() {
 
 void NewRenderer::FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, int time, XMFLOAT3 amb_light) {
     //identity
-    XMStoreFloat4x4(&cbuffer_.GetData().model, XMMatrixIdentity());
+    XMStoreFloat4x4(&cbuffer_->GetData().model, XMMatrixIdentity());
     //view
-    XMStoreFloat4x4(&cbuffer_.GetData().view, XMMatrixLookAtLH(cam_pos, look_at, up));
+    XMStoreFloat4x4(&cbuffer_->GetData().view, XMMatrixLookAtLH(cam_pos, look_at, up));
     //projection
-    XMStoreFloat4x4(&cbuffer_.GetData().projection, XMMatrixPerspectiveFovLH(XM_PIDIV4, float(device_->width_) / float(device_->height_), 0.1f, 10000.0f));
+    XMStoreFloat4x4(&cbuffer_->GetData().projection, XMMatrixPerspectiveFovLH(XM_PIDIV4, float(device_->width_) / float(device_->height_), 0.1f, 10000.0f));
     //inv identity
-    XMStoreFloat4x4(&cbuffer_.GetData().inv_model, XMMatrixInverse(nullptr, XMLoadFloat4x4(&cbuffer_.GetData().model)));
+    XMStoreFloat4x4(&cbuffer_->GetData().inv_model, XMMatrixInverse(nullptr, XMLoadFloat4x4(&cbuffer_->GetData().model)));
     //inv view
-    XMStoreFloat4x4(&cbuffer_.GetData().inv_view, XMMatrixInverse(nullptr, XMLoadFloat4x4(&cbuffer_.GetData().view)));
+    XMStoreFloat4x4(&cbuffer_->GetData().inv_view, XMMatrixInverse(nullptr, XMLoadFloat4x4(&cbuffer_->GetData().view)));
     //inv projection
-    XMStoreFloat4x4(&cbuffer_.GetData().inv_projection, XMMatrixInverse(nullptr, XMLoadFloat4x4(&cbuffer_.GetData().projection)));
-    cbuffer_.GetData().time = time;
-    cbuffer_.GetData().amb_light = amb_light;
-    cbuffer_.GetData().cam_pos = cam_pos;
-    cbuffer_.GetData().cam_forward = look_at;
+    XMStoreFloat4x4(&cbuffer_->GetData().inv_projection, XMMatrixInverse(nullptr, XMLoadFloat4x4(&cbuffer_->GetData().projection)));
+    cbuffer_->GetData().time = time;
+    cbuffer_->GetData().amb_light = amb_light;
+    XMStoreFloat4(&cbuffer_->GetData().cam_pos, cam_pos);
+    XMStoreFloat4(&cbuffer_->GetData().cam_forward, look_at);
     LightData light;
     light.direction = {1.0f, 1.0f, 1.0f, 1.0f};
     light.falloff_end = 0.5;
@@ -59,8 +59,17 @@ void NewRenderer::FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, i
     light.position = {0.0f, 10.0f, 10.0f, 1.0f};
     light.spot_power = 10.0f;
     light.strength = {10.0f, 10.0f, 10.0f};
-    cbuffer_.GetData().lights = std::vector<LightData>{light};
-    cbuffer_.Save_changes();
+    light.type = 1;
+    cbuffer_->GetData().lights[0]=light;
+    cbuffer_->GetData().max_lights = 1;
+    for (int i = 0; i < mesh_->GetMaterials().size(); i++) {
+        int index = min(i, 128);
+        cbuffer_->GetData().mats[index].ambient_ = mesh_->GetMaterials()[i].ambient_k;
+        cbuffer_->GetData().mats[index].diffuse_ = mesh_->GetMaterials()[i].diffuse_k;
+        cbuffer_->GetData().mats[index].spec_ = mesh_->GetMaterials()[i].specular_k;
+        cbuffer_->GetData().mats[index].shiny_ = mesh_->GetMaterials()[i].shiny_k;
+    }
+    cbuffer_->Save_changes();
 };
 
 void NewRenderer::CreateInputLayout() {
@@ -142,24 +151,26 @@ void NewRenderer::CompileShader(std::wstring path, ComPtr<ID3DBlob> shader) {
     }
 };
 
-void NewRenderer::Initialize(UINT width, UINT height, int frame_count, Window hwnd, std::string mesh_path, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, int time) {
+NewRenderer::NewRenderer(UINT width, UINT height, int frame_count, Window* hwnd, std::string mesh_path, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, int time) {
     frame_count_ = frame_count;
 	//device, cmd, fence, heaps, viewport, scissor
 	device_ = std::make_shared<Gdevice>(width, height, 100+frame_count);
     mesh_ = std::make_shared<Model>(mesh_path, device_);
-    swap_chain_=hwnd.CreateSwapChain(device_);
+    swap_chain_=hwnd->CreateSwapChain(device_);
     CreateBackbuffer();
 	//g buffer
     g_buffer_ = std::make_shared<GBuffer>(width, height, device_);
+    Sampler_handle_ = device_->heaps_->MakeSampler();
     // make root signs
     CreateGeomRootSign(mesh_->GetMaterials().size());
     CreateLightRootSign();
     CreateInputLayout();
+    cbuffer_ = std::make_shared<Cbuffer<PassConstants>>(device_);
     FillCbuffer(cam_pos, look_at, up, time);
     CreateVertexBuffer(mesh_);
     CompileShader(L"VertexShader.hlsl",vertex_shader_);
     CompileShader(L"PixelShader.hlsl", pixel_shader_);
-    pso_ = std::make_shared<PSO>(input_layout_, vertex_shader_, pixel_shader_, device_);
+    pso_ = std::make_shared<PSO>(input_layout_, vertex_shader_, pixel_shader_, device_, geom_root_signature_);
 }
 void NewRenderer::RenderFrame() {
     device_->cmd_->ResetAllocator();
@@ -181,12 +192,61 @@ void NewRenderer::RenderFrame() {
     device_->cmd_->command_list_->RSSetViewports(1, &device_->viewport_);
     device_->cmd_->command_list_->RSSetScissorRects(1, &device_->scissor_rect_);
     //dsv
-    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = g_buffer_->depth_->handle_;//device_->heaps_->GetDSVHeap()->GetCPUDescriptorHandleForHeapStart();
+    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = g_buffer_->depth_->handle_.cpu_;
     //command_list_->OMSetRenderTargets(1, &msaa_rtv_handle_, FALSE, &dsvHandle);
     const float clearColor[] = { 0.2f, 0.4f, 0.6f, 1.0f };
     device_->cmd_->command_list_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
     device_->cmd_->command_list_->SetPipelineState(pso_->GetPSO().Get());
     device_->cmd_->command_list_->SetGraphicsRootSignature(geom_root_signature_->GetRootSign().Get());
-    //device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, cbuffer_.GetHandle());
+    // heaps shit
+    ID3D12DescriptorHeap* heaps[] = {
+        device_->heaps_->GetCBV_SRV_UAV_Heap().Get(),
+        device_->heaps_->GetSamplerHeap().Get()
+    };
+    device_->cmd_->command_list_->SetDescriptorHeaps(_countof(heaps), heaps);
+    //set root params
+    //cbv
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, cbuffer_->GetHandle().gpu_);
+    //diffuse textures
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, mesh_->GetMaterials()[0].diffuseTexture->GetResourse()->GetHandle().gpu_);
+    //normal textures
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, mesh_->GetMaterials()[0].NormalTexture->GetResourse()->GetHandle().gpu_);
+    //sampler
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, Sampler_handle_.gpu_);
 
+    device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    device_->cmd_->command_list_->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
+
+
+    //DRAW
+    cbuffer_->GetData().current_mat = 0;
+    for (const auto& submesh : mesh_->GetSubMeshes()) {
+        device_->cmd_->command_list_->DrawInstanced(
+            static_cast<UINT>(submesh.vertexCount),
+            1,
+            static_cast<UINT>(submesh.startVertex),
+            0
+        );
+        cbuffer_->GetData().current_mat += 1;
+        cbuffer_->Save_changes();
+    } 
+
+    device_->cmd_->command_list_->Close();
+    ID3D12CommandList* lists[] = { device_->cmd_->command_list_.Get() };
+    device_->cmd_->command_queue_->ExecuteCommandLists(1, lists);
+
+    //Present
+    swap_chain_->Present(1, 0);
+    current_backbuffer_ = swap_chain_->GetCurrentBackBufferIndex();
+
+    //Fence
+    device_->fence_->IncrementFenceValue();
+    device_->cmd_->command_queue_->Signal(device_->fence_->GetFence().Get(), device_->fence_->GetFenceValue());
+
+    if (device_->fence_->GetFence()->GetCompletedValue() < device_->fence_->GetFenceValue()) {
+        HANDLE eventHandle = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+        device_->fence_->GetFence()->SetEventOnCompletion(device_->fence_->GetFenceValue(), eventHandle);
+        WaitForSingleObject(eventHandle, INFINITE);
+        CloseHandle(eventHandle);
+    }
 }

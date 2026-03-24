@@ -15,3 +15,6 @@ std::shared_ptr<Gdevice> GResourse::GetDevice() {
 D3D12_RESOURCE_DESC& GResourse::GetResDesc() {
 	return res_desc_;
 }
+Handle GResourse::GetHandle() {
+	return srv_handle;
+};

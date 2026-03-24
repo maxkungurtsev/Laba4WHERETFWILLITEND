@@ -1,10 +1,40 @@
-cbuffer MVP : register(b0)
+struct LightData
+{
+    float3 strength;
+    float falloff_start;
+    float4 direction;
+    float4 position;
+    float falloff_end;
+    float spot_power;
+    int type;
+    float pad=0;
+};
+struct shaderMaterialData
+{
+    float3 ambient_;
+    float shiny_;
+    float3 diffuse_;
+    float pad0 = 0;
+    float3 spec_;
+    float pad1 = 0;
+};
+cbuffer PassConstants : register(b0)
 {
     float4x4 model;
+    float4x4 inv_model;
     float4x4 view;
+    float4x4 inv_view;
     float4x4 projection;
+    float4x4 inv_projection;
+    float4 cam_pos;
+    float4 cam_forward;
+    float3 amb_light;
     float time;
-    float pad[3];
+    LightData lights[128];
+    shaderMaterialData mats[128];
+    float max_lights;
+    float current_mat;
+    float pad2[2];
 };
 
 struct VS_IN {

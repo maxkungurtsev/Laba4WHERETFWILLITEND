@@ -1,8 +1,7 @@
-#include "Model.h"
 #include <assimp/Importer.hpp>
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
-#include <Windows.h>
+#include "Model.h"
 Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
 {
     Assimp::Importer importer;
@@ -18,7 +17,7 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
     vertices_.clear();
     materials_.clear();
     submeshes_.clear();
-    //mats
+    //mats and diffuse textures
     materials_.resize(scene->mNumMaterials);
     for (unsigned i = 0; i < scene->mNumMaterials; ++i){
         aiMaterial* mat = scene->mMaterials[i];
@@ -46,24 +45,31 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
             outMat.hasDiffuseTexture = true;
             TGAImage image;
             image.read_tga_file(outMat.diffuseTexPath.c_str());
-            outMat.diffuseTexture = std::make_shared<GTexture>(image, path, device, TextureUsage::Albedo);
+            outMat.diffuseTexture = std::make_shared<GTexture>(image, outMat.diffuseTexPath, device, TextureUsage::Albedo);
         }
         else {
-            outMat.diffuseTexture = std::make_shared<GTexture>(dummy_, "diffuse texture missing", device, TextureUsage::Albedo);
+            outMat.diffuseTexPath = "diffuse texture missing";
+            outMat.diffuseTexture = std::make_shared<GTexture>(dummy_, outMat.diffuseTexPath, device, TextureUsage::Albedo);
             OutputDebugStringA(("diffuse tecxture for material " + std::to_string(i) + " is missing").c_str());
         }
+    }
+    // normal textures
+    for (unsigned i = 0; i < scene->mNumMaterials; ++i) {
+        aiMaterial* mat = scene->mMaterials[i];
+        MaterialData& outMat = materials_[i];
         if (mat->GetTextureCount(aiTextureType_NORMALS) > 0)
         {
             aiString path;
-            mat->GetTexture(aiTextureType_DIFFUSE, 0, &path);
+            mat->GetTexture(aiTextureType_NORMALS, 0, &path);
             outMat.normalTexPath = path.C_Str();
             outMat.hasNormalTexture = true;
             TGAImage image;
             image.read_tga_file(outMat.normalTexPath.c_str());
-            outMat.diffuseTexture = std::make_shared<GTexture>(image, path, device, TextureUsage::Normalmap);
+            outMat.NormalTexture = std::make_shared<GTexture>(image, outMat.normalTexPath, device, TextureUsage::Normalmap);
         }
         else {
-            outMat.diffuseTexture = std::make_shared<GTexture>(dummy_, "normal texture missing", device, TextureUsage::Normalmap);
+            outMat.normalTexPath = "normal texture missing";
+            outMat.NormalTexture = std::make_shared<GTexture>(dummy_, outMat.normalTexPath, device, TextureUsage::Normalmap);
             OutputDebugStringA(("normal tecxture for material " + std::to_string(i) + " is missing").c_str());
         }
     }

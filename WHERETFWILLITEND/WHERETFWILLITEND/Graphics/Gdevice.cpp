@@ -30,9 +30,8 @@ Gdevice::Gdevice(UINT width, UINT height, int num_descriptors) {
     if (FAILED(hr)) {
         throw std::runtime_error("Failed to create graphics device");
     }
-    auto self = shared_from_this();
-    fence_->CreateFence(self);
-    cmd_->CreateCMD(self);
-    heaps_->CreateGHeaps(num_descriptors, self);
+    fence_->CreateFence(device_);
+    cmd_->CreateCMD(device_);
+    heaps_->CreateGHeaps(num_descriptors, device_);
     ViewportScissorSetup();
 }

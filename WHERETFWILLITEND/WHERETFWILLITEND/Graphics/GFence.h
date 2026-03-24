@@ -14,5 +14,5 @@ public:
 	UINT GetFenceValue();
 	void IncrementFenceValue();
 	ComPtr<ID3D12Fence> GetFence();
-	void CreateFence(std::shared_ptr<Gdevice> device);
+	void CreateFence(ComPtr<ID3D12Device> device);
 };

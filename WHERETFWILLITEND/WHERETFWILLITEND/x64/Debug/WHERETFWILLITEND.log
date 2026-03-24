@@ -1,77 +1,10 @@
-﻿  Model.cpp
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\material.inl(91,15): error C2589: (: недопустимая лексема справа от "::"
-  (компиляция исходного файла "Model.cpp")
-      C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\material.h(683,14):
-      Сообщение диагностики возникло в созданной компилятором функции "aiReturn aiMaterial::Get(const char *,unsigned int,unsigned int,Type *,unsigned int *) const"
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\material.inl(91,15): error C3878: синтаксическая ошибка: непредвиденный токен "(" после "expression"
-  (компиляция исходного файла "Model.cpp")
-      C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\material.h(683,14):
-      Сообщение диагностики возникло в созданной компилятором функции "aiReturn aiMaterial::Get(const char *,unsigned int,unsigned int,Type *,unsigned int *) const"
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\material.inl(91,15): error C2760: синтаксическая ошибка: непредвиденный элемент ")". Ожидается ";"
-  (компиляция исходного файла "Model.cpp")
-      C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\material.h(683,14):
-      Сообщение диагностики возникло в созданной компилятором функции "aiReturn aiMaterial::Get(const char *,unsigned int,unsigned int,Type *,unsigned int *) const"
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\material.inl(91,15): error C3878: синтаксическая ошибка: непредвиденный токен ")" после "expression-statement"
-  (компиляция исходного файла "Model.cpp")
-      C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\material.h(683,14):
-      Сообщение диагностики возникло в созданной компилятором функции "aiReturn aiMaterial::Get(const char *,unsigned int,unsigned int,Type *,unsigned int *) const"
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\material.inl(91,15): error C3878: синтаксическая ошибка: непредвиденный токен ")" после "statement"
-  (компиляция исходного файла "Model.cpp")
-      C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\material.h(683,14):
-      Сообщение диагностики возникло в созданной компилятором функции "aiReturn aiMaterial::Get(const char *,unsigned int,unsigned int,Type *,unsigned int *) const"
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\material.inl(91,15): error C3878: синтаксическая ошибка: непредвиденный токен ")" после "statement-seq"
-  (компиляция исходного файла "Model.cpp")
-      C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\material.inl(91,15):
-      отсутствует один из элементов  '}'?
-      C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\material.h(683,14):
-      Сообщение диагностики возникло в созданной компилятором функции "aiReturn aiMaterial::Get(const char *,unsigned int,unsigned int,Type *,unsigned int *) const"
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\material.inl(91,15): error C2760: синтаксическая ошибка: непредвиденный элемент ")". Ожидается "}"
-  (компиляция исходного файла "Model.cpp")
-      C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\material.h(683,14):
-      Сообщение диагностики возникло в созданной компилятором функции "aiReturn aiMaterial::Get(const char *,unsigned int,unsigned int,Type *,unsigned int *) const"
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\material.inl(91,15): error C3878: синтаксическая ошибка: непредвиденный токен ")" после "compound-statement"
-  (компиляция исходного файла "Model.cpp")
-      C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\material.h(683,14):
-      Сообщение диагностики возникло в созданной компилятором функции "aiReturn aiMaterial::Get(const char *,unsigned int,unsigned int,Type *,unsigned int *) const"
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\material.inl(91,15): error C3878: синтаксическая ошибка: непредвиденный токен ")" после "selection-statement"
-  (компиляция исходного файла "Model.cpp")
-      C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\material.h(683,14):
-      Сообщение диагностики возникло в созданной компилятором функции "aiReturn aiMaterial::Get(const char *,unsigned int,unsigned int,Type *,unsigned int *) const"
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\material.inl(91,15): error C2760: синтаксическая ошибка: непредвиденный элемент ":". Ожидается ";"
-  (компиляция исходного файла "Model.cpp")
-      C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\material.h(683,14):
-      Сообщение диагностики возникло в созданной компилятором функции "aiReturn aiMaterial::Get(const char *,unsigned int,unsigned int,Type *,unsigned int *) const"
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\material.inl(91,15): error C3878: синтаксическая ошибка: непредвиденный токен ":" после "expression-statement"
-  (компиляция исходного файла "Model.cpp")
-      C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\material.h(683,14):
-      Сообщение диагностики возникло в созданной компилятором функции "aiReturn aiMaterial::Get(const char *,unsigned int,unsigned int,Type *,unsigned int *) const"
-  
-  NEWRenderer.cpp
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\NEWRenderer.cpp(5,24): warning C4018: <: несоответствие типов со знаком и без знака
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\NEWRenderer.cpp(51,31): warning C4244: =: преобразование "int" в "float", возможна потеря данных
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\NEWRenderer.cpp(58,27): warning C4305: =: усечение из "double" в "float"
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\NEWRenderer.cpp(101,34): warning C4267: =: преобразование из "size_t" в "UINT"; возможна потеря данных
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\NEWRenderer.cpp(155,50): warning C4267: аргумент: преобразование из "size_t" в "int"; возможна потеря данных
-  Renderer.cpp
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.cpp(386,39): warning C4244: =: преобразование "UINT64" в "UINT", возможна потеря данных
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.cpp(398,41): warning C4244: =: преобразование "UINT64" в "UINT", возможна потеря данных
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.cpp(794,34): warning C4267: =: преобразование из "size_t" в "UINT"; возможна потеря данных
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.cpp(864,41): warning C4267: аргумент: преобразование из "size_t" в "int"; возможна потеря данных
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.cpp(871,49): warning C4267: аргумент: преобразование из "size_t" в "int"; возможна потеря данных
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.cpp(875,24): error C2440: инициализация: невозможно преобразовать "std::shared_ptr<GTexture>" в "TGAImage"
-      C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Renderer.cpp(875,24):
-      Для выполнения данного преобразования нет доступного оператора преобразования, определенного пользователем, или вызов оператора невозможен
-  
-  Window.cpp
+﻿  Heaps.cpp
+  PSO.cpp
+  main.cpp
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\main.cpp(15,25): warning C4305: инициализация: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\main.cpp(22,25): warning C4305: инициализация: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\main.cpp(24,26): warning C4305: инициализация: усечение из "double" в "float"
   Создание кода...
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Window.cpp(45,1): warning C4715: Window::Create: значение возвращается не при всех путях выполнения
+  WHERETFWILLITEND.vcxproj -> C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\x64\Debug\WHERETFWILLITEND.exe
+  "pwsh.exe" не является внутренней или внешней
+  командой, исполняемой программой или пакетным файлом.

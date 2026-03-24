@@ -1,11 +1,11 @@
 #include "Window.h"
 #include "InputDevice.h"
-#include "Renderer.h"
+#include "NEWRenderer.h"
 #include "Model.h"
 #include <chrono>
 Window g_Window;
 InputDevice g_Input;
-Renderer g_Renderer;
+std::shared_ptr<NewRenderer> g_Renderer;
 const int width = 800;
 const int height = 800;
 const int depth = 1000;
@@ -23,7 +23,7 @@ const float ambient_k = 0.3;
 const float diffuse_k = 0.5;
 const float specular_k = 0.8;
 const float shiny_k = 32;
-int Run(Model &mesh) {
+int Run() {
     MSG msg = {};
     bool running = true;
     using clock = std::chrono::high_resolution_clock;
@@ -49,21 +49,21 @@ int Run(Model &mesh) {
        lastTime = currentTime;
        time += deltaTime;
        time = std::fmod(time, 4.0f);
-       g_Renderer.RenderFrame(mesh, time, cam_coords, look_at, up);
+       g_Renderer->RenderFrame();
     }
     return (int)msg.wParam;
 }
 
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow){
     //init window and check if it actually worked
-    //if (!g_Window.Create(hInstance, nCmdShow))
-        return 0;
+    if (!g_Window.Create(hInstance, nCmdShow)){
+            return 0;
+    }
     //init input device
-    //g_Input.Initialize(g_Window.GetHWND());
+    g_Input.Initialize(g_Window.GetHWND());
     //catch messege stuff
-    //Model mesh("sponza.obj"); // загружаем модель и материалы и текстуры и вообще пздц
-    //g_Renderer.Initialize(width,height,2, g_Window.GetHWND(),mesh, cam_coords, look_at, up, light_coords);
+    g_Renderer = std::make_shared<NewRenderer>(width,height,2, &(g_Window),"sponza.obj", cam_coords, look_at, up, 0);
 
-    //int messege = Run(mesh);
-    //return static_cast<int>(messege);
+    int messege = Run();
+    return static_cast<int>(messege);
 }

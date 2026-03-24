@@ -1,19 +1,44 @@
-Texture2D diffuseMap : register(t0);
+Texture2D diffuseMaps[64] : register(t0);
+Texture2D NormalMaps[64] : register(t100);
 SamplerState samplerState : register(s0);
 
-cbuffer Light : register(b1)
+struct LightData
 {
-    float3 lightPos;
-    float pad;
-    float3 cameraPos;
-    float pad1;
-    float4 ambient_k;
-    float4 diffuse_k;
-    float4 specular_k;
-    float shiny_k;
-    float intensity;
-    float pad3;
+    float3 strength;
+    float falloff_start;
+    float4 direction;
+    float4 position;
+    float falloff_end;
+    float spot_power;
+    int type;
+    float pad = 0;
+};
+struct shaderMaterialData
+{
+    float3 ambient_;
+    float shiny_;
+    float3 diffuse_;
+    float pad0 = 0;
+    float3 spec_;
+    float pad1 = 0;
+};
+cbuffer PassConstants : register(b0)
+{
+    float4x4 model;
+    float4x4 inv_model;
+    float4x4 view;
+    float4x4 inv_view;
+    float4x4 projection;
+    float4x4 inv_projection;
+    float4 cam_pos;
+    float4 cam_forward;
+    float3 amb_light;
     float time;
+    LightData lights[128];
+    shaderMaterialData mats[64];
+    float max_lights;
+    float current_mat;
+    float pad2[2];
 };
 
 struct PS_IN
@@ -26,14 +51,19 @@ struct PS_IN
 
 float4 main(PS_IN input) : SV_TARGET
 {
+    float4 FinalColor = amb_light;
     float3 N = normalize(input.normal);
-    float3 L = normalize(lightPos - input.worldPos);
-    float3 V = normalize(cameraPos - input.worldPos);
-    float4 diff = diffuse_k * max(dot(N, L), 0);
-    float3 R = reflect(-L, N);
-    float4 spec = specular_k * pow(max(dot(R, V), 0), shiny_k);
-    float2 uv = input.uv+time;
-    float4 texColor = diffuseMap.Sample(samplerState, uv);
-    float3 finalRGB = texColor * (ambient_k + diff) + spec +float3(0.1, 0.1, 0.1);
-    return float4(finalRGB, texColor.a);
+    float3 finalLight = amb_light;
+    for (int j = 0; j < max_lights; j++) {
+        float3 L = normalize(lights[j].position.xyz - input.worldPos);
+        float3 V = normalize(cam_pos.xyz - input.worldPos);
+        float3 diffuse_ = mats[current_mat].diffuse_ * max(dot(N, L), 0);
+        float3 R = reflect(-L, N);
+        float3 spec = mats[current_mat].spec_ * pow(max(dot(R, V), 0), mats[current_mat].shiny_);
+        finalLight += (diffuse_ + spec) *lights[j].strength;
+    }
+    float2 uv = input.uv;
+    float4 texcolor = diffuseMaps[current_mat].Sample(samplerState, uv);
+    FinalColor = float4(texcolor.xyz * finalLight, texcolor.a);
+    return FinalColor;
 }

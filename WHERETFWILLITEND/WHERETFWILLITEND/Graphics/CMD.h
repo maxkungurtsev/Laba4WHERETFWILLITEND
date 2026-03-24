@@ -4,8 +4,6 @@
 #include <windows.h>
 #include <wrl.h>
 #include <iostream>
-//#include "Gdevice.h"
-class Gdevice;
 using Microsoft::WRL::ComPtr;
 class Gdevice;
 class CMD {
@@ -13,8 +11,8 @@ public:
 	ComPtr<ID3D12CommandQueue> command_queue_;
 	ComPtr<ID3D12CommandAllocator> command_allocator_;
 	ComPtr<ID3D12GraphicsCommandList> command_list_;
-	std::shared_ptr<Gdevice> device_;
-	void CreateCMD(std::shared_ptr<Gdevice> device, D3D12_COMMAND_LIST_TYPE type = D3D12_COMMAND_LIST_TYPE_DIRECT);
+	ComPtr<ID3D12Device> device_;
+	void CreateCMD(ComPtr<ID3D12Device> device, D3D12_COMMAND_LIST_TYPE type = D3D12_COMMAND_LIST_TYPE_DIRECT);
 	void ResetAllocator();
 private:
 	void CreateCMDList(D3D12_COMMAND_LIST_TYPE type);

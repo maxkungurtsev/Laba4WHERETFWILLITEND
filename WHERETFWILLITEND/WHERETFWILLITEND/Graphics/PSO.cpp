@@ -1,6 +1,6 @@
 #include "PSO.h"
-
-PSO::PSO(std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout, ComPtr<ID3DBlob> vertex_shader, ComPtr<ID3DBlob> pixel_shader, std::shared_ptr<Gdevice> device) {
+#include <sstream>
+PSO::PSO(std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout, ComPtr<ID3DBlob> vertex_shader, ComPtr<ID3DBlob> pixel_shader, std::shared_ptr<Gdevice> device, std::shared_ptr<RootSignature> root_sign) {
     device_ = device;
     vertex_shader_ = vertex_shader;
     pixel_shader_ = pixel_shader;
@@ -8,7 +8,7 @@ PSO::PSO(std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout, ComPtr<ID3DBlob> ve
     ComPtr<ID3DBlob> errorBlob;
     D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
     psoDesc.InputLayout = { input_layout_.data(), (UINT)input_layout_.size() };
-    psoDesc.pRootSignature = root_signature_.Get();
+    psoDesc.pRootSignature = root_sign->GetRootSign().Get();
     psoDesc.VS = { vertex_shader_->GetBufferPointer(), vertex_shader_->GetBufferSize() };
     psoDesc.PS = { pixel_shader_->GetBufferPointer(), pixel_shader_->GetBufferSize() };
     psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
@@ -35,8 +35,8 @@ PSO::PSO(std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout, ComPtr<ID3DBlob> ve
     psoDesc.NumRenderTargets = 1;
     psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
     psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
-    psoDesc.SampleDesc.Count = sample_amount_;
-    psoDesc.SampleDesc.Quality = msaa_quality_;
+    psoDesc.SampleDesc.Count = device->sample_amount_;
+    psoDesc.SampleDesc.Quality = device->msaa_quality_;
     //RasterizerState
     D3D12_RASTERIZER_DESC rasterDesc{};
     rasterDesc.FillMode = D3D12_FILL_MODE_SOLID;
@@ -85,7 +85,7 @@ PSO::PSO(std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout, ComPtr<ID3DBlob> ve
     depthDesc.BackFace = depthDesc.FrontFace;
     psoDesc.DepthStencilState = depthDesc;
     // D E B U G  T I M E
-    if (!root_signature_) OutputDebugStringA("root_signature_ == null\n");
+    if (!root_sign->GetRootSign()) OutputDebugStringA("root_signature_ == null\n");
     if (!vertex_shader_) OutputDebugStringA("vertex_shader_ == null\n");
     if (!pixel_shader_) OutputDebugStringA("pixel_shader_ == null\n");
     {
@@ -111,7 +111,7 @@ PSO::PSO(std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout, ComPtr<ID3DBlob> ve
     oss << "VS Size: " << psoDesc.VS.BytecodeLength << "\n";
     oss << "PS Size: " << psoDesc.PS.BytecodeLength << "\n";
     OutputDebugStringA(oss.str().c_str());
-    HRESULT hr = device_->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipeline_state_));
+    HRESULT hr = device_->GetDXDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipeline_state_));
     if (FAILED(hr)) {
         std::ostringstream oss2;
         oss2 << "CreateGraphicsPipelineState failed. HRESULT = 0x" << std::hex << hr << "\n";
