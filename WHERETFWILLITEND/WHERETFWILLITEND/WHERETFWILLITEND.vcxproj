@@ -126,6 +126,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Graphics\BackBuffer.cpp" />
     <ClCompile Include="Graphics\CMD.cpp" />
     <ClCompile Include="Graphics\GBuffer.cpp" />
     <ClCompile Include="Graphics\Gdevice.cpp" />
@@ -145,6 +146,7 @@
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Graphics\BackBuffer.h" />
     <ClInclude Include="Graphics\CBuffer.h" />
     <ClInclude Include="Graphics\CMD.h" />
     <ClInclude Include="Graphics\Constants.h" />

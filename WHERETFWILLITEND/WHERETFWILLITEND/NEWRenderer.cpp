@@ -1,31 +1,25 @@
 #include "NEWRenderer.h"
-void NewRenderer::CreateBackbuffer() {
-    back_buffer_ = std::vector<ComPtr<ID3D12Resource>>(frame_count_);
-    D3D12_CPU_DESCRIPTOR_HANDLE rtv_handle = device_->heaps_->GetRTVHeap()->GetCPUDescriptorHandleForHeapStart();
-    for (UINT i = 0; i < frame_count_; i++) {
-        rtv_handle.ptr += SIZE_T(i) * device_->heaps_->GetRTVHeapDescriptorSize();
-        HRESULT hr = swap_chain_->GetBuffer(i, IID_PPV_ARGS(&back_buffer_[i]));
-        if (FAILED(hr)) {
-            throw std::runtime_error("Failed to get swapchain buffer");
-        }
-        device_->GetDXDevice()->CreateRenderTargetView(back_buffer_[i].Get(), nullptr, rtv_handle);
-    }
-};
-
 void NewRenderer::CreateGeomRootSign(int textures_amount) {
     //cbv
+    if (geom_root_signature_ == nullptr) {
+        geom_root_signature_ = std::make_shared<RootSignature>();
+    }
     geom_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_ALL);
     // textures diffuse and normal
-    geom_root_signature_->AddParameter(Type::srv, textures_amount, D3D12_SHADER_VISIBILITY_PIXEL);
-    geom_root_signature_->AddParameter(Type::srv, textures_amount, D3D12_SHADER_VISIBILITY_PIXEL, 100);
+    geom_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    geom_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     //sampler
     geom_root_signature_->AddParameter(Type::sampler, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    OutputDebugStringA("sampler made\n");
     //creating root sign with said params
     geom_root_signature_->CreateRootSignature(device_);
 };
 
 void NewRenderer::CreateLightRootSign() {
     //cbv
+    if (light_root_signature_ == nullptr) {
+        light_root_signature_ = std::make_shared<RootSignature>();
+    }
     light_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_ALL);
     // g buffer
     light_root_signature_->AddParameter(Type::srv, 3, D3D12_SHADER_VISIBILITY_PIXEL);
@@ -51,23 +45,22 @@ void NewRenderer::FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, i
     cbuffer_->GetData().time = time;
     cbuffer_->GetData().amb_light = amb_light;
     XMStoreFloat4(&cbuffer_->GetData().cam_pos, cam_pos);
-    XMStoreFloat4(&cbuffer_->GetData().cam_forward, look_at);
+    XMStoreFloat4(&cbuffer_->GetData().cam_forward, XMVector3Normalize(look_at - cam_pos));
     LightData light;
     light.direction = {1.0f, 1.0f, 1.0f, 1.0f};
     light.falloff_end = 0.5;
     light.falloff_start = 0.3;
     light.position = {0.0f, 10.0f, 10.0f, 1.0f};
     light.spot_power = 10.0f;
-    light.strength = {10.0f, 10.0f, 10.0f};
+    light.strength = {1.0f, 1.0f, 1.0f};
     light.type = 1;
     cbuffer_->GetData().lights[0]=light;
     cbuffer_->GetData().max_lights = 1;
     for (int i = 0; i < mesh_->GetMaterials().size(); i++) {
-        int index = min(i, 128);
-        cbuffer_->GetData().mats[index].ambient_ = mesh_->GetMaterials()[i].ambient_k;
-        cbuffer_->GetData().mats[index].diffuse_ = mesh_->GetMaterials()[i].diffuse_k;
-        cbuffer_->GetData().mats[index].spec_ = mesh_->GetMaterials()[i].specular_k;
-        cbuffer_->GetData().mats[index].shiny_ = mesh_->GetMaterials()[i].shiny_k;
+        cbuffer_->GetData().mats[i].ambient_ = mesh_->GetMaterials()[i].ambient_k;
+        cbuffer_->GetData().mats[i].diffuse_ = mesh_->GetMaterials()[i].diffuse_k;
+        cbuffer_->GetData().mats[i].spec_ = mesh_->GetMaterials()[i].specular_k;
+        cbuffer_->GetData().mats[i].shiny_ = mesh_->GetMaterials()[i].shiny_k;
     }
     cbuffer_->Save_changes();
 };
@@ -136,9 +129,9 @@ void NewRenderer::CreateVertexBuffer(std::shared_ptr<Model> model) {
     vertex_buffer_view_.SizeInBytes = bufferSize;
 }
 
-void NewRenderer::CompileShader(std::wstring path, ComPtr<ID3DBlob> shader) {
+void NewRenderer::CompileShader(std::wstring path, ComPtr<ID3DBlob>& shader, std::string& type) {
     ComPtr<ID3DBlob> errorBlob;
-    HRESULT hr = D3DCompileFromFile(path.c_str(), nullptr, nullptr, "main", "vs_5_0", 0, 0, &shader, &errorBlob);
+    HRESULT hr = D3DCompileFromFile(path.c_str(), nullptr, nullptr, "main", type.c_str(), 0, 0, &shader, &errorBlob);
     if (FAILED(hr)) {
         if (errorBlob) {
             std::cerr << "Shader compile error: ";
@@ -156,9 +149,10 @@ NewRenderer::NewRenderer(UINT width, UINT height, int frame_count, Window* hwnd,
 	//device, cmd, fence, heaps, viewport, scissor
 	device_ = std::make_shared<Gdevice>(width, height, 200+frame_count);
     swap_chain_=hwnd->CreateSwapChain(device_);
+    //////////////////////////////////////////////////////////////////////////////
     mesh_ = std::make_shared<Model>(mesh_path, device_);
     OutputDebugStringA("model loaded\n");
-    CreateBackbuffer();
+    back_buffer_ = std::make_shared<BackBuffer>(frame_count, swap_chain_, device_);
 	//g buffer
     g_buffer_ = std::make_shared<GBuffer>(width, height, device_);
     OutputDebugStringA("g buffer created\n");
@@ -172,8 +166,10 @@ NewRenderer::NewRenderer(UINT width, UINT height, int frame_count, Window* hwnd,
     cbuffer_ = std::make_shared<Cbuffer<PassConstants>>(device_);
     FillCbuffer(cam_pos, look_at, up, time);
     CreateVertexBuffer(mesh_);
-    CompileShader(L"VertexShader.hlsl",vertex_shader_);
-    CompileShader(L"PixelShader.hlsl", pixel_shader_);
+    std::string type= "vs_5_0";
+    CompileShader(L"VertexShader.hlsl",vertex_shader_, type);
+    type = "ps_5_0";
+    CompileShader(L"PixelShader.hlsl", pixel_shader_, type);
     pso_ = std::make_shared<PSO>(input_layout_, vertex_shader_, pixel_shader_, device_, geom_root_signature_);
 }
 void NewRenderer::RenderFrame() {
@@ -185,20 +181,23 @@ void NewRenderer::RenderFrame() {
         D3D12_RESOURCE_BARRIER_TYPE_TRANSITION,
         D3D12_RESOURCE_BARRIER_FLAG_NONE,
         {
-            back_buffer_[current_backbuffer_].Get(),
+            back_buffer_->GetCurrentBackBuffer().Get(),
             D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES,
             D3D12_RESOURCE_STATE_PRESENT,
-            D3D12_RESOURCE_STATE_RESOLVE_DEST
+            D3D12_RESOURCE_STATE_RENDER_TARGET
         }
     };
     device_->cmd_->command_list_->ResourceBarrier(barrierCount, barriersBegin);
     //Viewport / Scissor
     device_->cmd_->command_list_->RSSetViewports(1, &device_->viewport_);
     device_->cmd_->command_list_->RSSetScissorRects(1, &device_->scissor_rect_);
+    ////////////////////////////////////////////////////
     //dsv
     D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = g_buffer_->depth_->handle_.cpu_;
-    //command_list_->OMSetRenderTargets(1, &msaa_rtv_handle_, FALSE, &dsvHandle);
+    D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = back_buffer_->GetCurrentHandle().cpu_;
+    device_->cmd_->command_list_->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
     const float clearColor[] = { 0.2f, 0.4f, 0.6f, 1.0f };
+    device_->cmd_->command_list_->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
     device_->cmd_->command_list_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
     device_->cmd_->command_list_->SetPipelineState(pso_->GetPSO().Get());
     device_->cmd_->command_list_->SetGraphicsRootSignature(geom_root_signature_->GetRootSign().Get());
@@ -211,10 +210,6 @@ void NewRenderer::RenderFrame() {
     //set root params
     //cbv
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, cbuffer_->GetHandle().gpu_);
-    //diffuse textures
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, mesh_->GetMaterials()[0].diffuseTexture->GetResourse()->GetHandle().gpu_);
-    //normal textures
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, mesh_->GetMaterials()[0].NormalTexture->GetResourse()->GetHandle().gpu_);
     //sampler
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, Sampler_handle_.gpu_);
 
@@ -223,25 +218,32 @@ void NewRenderer::RenderFrame() {
 
 
     //DRAW
-    cbuffer_->GetData().current_mat = 0;
+   // OutputDebugStringA(std::to_string(mesh_->GetMaterials().size()).c_str());
+    //OutputDebugStringA("\n");
     for (const auto& submesh : mesh_->GetSubMeshes()) {
+        //diffuse textures
+       //OutputDebugStringA(std::to_string(current_mat).c_str());
+        //OutputDebugStringA("\n");
+        cbuffer_->GetData().current_mat = submesh.materialIndex;
+        cbuffer_->Save_changes();
+        device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, mesh_->GetMaterials()[submesh.materialIndex].diffuseTexture->GetResourse()->GetHandle().gpu_);
+        //normal textures
+        device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, mesh_->GetMaterials()[submesh.materialIndex].NormalTexture->GetResourse()->GetHandle().gpu_);
         device_->cmd_->command_list_->DrawInstanced(
             static_cast<UINT>(submesh.vertexCount),
             1,
             static_cast<UINT>(submesh.startVertex),
             0
         );
-        cbuffer_->GetData().current_mat += 1;
-        cbuffer_->Save_changes();
     } 
 
     device_->cmd_->command_list_->Close();
     ID3D12CommandList* lists[] = { device_->cmd_->command_list_.Get() };
     device_->cmd_->command_queue_->ExecuteCommandLists(1, lists);
-
+    /////////////////////////////////////////////////////////////////////////
     //Present
     swap_chain_->Present(1, 0);
-    current_backbuffer_ = swap_chain_->GetCurrentBackBufferIndex();
+    back_buffer_->SetCurrentBackBuffer();
 
     //Fence
     device_->fence_->IncrementFenceValue();

@@ -1,5 +1,5 @@
-Texture2D diffuseMaps[64] : register(t0);
-Texture2D NormalMaps[64] : register(t100);
+Texture2D diffuseMap : register(t0);
+Texture2D NormalMap : register(t1);
 SamplerState samplerState : register(s0);
 
 struct LightData
@@ -11,16 +11,16 @@ struct LightData
     float falloff_end;
     float spot_power;
     int type;
-    float pad = 0;
+    float pad;
 };
 struct shaderMaterialData
 {
     float3 ambient_;
     float shiny_;
     float3 diffuse_;
-    float pad0 = 0;
+    float pad0;
     float3 spec_;
-    float pad1 = 0;
+    float pad1;
 };
 cbuffer PassConstants : register(b0)
 {
@@ -51,7 +51,6 @@ struct PS_IN
 
 float4 main(PS_IN input) : SV_TARGET
 {
-    float4 FinalColor = amb_light;
     float3 N = normalize(input.normal);
     float3 finalLight = amb_light;
     for (int j = 0; j < max_lights; j++) {
@@ -60,10 +59,11 @@ float4 main(PS_IN input) : SV_TARGET
         float3 diffuse_ = mats[current_mat].diffuse_ * max(dot(N, L), 0);
         float3 R = reflect(-L, N);
         float3 spec = mats[current_mat].spec_ * pow(max(dot(R, V), 0), mats[current_mat].shiny_);
-        finalLight += (diffuse_ + spec) *lights[j].strength;
+        finalLight += (diffuse_+spec) * lights[j].strength;
     }
     float2 uv = input.uv;
-    float4 texcolor = diffuseMaps[current_mat].Sample(samplerState, uv);
-    FinalColor = float4(texcolor.xyz * finalLight, texcolor.a);
+    const int a = current_mat;
+    float4 texcolor = diffuseMap.Sample(samplerState, uv);
+    float4 FinalColor = float4(texcolor.xyz * finalLight, texcolor.a);
     return FinalColor;
 }

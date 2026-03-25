@@ -56,7 +56,7 @@ GTexture::GTexture(TGAImage image, std::string& name, std::shared_ptr<Gdevice> d
 	src.PlacedFootprint.Footprint.Width = width_;
 	src.PlacedFootprint.Footprint.Height = height_;
 	src.PlacedFootprint.Footprint.Depth = 1;
-	src.PlacedFootprint.Footprint.RowPitch = (width_ * 4 + 255) & ~255;
+	src.PlacedFootprint.Footprint.RowPitch =width_ * 4; 
 	device->cmd_->command_list_->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
 	D3D12_RESOURCE_BARRIER barrier{};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;

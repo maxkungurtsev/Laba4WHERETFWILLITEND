@@ -1,15 +1,15 @@
 #include "RootSignature.h"
 void RootSignature::AddParameter(Type type, int descriptor_amount, D3D12_SHADER_VISIBILITY visibility, int base_register){
-		D3D12_DESCRIPTOR_RANGE1 range{};
+	D3D12_DESCRIPTOR_RANGE1 range{};
 	switch (type) {
 	case Type::cbv:
 		range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_CBV;
 		range.NumDescriptors = descriptor_amount;
 		range.BaseShaderRegister = max(base_register,base_shader_register_cbv_);
 		range.RegisterSpace = 0;
-		range.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DATA_STATIC;
+		range.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
 		range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-		base_shader_register_cbv_ += descriptor_amount;
+		base_shader_register_cbv_ = max(base_register, base_shader_register_cbv_) + descriptor_amount;
 		break;
 
 	case Type::srv:
@@ -19,7 +19,7 @@ void RootSignature::AddParameter(Type type, int descriptor_amount, D3D12_SHADER_
 		range.RegisterSpace = 0;
 		range.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
 		range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-		base_shader_register_srv_ += descriptor_amount;
+		base_shader_register_srv_ = max(base_register, base_shader_register_srv_) + descriptor_amount;
 		break;
 
 	case Type::sampler:
@@ -29,17 +29,21 @@ void RootSignature::AddParameter(Type type, int descriptor_amount, D3D12_SHADER_
 		range.RegisterSpace = 0;
 		range.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_NONE;
 		range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
-		base_shader_register_sampler_ += descriptor_amount;
+		base_shader_register_sampler_ = max(base_register, base_shader_register_sampler_)+descriptor_amount;
 		break;
 	}
+	ranges_.push_back(range);
 	D3D12_ROOT_PARAMETER1 new_root_param;
 	new_root_param.ParameterType = D3D12_ROOT_PARAMETER_TYPE_DESCRIPTOR_TABLE;
 	new_root_param.DescriptorTable.NumDescriptorRanges = 1;
-	new_root_param.DescriptorTable.pDescriptorRanges = &range;
+	new_root_param.DescriptorTable.pDescriptorRanges = &(ranges_[root_params_.size()]);
 	new_root_param.ShaderVisibility = visibility;
 	root_params_.push_back(new_root_param);
 }
 void RootSignature::CreateRootSignature(std::shared_ptr<Gdevice> device) {
+	for (int i = 0; i < root_params_.size(); i++) {
+		root_params_[i].DescriptorTable.pDescriptorRanges = &ranges_[i];
+	}
 	D3D12_VERSIONED_ROOT_SIGNATURE_DESC rootSigDesc{};
 	rootSigDesc.Version = D3D_ROOT_SIGNATURE_VERSION_1_1;
 	rootSigDesc.Desc_1_1.NumParameters = root_params_.size();

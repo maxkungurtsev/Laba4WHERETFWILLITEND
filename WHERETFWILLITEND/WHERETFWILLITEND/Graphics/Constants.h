@@ -31,7 +31,7 @@ struct PassConstants {
 	XMFLOAT3 amb_light;
 	float time;
 	LightData lights[128];
-	shaderMaterialData mats[128];
+	shaderMaterialData mats[64];
 	float max_lights;
 	float current_mat;
 	float pad2[2];

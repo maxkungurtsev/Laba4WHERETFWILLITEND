@@ -66,6 +66,9 @@
     <ClCompile Include="Graphics\GBuffer.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="Graphics\BackBuffer.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Window.h">
@@ -120,6 +123,9 @@
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
     <ClInclude Include="Graphics\Constants.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
+    <ClInclude Include="Graphics\BackBuffer.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
