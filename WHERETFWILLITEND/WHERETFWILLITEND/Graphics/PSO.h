@@ -8,6 +8,6 @@ private:
 	ComPtr<ID3D12PipelineState> pipeline_state_;
 	std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout_;
 public:
-	PSO(std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout, ComPtr<ID3DBlob> vertex_shader, ComPtr<ID3DBlob> pixel_shader, std::shared_ptr<Gdevice> device, std::shared_ptr<RootSignature> root_sign);
+	PSO(std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout, ComPtr<ID3DBlob> vertex_shader, ComPtr<ID3DBlob> pixel_shader, std::shared_ptr<Gdevice> device, std::shared_ptr<RootSignature> root_sign, int rtv_amount, std::vector<DXGI_FORMAT> formats);
 	ComPtr<ID3D12PipelineState> GetPSO();
 };

@@ -1,9 +1,9 @@
 #include "RenderingSystem.h"
 void RenderingSystem::CreateGeomRootSign(int textures_amount) {
-    //cbv
     if (geom_root_signature_ == nullptr) {
         geom_root_signature_ = std::make_shared<RootSignature>();
     }
+    //cbv
     geom_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_ALL);
     // textures diffuse and normal
     geom_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
@@ -16,13 +16,16 @@ void RenderingSystem::CreateGeomRootSign(int textures_amount) {
 };
 
 void RenderingSystem::CreateLightRootSign() {
-    //cbv
     if (light_root_signature_ == nullptr) {
         light_root_signature_ = std::make_shared<RootSignature>();
     }
-    light_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_ALL);
+    //cbv
+    light_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     // g buffer
-    light_root_signature_->AddParameter(Type::srv, 3, D3D12_SHADER_VISIBILITY_PIXEL);
+    light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     //sampler
     light_root_signature_->AddParameter(Type::sampler, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     //creating root sign with said params
@@ -150,6 +153,64 @@ void RenderingSystem::CompileShader(std::wstring path, ComPtr<ID3DBlob>& shader,
     }
 };
 
+void RenderingSystem::GeomPass(const float clearColor[4]) {
+    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = g_buffer_->depth_->handle_.cpu_;
+    // setting gbuffer as render target
+    device_->cmd_->command_list_->OMSetRenderTargets(0, &g_buffer_->albedo_->handle_.cpu_, FALSE, &dsvHandle);
+    device_->cmd_->command_list_->OMSetRenderTargets(1, &g_buffer_->normal_->handle_.cpu_, FALSE, &dsvHandle);
+    device_->cmd_->command_list_->OMSetRenderTargets(2, &g_buffer_->material_index_->handle_.cpu_, FALSE, &dsvHandle);
+
+    //clearing
+    device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->albedo_->handle_.cpu_, clearColor, 0, nullptr);
+    device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->normal_->handle_.cpu_, clearColor, 0, nullptr);
+    device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->material_index_->handle_.cpu_, clearColor, 0, nullptr);
+    device_->cmd_->command_list_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+    //desc tables setup
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, cbuffer_->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, Sampler_handle_.gpu_);
+    device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+
+    device_->cmd_->command_list_->SetPipelineState(geom_pso_->GetPSO().Get());
+    device_->cmd_->command_list_->SetGraphicsRootSignature(geom_root_signature_->GetRootSign().Get());
+    for (const auto& submesh : mesh_->GetSubMeshes()) {
+        //diffuse textures
+       //OutputDebugStringA(std::to_string(current_mat).c_str());
+        //OutputDebugStringA("\n");
+        cbuffer_->GetData().current_mat = submesh.materialIndex;
+        cbuffer_->Save_changes();
+        device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, mesh_->GetMaterials()[submesh.materialIndex].diffuseTexture->GetResourse()->GetHandle().gpu_);
+        //normal textures
+        device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, mesh_->GetMaterials()[submesh.materialIndex].NormalTexture->GetResourse()->GetHandle().gpu_);
+        if (mesh_->GetMaterials()[submesh.materialIndex].diffuseTexPath == "textures/sponza_thorn_diff.tga" or mesh_->GetMaterials()[submesh.materialIndex].diffuseTexPath == "textures/vase_plant.tga")
+        {
+            device_->cmd_->command_list_->SetPipelineState(geom_pso_anim_->GetPSO().Get());
+        }
+        else {
+            device_->cmd_->command_list_->SetPipelineState(geom_pso_->GetPSO().Get());
+        }
+        device_->cmd_->command_list_->DrawInstanced(static_cast<UINT>(submesh.vertexCount), 1, static_cast<UINT>(submesh.startVertex), 0);
+    }
+}
+void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle) {
+    // set & cler dsv, rtv
+    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = g_buffer_->depth_->handle_.cpu_;
+    device_->cmd_->command_list_->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+    device_->cmd_->command_list_->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
+    device_->cmd_->command_list_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+    //set desc tables
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, cbuffer_->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, g_buffer_->albedo_->handle_.gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, g_buffer_->normal_->handle_.gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, g_buffer_->depth_->handle_.gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(4, g_buffer_->material_index_->handle_.gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(5, Sampler_handle_.gpu_);
+    device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    // set pso and draw
+    device_->cmd_->command_list_->SetPipelineState(light_pso_->GetPSO().Get());
+    device_->cmd_->command_list_->SetGraphicsRootSignature(light_root_signature_->GetRootSign().Get());
+    device_->cmd_->command_list_->DrawInstanced(3, 1, 0, 0);
+}
 RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string mesh_path, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, int time) {
     device_ = device;
     mesh_ = std::make_shared<Model>(mesh_path, device_);
@@ -163,66 +224,42 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string me
     CreateGeomRootSign(mesh_->GetMaterials().size());
     OutputDebugStringA("geom root sign made\n");
     CreateLightRootSign();
+    OutputDebugStringA("light root sign made\n");
     CreateInputLayout();
     cbuffer_ = std::make_shared<Cbuffer<PassConstants>>(device_);
     cbuffer_->GetData().max_lights = 0;
     FillCbuffer(cam_pos, look_at, up, time);
     AddLight();
     CreateVertexBuffer(mesh_);
+
+
     std::string type = "vs_5_0";
-    CompileShader(L"VertexShader.hlsl", vertex_shader_, type);
-    CompileShader(L"VertexShader_anim_.hlsl", vertex_shader_anim_, type);
+    CompileShader(L"GeomVertexShader.hlsl", geom_vertex_shader_, type);
+    CompileShader(L"GeomVertexShader_anim_.hlsl", geom_vertex_shader_anim_, type);
     type = "ps_5_0";
-    CompileShader(L"PixelShader.hlsl", pixel_shader_, type);
-    pso_ = std::make_shared<PSO>(input_layout_, vertex_shader_, pixel_shader_, device_, geom_root_signature_);
-    pso_anim_ = std::make_shared<PSO>(input_layout_, vertex_shader_anim_, pixel_shader_, device_, geom_root_signature_);
+    CompileShader(L"GeomPixelShader.hlsl", geom_pixel_shader_, type);
+    OutputDebugStringA("geom shaders compiled\n");
+
+    type = "vs_5_0";
+    CompileShader(L"LightVertexShader.hlsl", geom_vertex_shader_, type);
+    type = "ps_5_0";
+    CompileShader(L"LightPixelShader.hlsl", geom_pixel_shader_, type);
+    OutputDebugStringA("light shaders compiled\n");
+    // formats of bullshit ima use as rtv
+    std::vector<DXGI_FORMAT> formats = {DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_B8G8R8A8_UNORM ,DXGI_FORMAT_R8G8B8A8_UNORM };
+    geom_pso_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, geom_pixel_shader_, device_, geom_root_signature_, 3, formats);
+    OutputDebugStringA("geom pso 1 made\n");
+    geom_pso_anim_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_anim_, geom_pixel_shader_, device_, geom_root_signature_, 3, formats);
+    OutputDebugStringA("geom pso 2 made\n");
+    formats = { DXGI_FORMAT_R8G8B8A8_UNORM };
+    std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout;
+    input_layout.push_back({ nullptr, 0 });
+    light_pso_ = std::make_shared<PSO>(input_layout, light_vertex_shader_, light_pixel_shader_, device_, light_root_signature_, 1, formats);
+    OutputDebugStringA("light pso made\n");
 }
 void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up, D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle) {
     //dsv
-    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = g_buffer_->depth_->handle_.cpu_;
-    device_->cmd_->command_list_->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
-    const float clearColor[] = { 0.2f, 0.4f, 0.6f, 1.0f };
-    device_->cmd_->command_list_->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
-    device_->cmd_->command_list_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-    device_->cmd_->command_list_->SetPipelineState(pso_->GetPSO().Get());
-    device_->cmd_->command_list_->SetGraphicsRootSignature(geom_root_signature_->GetRootSign().Get());
-    // heaps shit
-    ID3D12DescriptorHeap* heaps[] = {
-        device_->heaps_->GetCBV_SRV_UAV_Heap().Get(),
-        device_->heaps_->GetSamplerHeap().Get()
-    };
-    device_->cmd_->command_list_->SetDescriptorHeaps(_countof(heaps), heaps);
-    //set root params
-    //cbv
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, cbuffer_->GetHandle().gpu_);
-    //sampler
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, Sampler_handle_.gpu_);
-    device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-    device_->cmd_->command_list_->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
-    //DRAW
-    FillCbuffer(cam_pos, look_at, up, time);
-    for (const auto& submesh : mesh_->GetSubMeshes()) {
-        //diffuse textures
-       //OutputDebugStringA(std::to_string(current_mat).c_str());
-        //OutputDebugStringA("\n");
-        cbuffer_->GetData().current_mat = submesh.materialIndex;
-        cbuffer_->Save_changes();
-        device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, mesh_->GetMaterials()[submesh.materialIndex].diffuseTexture->GetResourse()->GetHandle().gpu_);
-        //normal textures
-        device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, mesh_->GetMaterials()[submesh.materialIndex].NormalTexture->GetResourse()->GetHandle().gpu_);
-        if (mesh_->GetMaterials()[submesh.materialIndex].diffuseTexPath == "textures/sponza_thorn_diff.tga" or mesh_->GetMaterials()[submesh.materialIndex].diffuseTexPath == "textures/vase_plant.tga")
-        {
-            device_->cmd_->command_list_->SetPipelineState(pso_anim_->GetPSO().Get());
-        }
-        else {
-            device_->cmd_->command_list_->SetPipelineState(pso_->GetPSO().Get());
-        }
-
-        device_->cmd_->command_list_->DrawInstanced(
-            static_cast<UINT>(submesh.vertexCount),
-            1,
-            static_cast<UINT>(submesh.startVertex),
-            0
-        );
-    }
+    const float clearColor[4] = { 0.2f, 0.4f, 0.6f, 1.0f };
+    GeomPass(clearColor);
+    LightPass(clearColor, rtvHandle);
 }

@@ -1,6 +1,6 @@
 #include "PSO.h"
 #include <sstream>
-PSO::PSO(std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout, ComPtr<ID3DBlob> vertex_shader, ComPtr<ID3DBlob> pixel_shader, std::shared_ptr<Gdevice> device, std::shared_ptr<RootSignature> root_sign) {
+PSO::PSO(std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout, ComPtr<ID3DBlob> vertex_shader, ComPtr<ID3DBlob> pixel_shader, std::shared_ptr<Gdevice> device, std::shared_ptr<RootSignature> root_sign, int rtv_amount, std::vector<DXGI_FORMAT> formats) {
     device_ = device;
     vertex_shader_ = vertex_shader;
     pixel_shader_ = pixel_shader;
@@ -32,8 +32,10 @@ PSO::PSO(std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout, ComPtr<ID3DBlob> ve
     psoDesc.DepthStencilState.StencilEnable = FALSE;
     psoDesc.SampleMask = UINT_MAX;
     psoDesc.PrimitiveTopologyType = D3D12_PRIMITIVE_TOPOLOGY_TYPE_TRIANGLE;
-    psoDesc.NumRenderTargets = 1;
-    psoDesc.RTVFormats[0] = DXGI_FORMAT_R8G8B8A8_UNORM;
+    psoDesc.NumRenderTargets = rtv_amount;
+    for (int i = 0; i < rtv_amount; i++) {
+    psoDesc.RTVFormats[i] = formats[i];
+    }
     psoDesc.DSVFormat = DXGI_FORMAT_D32_FLOAT;
     psoDesc.SampleDesc.Count = device->sample_amount_;
     psoDesc.SampleDesc.Quality = device->msaa_quality_;

@@ -25,17 +25,22 @@ void NewRenderer::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XM
         }
     };
     device_->cmd_->command_list_->ResourceBarrier(barrierCount, barriersBegin);
+
     //Viewport / Scissor
     device_->cmd_->command_list_->RSSetViewports(1, &device_->viewport_);
     device_->cmd_->command_list_->RSSetScissorRects(1, &device_->scissor_rect_);
+
     //rtv
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = back_buffer_->GetCurrentHandle().cpu_;
-    OutputDebugStringA("up to renderframe\n");
+
+    //renderframe
     render_system_->RenderFrame(time, look_at, cam_pos, up, rtvHandle);
 
+    //close cmd
     device_->cmd_->command_list_->Close();
     ID3D12CommandList* lists[] = { device_->cmd_->command_list_.Get() };
     device_->cmd_->command_queue_->ExecuteCommandLists(1, lists);
+
     //Present
     swap_chain_->Present(1, 0);
     back_buffer_->SetCurrentBackBuffer();
