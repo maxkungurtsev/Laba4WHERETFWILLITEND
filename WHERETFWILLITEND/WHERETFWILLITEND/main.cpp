@@ -15,9 +15,9 @@ int texture_height = 800;
 const float intensity = 0.1;
 XMFLOAT3 light_coords = {0.0, 10.0, 10.0};
 //camera stuff
-const XMVECTOR cam_coords = {0.0, 2.0, -5.0, 1.0};
-const XMVECTOR look_at = {5.0, 5.0, 0.0, 1.0};
-const XMVECTOR up = {0.0, 1.0, 0.0, 1.0 };
+XMVECTOR cam_coords = {0.0, 2.0, -5.0, 1.0};
+XMVECTOR look_at = {0.0, 2.0, -4.0, 1.0};
+XMVECTOR up = {0.0, 1.0, 0.0, 1.0 };
 // material stuff
 const float ambient_k = 0.3;
 const float diffuse_k = 0.5;
@@ -38,17 +38,49 @@ int Run() {
             DispatchMessage(&msg);
         }
         g_Input.Update();
+        XMVECTOR forward = look_at - cam_coords;
+        XMVECTOR right = XMVector3Normalize((XMVector3Cross(forward, up)));
         if (g_Input.IsKeyDown(VK_ESCAPE)) {
             PostQuitMessage(0);
         }
-        else if (g_Input.IsKeyDown(VK_SPACE)) {
-            MessageBox(nullptr, L"Space detected!", L"Input Test", MB_OK);
+        if (g_Input.IsKeyDown(VK_UP)) {
+            XMMATRIX rotPitch = XMMatrixRotationAxis(right, 0.05);
+            forward = XMVector3TransformCoord(forward, rotPitch);
+            up = XMVector3TransformCoord(up, rotPitch);
+        }
+        if (g_Input.IsKeyDown(VK_DOWN)) {
+            XMMATRIX rotPitch = XMMatrixRotationAxis(right, -0.05);
+            forward = XMVector3TransformCoord(forward, rotPitch);
+            up = XMVector3TransformCoord(up, rotPitch);
+        }
+        if (g_Input.IsKeyDown(VK_LEFT)) {
+            XMMATRIX rotYaw = XMMatrixRotationAxis(up, 0.05);
+            forward = XMVector3TransformCoord(forward, rotYaw);
+            right = XMVector3TransformCoord(right, rotYaw);
+        }
+        if (g_Input.IsKeyDown(VK_RIGHT)) {
+            XMMATRIX rotYaw = XMMatrixRotationAxis(up, -0.05);
+            forward = XMVector3TransformCoord(forward, rotYaw);
+            right = XMVector3TransformCoord(right, rotYaw);
+        }
+        if (g_Input.IsKeyDown('W')) {
+            cam_coords += forward;
+        }
+        if (g_Input.IsKeyDown('S')) {
+            cam_coords -= forward;
+        }
+        if (g_Input.IsKeyDown('A')) {
+            cam_coords += right;
+        }
+        if (g_Input.IsKeyDown('D')) {
+            cam_coords -= right;
         }
        auto currentTime = clock::now();
        float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
        lastTime = currentTime;
        time += deltaTime;
-       g_Renderer->RenderFrame(time);
+       look_at = cam_coords + forward;
+       g_Renderer->RenderFrame(time, look_at, cam_coords, up);
     }
     return (int)msg.wParam;
 }

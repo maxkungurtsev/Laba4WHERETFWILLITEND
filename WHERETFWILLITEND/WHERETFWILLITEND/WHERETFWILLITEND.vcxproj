@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\packages\Microsoft.Direct3D.D3D12.1.619.1\build\native\Microsoft.Direct3D.D3D12.props" Condition="Exists('..\packages\Microsoft.Direct3D.D3D12.1.619.1\build\native\Microsoft.Direct3D.D3D12.props')" />
   <ItemGroup Label="ProjectConfigurations">
@@ -142,6 +142,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="NEWRenderer.cpp" />
+    <ClCompile Include="RenderingSystem.cpp" />
     <ClCompile Include="tgaimage.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
@@ -163,6 +164,7 @@
     <ClInclude Include="InputDevice.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="NEWRenderer.h" />
+    <ClInclude Include="RenderingSystem.h" />
     <ClInclude Include="tgaimage.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>
