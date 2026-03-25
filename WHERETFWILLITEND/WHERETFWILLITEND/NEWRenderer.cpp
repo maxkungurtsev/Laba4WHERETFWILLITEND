@@ -36,11 +36,12 @@ void NewRenderer::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XM
     //renderframe
     render_system_->RenderFrame(time, look_at, cam_pos, up, rtvHandle);
 
+    
     //close cmd
     device_->cmd_->command_list_->Close();
     ID3D12CommandList* lists[] = { device_->cmd_->command_list_.Get() };
     device_->cmd_->command_queue_->ExecuteCommandLists(1, lists);
-
+    
     //Present
     swap_chain_->Present(1, 0);
     back_buffer_->SetCurrentBackBuffer();
