@@ -16,6 +16,7 @@ private:
 	ComPtr<IDXGISwapChain3> swap_chain_;
 	//////////////////////////////////////////////////////
 	std::shared_ptr<PSO> pso_;
+	std::shared_ptr<PSO> pso_anim_;
 	std::shared_ptr<RootSignature> geom_root_signature_;
 	std::shared_ptr<RootSignature> light_root_signature_;
 	std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout_;
@@ -39,5 +40,5 @@ public:
 	void FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, int time, XMFLOAT3 amb_light = { 0.0f,0.3f,0.3f });
 	NewRenderer(UINT width, UINT height, int num_descriptors, Window* hwnd, std::string mesh_path, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, int time);
 	void CompileShader(std::wstring path, ComPtr<ID3DBlob>& shader, std::string& type);
-	void RenderFrame();
+	void RenderFrame(float time);
 };

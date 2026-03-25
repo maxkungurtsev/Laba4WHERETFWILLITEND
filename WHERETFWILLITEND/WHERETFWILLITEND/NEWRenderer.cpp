@@ -167,12 +167,14 @@ NewRenderer::NewRenderer(UINT width, UINT height, int frame_count, Window* hwnd,
     FillCbuffer(cam_pos, look_at, up, time);
     CreateVertexBuffer(mesh_);
     std::string type= "vs_5_0";
-    CompileShader(L"VertexShader.hlsl",vertex_shader_, type);
+    CompileShader(L"VertexShader.hlsl", vertex_shader_, type);
+    CompileShader(L"VertexShader_anim_.hlsl", vertex_shader_anim_, type);
     type = "ps_5_0";
     CompileShader(L"PixelShader.hlsl", pixel_shader_, type);
     pso_ = std::make_shared<PSO>(input_layout_, vertex_shader_, pixel_shader_, device_, geom_root_signature_);
+    pso_anim_ = std::make_shared<PSO>(input_layout_, vertex_shader_anim_, pixel_shader_, device_, geom_root_signature_);
 }
-void NewRenderer::RenderFrame() {
+void NewRenderer::RenderFrame(float time) {
     device_->cmd_->ResetAllocator();
     D3D12_RESOURCE_BARRIER barriersBegin[2];
     UINT barrierCount = 0;
@@ -220,6 +222,7 @@ void NewRenderer::RenderFrame() {
     //DRAW
    // OutputDebugStringA(std::to_string(mesh_->GetMaterials().size()).c_str());
     //OutputDebugStringA("\n");
+    cbuffer_->GetData().time = time;
     for (const auto& submesh : mesh_->GetSubMeshes()) {
         //diffuse textures
        //OutputDebugStringA(std::to_string(current_mat).c_str());
@@ -229,6 +232,14 @@ void NewRenderer::RenderFrame() {
         device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, mesh_->GetMaterials()[submesh.materialIndex].diffuseTexture->GetResourse()->GetHandle().gpu_);
         //normal textures
         device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, mesh_->GetMaterials()[submesh.materialIndex].NormalTexture->GetResourse()->GetHandle().gpu_);
+        if (mesh_->GetMaterials()[submesh.materialIndex].diffuseTexPath == "textures/sponza_thorn_diff.tga" or mesh_->GetMaterials()[submesh.materialIndex].diffuseTexPath == "textures/vase_plant.tga")
+        {
+            device_->cmd_->command_list_->SetPipelineState(pso_anim_->GetPSO().Get());
+        }
+        else {
+            device_->cmd_->command_list_->SetPipelineState(pso_->GetPSO().Get());
+        }
+        
         device_->cmd_->command_list_->DrawInstanced(
             static_cast<UINT>(submesh.vertexCount),
             1,

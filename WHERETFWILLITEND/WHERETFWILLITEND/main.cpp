@@ -48,8 +48,7 @@ int Run() {
        float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
        lastTime = currentTime;
        time += deltaTime;
-       time = std::fmod(time, 4.0f);
-       g_Renderer->RenderFrame();
+       g_Renderer->RenderFrame(time);
     }
     return (int)msg.wParam;
 }

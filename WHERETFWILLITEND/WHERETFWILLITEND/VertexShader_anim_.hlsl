@@ -1,10 +1,40 @@
-cbuffer MVP : register(b0)
+struct LightData
+{
+    float3 strength;
+    float falloff_start;
+    float4 direction;
+    float4 position;
+    float falloff_end;
+    float spot_power;
+    int type;
+    float pad;
+};
+struct shaderMaterialData
+{
+    float3 ambient_;
+    float shiny_;
+    float3 diffuse_;
+    float pad0;
+    float3 spec_;
+    float pad1;
+};
+cbuffer PassConstants : register(b0)
 {
     float4x4 model;
+    float4x4 inv_model;
     float4x4 view;
+    float4x4 inv_view;
     float4x4 projection;
+    float4x4 inv_projection;
+    float4 cam_pos;
+    float4 cam_forward;
+    float3 amb_light;
     float time;
-    float pad[3];
+    LightData lights[128];
+    shaderMaterialData mats[64];
+    float max_lights;
+    float current_mat;
+    float pad2[2];
 };
 
 struct VS_IN
@@ -25,15 +55,13 @@ struct VS_OUT
 VS_OUT main(VS_IN input)
 {
     VS_OUT output;
-
     float3 pos = input.pos;
-    pos.x += sin(time + pos.y)*2;
-    pos.z += cos(time + pos.x)*2;
+    pos.x += sin(time + pos.y) * 2;
+    pos.z += cos(time + pos.x) * 2;
     float4 worldPosition = mul(model, float4(pos, 1.0));
     output.pos = mul(projection, mul(view, worldPosition));
     output.worldPos = worldPosition.xyz;
     output.normal = normalize(mul((float3x3) model, input.normal));
     output.uv = input.uv;
-
     return output;
 }
