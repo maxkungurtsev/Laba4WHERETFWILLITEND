@@ -1,4 +1,21 @@
 #include "RenderingSystem.h"
+
+static inline D3D12_RESOURCE_BARRIER Transition(
+    ID3D12Resource* res,
+    D3D12_RESOURCE_STATES before,
+    D3D12_RESOURCE_STATES after)
+{
+    D3D12_RESOURCE_BARRIER b{};
+    b.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    b.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+    b.Transition.pResource = res;
+    b.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    b.Transition.StateBefore = before;
+    b.Transition.StateAfter = after;
+    return b;
+}
+
+
 void RenderingSystem::CreateGeomRootSign(int textures_amount) {
     if (geom_root_signature_ == nullptr) {
         geom_root_signature_ = std::make_shared<RootSignature>();
@@ -257,13 +274,38 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string me
     OutputDebugStringA("light pso made\n");
 }
 void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up, D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle) {
-    //dsv
+    FillCbuffer(cam_pos, look_at, up, time);
     ID3D12DescriptorHeap* heaps[] = {
         device_->heaps_->GetCBV_SRV_UAV_Heap().Get(),
         device_->heaps_->GetSamplerHeap().Get()
     };
     device_->cmd_->command_list_->SetDescriptorHeaps(_countof(heaps), heaps);
     const float clearColor[4] = { 0.2f, 0.4f, 0.6f, 1.0f };
+    D3D12_RESOURCE_BARRIER toGeom[] =
+    {
+        Transition(g_buffer_->albedo_->texture_->GetResourse()->GetResourse().Get(),
+                   D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET),
+        Transition(g_buffer_->normal_->texture_->GetResourse()->GetResourse().Get(),
+                   D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET),
+        Transition(g_buffer_->material_index_->texture_->GetResourse()->GetResourse().Get(),
+                   D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET),
+        Transition(g_buffer_->depth_->z_buffer_->GetResourse()->GetResourse().Get(),
+                   D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_DEPTH_WRITE) // no-op, optional
+    };
+    device_->cmd_->command_list_.Get()->ResourceBarrier(3, toGeom);
     GeomPass(clearColor);
+    D3D12_RESOURCE_BARRIER toLight[] =
+    {
+        Transition(g_buffer_->albedo_->texture_->GetResourse()->GetResourse().Get(),
+                   D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
+        Transition(g_buffer_->normal_->texture_->GetResourse()->GetResourse().Get(),
+                   D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
+        Transition(g_buffer_->material_index_->texture_->GetResourse()->GetResourse().Get(),
+                   D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
+        Transition(g_buffer_->depth_->z_buffer_->GetResourse()->GetResourse().Get(),
+                   D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+    };
+    device_->cmd_->command_list_.Get()->ResourceBarrier(4, toLight);
     LightPass(clearColor, rtvHandle);
+
 }

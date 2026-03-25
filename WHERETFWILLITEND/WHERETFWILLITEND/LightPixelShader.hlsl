@@ -73,5 +73,5 @@ float4 main(PS_IN input) : SV_Target{
         finalLight += (diffuse_ + spec) * lights[i].strength;
     }
     float4 Final = float4(albedo, 1.0);
-    return Final;
+    return diffuseMap.Sample(samplerState, uv);
 }

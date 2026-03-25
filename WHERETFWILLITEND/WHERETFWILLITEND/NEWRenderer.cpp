@@ -32,7 +32,7 @@ void NewRenderer::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XM
 
     //rtv
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = back_buffer_->GetCurrentHandle().cpu_;
-
+    //fill cbv
     //renderframe
     render_system_->RenderFrame(time, look_at, cam_pos, up, rtvHandle);
 
@@ -41,7 +41,14 @@ void NewRenderer::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XM
     device_->cmd_->command_list_->Close();
     ID3D12CommandList* lists[] = { device_->cmd_->command_list_.Get() };
     device_->cmd_->command_queue_->ExecuteCommandLists(1, lists);
-    
+    D3D12_RESOURCE_BARRIER toPresent{};
+    toPresent.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+    toPresent.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
+    toPresent.Transition.pResource = back_buffer_->GetCurrentBackBuffer().Get();
+    toPresent.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+    toPresent.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
+    toPresent.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
+    device_->cmd_->command_list_->ResourceBarrier(1, &toPresent);
     //Present
     swap_chain_->Present(1, 0);
     back_buffer_->SetCurrentBackBuffer();
