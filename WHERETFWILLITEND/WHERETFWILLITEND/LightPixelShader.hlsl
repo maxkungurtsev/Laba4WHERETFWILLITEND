@@ -72,6 +72,6 @@ float4 main(PS_IN input) : SV_Target{
         float3 spec = mats[matIndex].spec_ * pow(max(dot(R, V), 0), mats[matIndex].shiny_);
         finalLight += (diffuse_ + spec) * lights[i].strength;
     }
-    float4 Final = float4(albedo, 1.0);
-    return diffuseMap.Sample(samplerState, uv);
+    float4 Final = float4(albedo * finalLight, 1.0);
+    return Final;
 }

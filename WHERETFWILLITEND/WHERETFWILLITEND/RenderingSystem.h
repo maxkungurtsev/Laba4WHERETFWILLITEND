@@ -29,6 +29,7 @@ class RenderingSystem {
 	ComPtr<ID3DBlob> light_pixel_shader_;
 	std::shared_ptr<Model> mesh_;
 	Handle Sampler_handle_;
+	bool first_frame_ = true;
 public:
 	void CreateGeomRootSign(int textures_amount);
 	void CreateLightRootSign();

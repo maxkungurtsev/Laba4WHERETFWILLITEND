@@ -30,17 +30,14 @@ void NewRenderer::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XM
     device_->cmd_->command_list_->RSSetViewports(1, &device_->viewport_);
     device_->cmd_->command_list_->RSSetScissorRects(1, &device_->scissor_rect_);
 
+
+
     //rtv
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = back_buffer_->GetCurrentHandle().cpu_;
     //fill cbv
     //renderframe
     render_system_->RenderFrame(time, look_at, cam_pos, up, rtvHandle);
 
-    
-    //close cmd
-    device_->cmd_->command_list_->Close();
-    ID3D12CommandList* lists[] = { device_->cmd_->command_list_.Get() };
-    device_->cmd_->command_queue_->ExecuteCommandLists(1, lists);
     D3D12_RESOURCE_BARRIER toPresent{};
     toPresent.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
     toPresent.Flags = D3D12_RESOURCE_BARRIER_FLAG_NONE;
@@ -49,6 +46,12 @@ void NewRenderer::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XM
     toPresent.Transition.StateBefore = D3D12_RESOURCE_STATE_RENDER_TARGET;
     toPresent.Transition.StateAfter = D3D12_RESOURCE_STATE_PRESENT;
     device_->cmd_->command_list_->ResourceBarrier(1, &toPresent);
+
+    //close cmd
+    device_->cmd_->command_list_->Close();
+    ID3D12CommandList* lists[] = { device_->cmd_->command_list_.Get() };
+    device_->cmd_->command_queue_->ExecuteCommandLists(1, lists);
+    
     //Present
     swap_chain_->Present(1, 0);
     back_buffer_->SetCurrentBackBuffer();

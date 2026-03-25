@@ -67,8 +67,14 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
             outMat.hasNormalTexture = true;
             TGAImage image;
             image.read_tga_file(outMat.normalTexPath.c_str());
-            OutputDebugStringA(("Normal texture for material " + std::to_string(i) + " exists"+'\n').c_str());
-            outMat.NormalTexture = std::make_shared<GTexture>(image, outMat.normalTexPath, device, TextureUsage::Normalmap);
+            if (image.get_width() == 0 or image.get_height()==0) {
+                outMat.normalTexPath = "normal texture file is missing";
+                outMat.NormalTexture = std::make_shared<GTexture>(dummy_, outMat.normalTexPath, device, TextureUsage::Normalmap);
+                OutputDebugStringA(("normal texture file for material " + std::to_string(i) + " is missing" + '\n').c_str());
+            }else{
+                OutputDebugStringA(("Normal texture for material " + outMat.normalTexPath + " exists" + '\n').c_str());
+                outMat.NormalTexture = std::make_shared<GTexture>(image, outMat.normalTexPath, device, TextureUsage::Normalmap);
+            }
         }
         else {
             // for sponza normal path is just not there
