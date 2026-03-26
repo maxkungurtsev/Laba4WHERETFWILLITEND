@@ -50,9 +50,20 @@ struct PS_IN
 
 float4 main(PS_IN input) : SV_Target{
     float2 uv = input.uv;
+    float z = NormalMap.Sample(samplerState, uv).x;
+    int width;
+    int height;
+    NormalMap.GetDimensions(width, height);
+    float du = 1.0 / width;
+    float dv = 1.0 / height;
+    float hL = NormalMap.Sample(samplerState, uv + float2(-du, 0)).r;
+    float hR = NormalMap.Sample(samplerState, uv + float2(du, 0)).r;
+    float hD = NormalMap.Sample(samplerState, uv + float2(0, -dv)).r;
+    float hU = NormalMap.Sample(samplerState, uv + float2(0, dv)).r;
+
+    float3 normal = normalize(float3(hL - hR, hD - hU, 1.0));
     
     float3 albedo = diffuseMap.Sample(samplerState, uv).xyz;
-    float3 normal = NormalMap.Sample(samplerState, uv).xyz;
     normal = normalize(normal * 2.0f - 1.0f);
     int matIndex = (int) (MaterialIndex.Sample(samplerState, uv).x + 0.5f);
 
@@ -70,8 +81,8 @@ float4 main(PS_IN input) : SV_Target{
         float3 diffuse_ = mats[matIndex].diffuse_ * max(dot(normal, L), 0);
         float3 R = reflect(-L, normal);
         float3 spec = mats[matIndex].spec_ * pow(max(dot(R, V), 0), mats[matIndex].shiny_);
-        finalLight += (diffuse_ + spec) * lights[i].strength;
+        finalLight += (diffuse_+ spec) * lights[i].strength;
     }
-    float4 Final = float4(albedo * finalLight, 1.0);
+    float4 Final = float4(normal, 1.0);
     return Final;
 }

@@ -4,7 +4,7 @@
 #include <string>
 #include <DirectXMath.h>
 #include "Graphics\GTexture.h"
-
+#include <DirectXTex.h>
 using namespace DirectX;
 struct Vertex
 {

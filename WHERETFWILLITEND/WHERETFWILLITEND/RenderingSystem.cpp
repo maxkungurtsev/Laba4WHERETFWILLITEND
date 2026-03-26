@@ -178,8 +178,8 @@ void RenderingSystem::GeomPass(const float clearColor[4]) {
 
     //clearing
     device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->albedo_->handle_.cpu_, clearColor, 0, nullptr);
-    device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->normal_->handle_.cpu_, clearColor, 0, nullptr);
-    device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->material_index_->handle_.cpu_, clearColor, 0, nullptr);
+    //device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->normal_->handle_.cpu_, clearColor, 0, nullptr);
+    //device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->material_index_->handle_.cpu_, clearColor, 0, nullptr);
     device_->cmd_->command_list_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
     // setting gbuffer as render target

@@ -1,5 +1,6 @@
 #pragma once
 #include "GResourse.h"
+#include <DirectXTex.h>
 #include "tgaimage.h"
 enum class TextureUsage
 {
@@ -23,6 +24,7 @@ class GTexture{
 public:
     std::shared_ptr<GResourse> GetResourse();
     GTexture(TGAImage image, std::string& name, std::shared_ptr<Gdevice> device, TextureUsage usage);
+    GTexture(const DirectX::Image* image, std::string& name, std::shared_ptr<Gdevice> device, TextureUsage usage);
 	GTexture(UINT width, UINT height, std::string& name, std::shared_ptr<Gdevice> device, TextureUsage usage, D3D12_RESOURCE_FLAGS flag);
     GTexture(std::shared_ptr<GResourse> Gresourse, TextureUsage usage);
 };

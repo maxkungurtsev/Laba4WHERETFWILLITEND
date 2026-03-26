@@ -11,7 +11,7 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
         aiProcess_Triangulate |
         aiProcess_GenNormals |
         aiProcess_FlipUVs);
-    if (!scene || !scene->HasMeshes()){
+    if (!scene || !scene->HasMeshes()) {
         return;
     }
     vertices_.clear();
@@ -19,7 +19,7 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
     submeshes_.clear();
     //mats and diffuse textures
     materials_.resize(scene->mNumMaterials);
-    for (unsigned i = 0; i < scene->mNumMaterials; ++i){
+    for (unsigned i = 0; i < scene->mNumMaterials; ++i) {
         aiMaterial* mat = scene->mMaterials[i];
         MaterialData& outMat = materials_[i];
         aiColor3D color;
@@ -42,12 +42,28 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
             aiString path;
             mat->GetTexture(aiTextureType_DIFFUSE, 0, &path);
             outMat.diffuseTexPath = path.C_Str();
+            OutputDebugStringA((outMat.diffuseTexPath + '\n').c_str());
             outMat.hasDiffuseTexture = true;
-            TGAImage image;
-            image.read_tga_file(outMat.diffuseTexPath.c_str());
+            TGAImage image_tga;
+            const Image* image_png;
+            //choose between parsers
+            if (outMat.diffuseTexPath.substr(outMat.diffuseTexPath.size() - 3) == "tga"){
+            image_tga.read_tga_file(outMat.diffuseTexPath.c_str());
+            outMat.diffuseTexture = std::make_shared<GTexture>(image_tga, outMat.diffuseTexPath, device, TextureUsage::Albedo);
+            }
+            else {
+                ScratchImage image;
+                std::wstring wpath(outMat.diffuseTexPath.begin(), outMat.diffuseTexPath.end());
+                HRESULT hr = LoadFromWICFile(wpath.c_str(), WIC_FLAGS_NONE, nullptr, image);
+                if (FAILED(hr)) {
+                    throw std::runtime_error("failed loading texture from png");
+                }
+                image_png = image.GetImage(0, 0, 0);
+                outMat.diffuseTexture = std::make_shared<GTexture>(image_png, outMat.diffuseTexPath, device, TextureUsage::Albedo);
+            }
+
 
             OutputDebugStringA(("diffuse texture for material " + std::to_string(i) + " exists"+'\n').c_str());
-            outMat.diffuseTexture = std::make_shared<GTexture>(image, outMat.diffuseTexPath, device, TextureUsage::Albedo);
         }
         else {
             outMat.diffuseTexPath = "diffuse texture missing";
@@ -59,28 +75,37 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
     for (unsigned i = 0; i < scene->mNumMaterials; ++i) {
         aiMaterial* mat = scene->mMaterials[i];
         MaterialData& outMat = materials_[i];
-        if (mat->GetTextureCount(aiTextureType_NORMALS) > 0)
+        if (mat->GetTextureCount(aiTextureType_HEIGHT) > 0)
         {
             aiString path;
-            mat->GetTexture(aiTextureType_NORMALS, 0, &path);
+            mat->GetTexture(aiTextureType_HEIGHT, 0, &path);
             outMat.normalTexPath = path.C_Str();
             outMat.hasNormalTexture = true;
-            TGAImage image;
-            image.read_tga_file(outMat.normalTexPath.c_str());
-            if (image.get_width() == 0 or image.get_height()==0) {
-                outMat.normalTexPath = "normal texture file is missing";
-                outMat.NormalTexture = std::make_shared<GTexture>(dummy_, outMat.normalTexPath, device, TextureUsage::Normalmap);
-                OutputDebugStringA(("normal texture file for material " + std::to_string(i) + " is missing" + '\n').c_str());
-            }else{
-                OutputDebugStringA(("Normal texture for material " + outMat.normalTexPath + " exists" + '\n').c_str());
-                outMat.NormalTexture = std::make_shared<GTexture>(image, outMat.normalTexPath, device, TextureUsage::Normalmap);
+            TGAImage image_tga;
+            const Image* image_png;
+            //choose between parsers
+            if (outMat.normalTexPath.substr(outMat.normalTexPath.size() - 3) == "tga") {
+                image_tga.read_tga_file(outMat.normalTexPath.c_str());
+                outMat.NormalTexture = std::make_shared<GTexture>(image_tga, outMat.normalTexPath, device, TextureUsage::Normalmap);
+            }
+            else {
+                ScratchImage image;
+                std::wstring wpath(outMat.normalTexPath.begin(), outMat.normalTexPath.end());
+                HRESULT hr = LoadFromWICFile(wpath.c_str(), WIC_FLAGS_NONE, nullptr, image);
+                if (FAILED(hr)) {
+                    OutputDebugStringA(("normal texture for material " + outMat.normalTexPath + " failed to load" + '\n').c_str());
+               
+                    throw std::runtime_error("failed loading normal texture from png");
+                }
+                image_png = image.GetImage(0, 0, 0);
+                outMat.NormalTexture = std::make_shared<GTexture>(image_png, outMat.normalTexPath, device, TextureUsage::Normalmap);
             }
         }
         else {
             // for sponza normal path is just not there
-            outMat.normalTexPath = "normal texture missing";
+            //outMat.normalTexPath = "normal texture missing";
             outMat.NormalTexture = std::make_shared<GTexture>(dummy_, outMat.normalTexPath, device, TextureUsage::Normalmap);
-            OutputDebugStringA(("normal texture for material " + std::to_string(i) + " is missing" + '\n').c_str());
+            OutputDebugStringA(("normal texture for material " + outMat.normalTexPath + " is missing" + '\n').c_str());
            // OutputDebugStringA((outMat.normalTexPath + '\n').c_str());
         }
     }

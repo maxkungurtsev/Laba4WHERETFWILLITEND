@@ -54,26 +54,26 @@ int Run() {
             up = XMVector3TransformCoord(up, rotPitch);
         }
         if (g_Input.IsKeyDown(VK_LEFT)) {
-            XMMATRIX rotYaw = XMMatrixRotationAxis(up, 0.05);
-            forward = XMVector3TransformCoord(forward, rotYaw);
-            right = XMVector3TransformCoord(right, rotYaw);
-        }
-        if (g_Input.IsKeyDown(VK_RIGHT)) {
             XMMATRIX rotYaw = XMMatrixRotationAxis(up, -0.05);
             forward = XMVector3TransformCoord(forward, rotYaw);
             right = XMVector3TransformCoord(right, rotYaw);
         }
+        if (g_Input.IsKeyDown(VK_RIGHT)) {
+            XMMATRIX rotYaw = XMMatrixRotationAxis(up, 0.05);
+            forward = XMVector3TransformCoord(forward, rotYaw);
+            right = XMVector3TransformCoord(right, rotYaw);
+        }
         if (g_Input.IsKeyDown('W')) {
-            cam_coords += forward;
+            cam_coords += forward * 0.75;
         }
         if (g_Input.IsKeyDown('S')) {
-            cam_coords -= forward;
+            cam_coords -= forward * 0.75;
         }
         if (g_Input.IsKeyDown('A')) {
-            cam_coords += right;
+            cam_coords += right * 0.75;
         }
         if (g_Input.IsKeyDown('D')) {
-            cam_coords -= right;
+            cam_coords -= right * 0.75;
         }
        auto currentTime = clock::now();
        float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
@@ -93,7 +93,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow){
     //init input device
     g_Input.Initialize(g_Window.GetHWND());
     //catch messege stuff
-    g_Renderer = std::make_shared<NewRenderer>(width,height,2, &(g_Window),"sponza.obj", cam_coords, look_at, up, 0);
+    g_Renderer = std::make_shared<NewRenderer>(width,height,2, &(g_Window),"sibenik.obj", cam_coords, look_at, up, 0);
 
     int messege = Run();
     return static_cast<int>(messege);
