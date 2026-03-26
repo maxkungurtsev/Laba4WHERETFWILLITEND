@@ -35,7 +35,7 @@ cbuffer PassConstants : register(b0)
     float3 amb_light;
     float time;
     LightData lights[128];
-    shaderMaterialData mats[64];
+    shaderMaterialData mats[300];
     float max_lights;
     float current_mat;
     float pad2[2];
@@ -59,7 +59,7 @@ PS_OUT main(PS_IN input) : SV_TARGET
     float2 uv = input.uv;
     PS_OUT output;
     output.albedo = diffuseMap.Sample(samplerState, uv);
-    output.normal = normalize(NormalMap.Sample(samplerState, uv));
+    output.normal = float4(input.normal, 1.0);
     output.material_index = float4(current_mat, 0.0f, 0.0f, 0.0f);
     return output;
 }

@@ -31,7 +31,7 @@ cbuffer PassConstants : register(b0)
     float3 amb_light;
     float time;
     LightData lights[128];
-    shaderMaterialData mats[64];
+    shaderMaterialData mats[300];
     float max_lights;
     float current_mat;
     float pad2[2];

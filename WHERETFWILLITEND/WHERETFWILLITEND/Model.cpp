@@ -19,6 +19,8 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
     submeshes_.clear();
     //mats and diffuse textures
     materials_.resize(scene->mNumMaterials);
+    OutputDebugStringA("material amount:\n");
+    OutputDebugStringA((std::to_string(materials_.size()) + '\n').c_str());
     for (unsigned i = 0; i < scene->mNumMaterials; ++i) {
         aiMaterial* mat = scene->mMaterials[i];
         MaterialData& outMat = materials_[i];
