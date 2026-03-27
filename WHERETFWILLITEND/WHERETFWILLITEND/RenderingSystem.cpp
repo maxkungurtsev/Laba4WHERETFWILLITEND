@@ -155,35 +155,35 @@ void RenderingSystem::CreateInputLayout() {
     };
 }
 
-void RenderingSystem::CreateIndexBuffer(std::shared_ptr<Model> model) {
-    std::vector<uint32_t> indices=model->Geindices();
-    UINT bufferSize = static_cast<UINT>(indices.size() * sizeof(uint32_t));
-    CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_DEFAULT);
-    CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
-    device_->GetDXDevice()->CreateCommittedResource(&heapProps,D3D12_HEAP_FLAG_NONE,&bufferDesc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr,IID_PPV_ARGS(&index_buffer_));
-    // upload heap
-    CD3DX12_HEAP_PROPERTIES uploadHeap(D3D12_HEAP_TYPE_UPLOAD);
-    ComPtr<ID3D12Resource> indexUploadBuffer_;
-    device_->GetDXDevice()->CreateCommittedResource(&uploadHeap, D3D12_HEAP_FLAG_NONE, &bufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&indexUploadBuffer_));
-    // копируем данные
+void RenderingSystem::CreateVertexBuffer(std::shared_ptr<Model> model) {
+    const std::vector<Vertex>& vertices = model->GetVertices();
+    vertex_count_ = vertices.size();
+    UINT bufferSize = vertex_count_ * sizeof(Vertex);
+    D3D12_RESOURCE_DESC bufferDesc{};
+    bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    bufferDesc.Width = bufferSize;
+    bufferDesc.Height = 1;
+    bufferDesc.DepthOrArraySize = 1;
+    bufferDesc.MipLevels = 1;
+    bufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+    bufferDesc.SampleDesc.Count = 1;
+    bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+    D3D12_HEAP_PROPERTIES heapProps{};
+    heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+    HRESULT hr = device_->GetDXDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &bufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&vertex_buffer_));
+    if (FAILED(hr))
+        throw std::runtime_error("Failed to create vertex buffer");
     void* mappedData = nullptr;
-    CD3DX12_RANGE readRange(0, 0);
-
-    indexUploadBuffer_->Map(0, &readRange, &mappedData);
-    memcpy(mappedData, indices.data(), bufferSize);
-    indexUploadBuffer_->Unmap(0, nullptr);
-
-    // копия на GPU (через command list)
-    device_->cmd_->command_list_->CopyBufferRegion(index_buffer_.Get(), 0, indexUploadBuffer_.Get(), 0, bufferSize);
-
-    // barrier
-    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition( index_buffer_.Get(), D3D12_RESOURCE_STATE_COPY_DEST,D3D12_RESOURCE_STATE_INDEX_BUFFER);
-    device_->cmd_->command_list_->ResourceBarrier(1, &barrier);
-
-    // создаём view
-    index_buffer_view_.BufferLocation = index_buffer_->GetGPUVirtualAddress();
-    index_buffer_view_.SizeInBytes = bufferSize;
-    index_buffer_view_.Format = DXGI_FORMAT_R32_UINT;
+    D3D12_RANGE readRange{ 0, 0 };
+    hr = vertex_buffer_->Map(0, &readRange, &mappedData);
+    if (FAILED(hr))
+        throw std::runtime_error("Failed to fill vertex buffer");
+    memcpy(mappedData, vertices.data(), bufferSize);
+    vertex_buffer_->Unmap(0, nullptr);
+    vertex_buffer_view_.BufferLocation = vertex_buffer_->GetGPUVirtualAddress();
+    vertex_buffer_view_.StrideInBytes = sizeof(Vertex);
+    vertex_buffer_view_.SizeInBytes = bufferSize;
 }
 
 void RenderingSystem::CompileShader(std::wstring path, ComPtr<ID3DBlob>& shader, std::string& type) {
@@ -220,7 +220,7 @@ void RenderingSystem::GeomPass(const float clearColor[4]) {
     //desc tables setup
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, cbuffer_->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, Sampler_handle_.gpu_);
-    device_->cmd_->command_list_->IASetIndexBuffer(&index_buffer_view_);
+    device_->cmd_->command_list_->IASetVertexBuffers(0,1,&vertex_buffer_view_);
     device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     for (const auto& submesh : mesh_->GetSubMeshes()) {
@@ -290,7 +290,7 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string me
     dir = { 1,0,0,0 };
     pos = { 1100,50,-10,0 };
     AddSpotLight(dir, 30,20, pos, str, 10);
-    CreateIndexBuffer(mesh_);
+    CreateVertexBuffer(mesh_);
 
     std::string type = "vs_5_0";
     CompileShader(L"GeomVertexShader.hlsl", geom_vertex_shader_, type);
