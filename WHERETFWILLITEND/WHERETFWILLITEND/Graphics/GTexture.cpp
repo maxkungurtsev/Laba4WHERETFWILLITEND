@@ -217,6 +217,18 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 		clear_value_pointer = &clear_value;
 		srv_format = DXGI_FORMAT_R32_FLOAT;
 		break;
+	case TextureUsage::MaterialIndex:
+		heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+		heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+		heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+		heapProps.CreationNodeMask = 1;
+		heapProps.VisibleNodeMask = 1;
+		desc = CD3DX12_RESOURCE_DESC::Tex2D(formats[index],
+			width, height, 1, 1, 1, 0,
+			flag,
+			D3D12_TEXTURE_LAYOUT_UNKNOWN, 0);
+		srv_format = formats[index];
+		break;
 	}
 	Gresourse_ = std::make_shared<GResourse>(desc, srv_format, heapProps, name, device,initial_states_[index], clear_value_pointer);
 }

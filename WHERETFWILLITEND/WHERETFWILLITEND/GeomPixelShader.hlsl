@@ -37,7 +37,7 @@ cbuffer PassConstants : register(b0)
     LightData lights[128];
     shaderMaterialData mats[300];
     float max_lights;
-    float current_mat;
+    int current_mat;
     float pad2[2];
 };
 
@@ -52,7 +52,7 @@ struct PS_OUT
 {
     float4 albedo : SV_Target0;
     float4 normal : SV_Target1;
-    float4 material_index : SV_Target2;
+    int4 material_index : SV_Target2;
 };
 PS_OUT main(PS_IN input) : SV_TARGET
 {
@@ -60,6 +60,6 @@ PS_OUT main(PS_IN input) : SV_TARGET
     PS_OUT output;
     output.albedo = diffuseMap.Sample(samplerState, uv);
     output.normal = float4(input.normal, 1.0);
-    output.material_index = float4(current_mat, 0.0f, 0.0f, 0.0f);
+    output.material_index = int4(current_mat, 0, 0, 0);
     return output;
 }

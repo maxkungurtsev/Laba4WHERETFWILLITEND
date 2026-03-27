@@ -8,5 +8,5 @@ GBuffer::GBuffer(UINT width, UINT height, std::shared_ptr<Gdevice> device) {
 	name = "z buffer";
 	depth_ = std::make_shared<Zbuffer>(width, height, name, device, TextureUsage::Depth);
 	name = "material_index";
-	material_index_ = std::make_shared<RenderTarget>(width, height, name, device, TextureUsage::Albedo);
+	material_index_ = std::make_shared<RenderTarget>(width, height, name, device, TextureUsage::MaterialIndex);
 };

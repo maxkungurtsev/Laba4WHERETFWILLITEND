@@ -39,7 +39,7 @@ cbuffer PassConstants : register(b0)
     LightData lights[128];
     shaderMaterialData mats[300];
     float max_lights;
-    float current_mat;
+    int current_mat;
     float pad2[2];
 };
 struct PS_IN
@@ -52,7 +52,7 @@ float4 main(PS_IN input) : SV_Target{
     float2 uv = input.uv;
     float3 normal = NormalMap.Sample(samplerState, uv).xyz;
     float3 albedo = diffuseMap.Sample(samplerState, uv).xyz;
-    int matIndex = (int) (MaterialIndex.Sample(samplerState, uv).x + 0.5f);
+    int matIndex = MaterialIndex.Sample(samplerState, uv).x;
 
     float depth = Depth.Sample(samplerState, uv).x;
     
@@ -67,7 +67,7 @@ float4 main(PS_IN input) : SV_Target{
         float3 diffuse_ = mats[matIndex].diffuse_ * max(dot(normal, L), 0);
         float3 R = reflect(-L, normal);
         float3 spec = mats[matIndex].spec_ * pow(max(dot(R, V), 0), mats[matIndex].shiny_);
-        finalLight += (diffuse_) * lights[i].strength;
+        finalLight += (diffuse_+spec) * lights[i].strength;
     }
     float4 Final = float4(finalLight, 1.0);
     return Final;
