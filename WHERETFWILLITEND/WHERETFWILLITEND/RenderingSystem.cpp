@@ -186,6 +186,37 @@ void RenderingSystem::CreateVertexBuffer(std::shared_ptr<Model> model) {
     vertex_buffer_view_.SizeInBytes = bufferSize;
 }
 
+void RenderingSystem::CreateIndexBuffer(std::shared_ptr<Model> model) {
+    std::vector<uint32_t> indices = model->Getindices();
+    UINT bufferSize = static_cast<UINT>(indices.size() * sizeof(uint32_t));
+    CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_DEFAULT);
+    CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
+    device_->GetDXDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &bufferDesc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&index_buffer_));
+    // upload heap
+    CD3DX12_HEAP_PROPERTIES uploadHeap(D3D12_HEAP_TYPE_UPLOAD);
+    ComPtr<ID3D12Resource> index_buffer_upload_buffer_;
+    device_->GetDXDevice()->CreateCommittedResource(&uploadHeap, D3D12_HEAP_FLAG_NONE, &bufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&index_buffer_upload_buffer_));
+    // копируем данные
+    void* mappedData = nullptr;
+    CD3DX12_RANGE readRange(0, 0);
+
+    index_buffer_upload_buffer_->Map(0, &readRange, &mappedData);
+    memcpy(mappedData, indices.data(), bufferSize);
+    index_buffer_upload_buffer_->Unmap(0, nullptr);
+
+    // копия на GPU (через command list)
+    device_->cmd_->command_list_->CopyBufferRegion(index_buffer_.Get(), 0, index_buffer_upload_buffer_.Get(), 0, bufferSize);
+
+    // barrier
+    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer_.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
+    device_->cmd_->command_list_->ResourceBarrier(1, &barrier);
+
+    // создаём view
+    index_buffer_view_.BufferLocation = index_buffer_->GetGPUVirtualAddress();
+    index_buffer_view_.SizeInBytes = bufferSize;
+    index_buffer_view_.Format = DXGI_FORMAT_R32_UINT;
+}
+
 void RenderingSystem::CompileShader(std::wstring path, ComPtr<ID3DBlob>& shader, std::string& type) {
     ComPtr<ID3DBlob> errorBlob;
     HRESULT hr = D3DCompileFromFile(path.c_str(), nullptr, nullptr, "main", type.c_str(), 0, 0, &shader, &errorBlob);
@@ -220,7 +251,8 @@ void RenderingSystem::GeomPass(const float clearColor[4]) {
     //desc tables setup
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, cbuffer_->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, Sampler_handle_.gpu_);
-    device_->cmd_->command_list_->IASetVertexBuffers(0,1,&vertex_buffer_view_);
+    device_->cmd_->command_list_->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
+    device_->cmd_->command_list_->IASetIndexBuffer(&index_buffer_view_);
     device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
 
     for (const auto& submesh : mesh_->GetSubMeshes()) {

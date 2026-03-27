@@ -21,6 +21,9 @@ class RenderingSystem {
 	UINT vertex_count_;
 	ComPtr<ID3D12Resource> vertex_buffer_;
 	D3D12_VERTEX_BUFFER_VIEW vertex_buffer_view_;
+	ComPtr<ID3D12Resource> index_buffer_;
+	ComPtr<ID3D12Resource> index_buffer_upload_buffer_;
+	D3D12_INDEX_BUFFER_VIEW index_buffer_view_;
 	std::shared_ptr <Cbuffer<PassConstants>> cbuffer_;
 	ComPtr<ID3DBlob> geom_vertex_shader_;
 	ComPtr<ID3DBlob> geom_vertex_shader_anim_;
@@ -34,6 +37,7 @@ public:
 	void CreateGeomRootSign(int textures_amount);
 	void CreateLightRootSign();
 	void CreateVertexBuffer(std::shared_ptr<Model> mesh);
+	void CreateIndexBuffer(std::shared_ptr<Model> model);
 	void AddDirLight(XMFLOAT4 direction, XMFLOAT3 strength);
 	void AddPointLight(float falloff_end, float falloff_start, XMFLOAT4 position, XMFLOAT3 strength);
 	void AddSpotLight(XMFLOAT4 direction, float falloff_end, float falloff_start, XMFLOAT4 position, XMFLOAT3 strength, float spot_power);
