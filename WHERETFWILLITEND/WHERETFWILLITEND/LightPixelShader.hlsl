@@ -67,8 +67,8 @@ float4 main(PS_IN input) : SV_Target{
         float3 diffuse_ = mats[matIndex].diffuse_ * max(dot(normal, L), 0);
         float3 R = reflect(-L, normal);
         float3 spec = mats[matIndex].spec_ * pow(max(dot(R, V), 0), mats[matIndex].shiny_);
-        finalLight += (diffuse_+ spec) * lights[i].strength;
+        finalLight += (diffuse_) * lights[i].strength;
     }
-    float4 Final = float4(albedo, 1.0);
+    float4 Final = float4(finalLight, 1.0);
     return Final;
 }
