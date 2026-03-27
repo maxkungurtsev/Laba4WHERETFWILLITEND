@@ -130,14 +130,23 @@ struct PS_IN
 };
 
 float4 main(PS_IN input) : SV_Target{
-    float2 uv = input.uv;
-    float3 normal = normalize(NormalMap.Sample(samplerState, uv).xyz*2 -1);
-    float3 albedo = diffuseMap.Sample(samplerState, uv).xyz;
-    int matIndex = MaterialIndex.Sample(samplerState, uv).x;
-
-    float depth = Depth.Sample(samplerState, uv).x*2.0-1.0;
+    uint w, h;
+    Depth.GetDimensions(w, h);
+    int2 pix = int2(input.pos.xy); // screen pixel
+    float2 uv = (pix + 0.5) / float2(w, h); // for albedo/normal if needed
     
-    float4 clip = float4(uv, depth, 1.0);
+    float3 albedo = diffuseMap.Sample(samplerState, uv).xyz;
+    float3 normal = normalize(NormalMap.Sample(samplerState, uv).xyz*2 -1);
+
+
+    float depth = Depth.Load(int3(pix, 0)).x; // no filtering
+    int matIndex = MaterialIndex.Load(int3(pix, 0)).x;
+
+    float2 ndc;
+    ndc.x = uv.x * 2.0 - 1.0;
+    ndc.y = 1.0 - uv.y * 2.0; // y flip for D3D screen->NDC
+
+    float4 clip = float4(ndc, depth, 1.0);
     float4 viewPos = mul(inv_projection, clip);
     viewPos /= viewPos.w;
     float3 worldPos = mul(inv_view, viewPos).xyz;
