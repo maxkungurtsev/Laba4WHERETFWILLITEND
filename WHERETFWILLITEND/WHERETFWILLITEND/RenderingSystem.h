@@ -36,7 +36,7 @@ public:
 	void CreateVertexBuffer(std::shared_ptr<Model> mesh);
 	void AddLight();
 	void CreateInputLayout();
-	void FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, int time, XMFLOAT3 amb_light = { 0.3f,0.3f,0.3f });
+	void FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, int time, XMFLOAT3 amb_light = { 0.4f,0.4f,0.4f });
 	RenderingSystem(std::shared_ptr<Gdevice> device, std::string mesh_path, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, int time);
 	void CompileShader(std::wstring path, ComPtr<ID3DBlob>& shader, std::string& type);
 	void GeomPass(const float clearColor[4]);

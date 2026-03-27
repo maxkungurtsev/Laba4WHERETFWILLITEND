@@ -15,8 +15,8 @@ int texture_height = 800;
 const float intensity = 0.1;
 XMFLOAT3 light_coords = {0.0, 10.0, 10.0};
 //camera stuff
-XMVECTOR cam_coords = {0.0, 2.0, -5.0, 1.0};
-XMVECTOR look_at = {0.0, 2.0, -4.0, 1.0};
+XMVECTOR cam_coords = {0.0, 0.0, 0.0, 1.0};
+XMVECTOR look_at = {1.0, 1.0, 0.0, 1.0};
 XMVECTOR up = {0.0, 1.0, 0.0, 1.0 };
 // material stuff
 const float ambient_k = 0.3;
@@ -40,6 +40,7 @@ int Run() {
         g_Input.Update();
         XMVECTOR forward = look_at - cam_coords;
         XMVECTOR right = XMVector3Normalize((XMVector3Cross(forward, up)));
+        up = XMVector3Normalize((XMVector3Cross(right, forward)));
         if (g_Input.IsKeyDown(VK_ESCAPE)) {
             PostQuitMessage(0);
         }

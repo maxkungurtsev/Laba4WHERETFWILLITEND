@@ -42,6 +42,87 @@ cbuffer PassConstants : register(b0)
     int current_mat;
     float pad2[2];
 };
+
+
+float3 CalcLight(LightData light, float3 normal, float3 worldPos, float3 viewDir, shaderMaterialData mat)
+{
+    float3 lightContrib = 0.0f;
+
+    switch (light.type)
+    {
+        case 0: // directional
+        {
+                float3 L = normalize(-light.direction.xyz); // если direction = "куда свет светит"
+                float NdotL = max(dot(normal, L), 0.0f);
+
+                float3 diffuse = mat.diffuse_ * NdotL;
+
+                float3 R = normalize(reflect(-L, normal));
+                float specPow = pow(max(dot(R, viewDir), 0.00001), mat.shiny_);
+                float3 spec = mat.spec_ * specPow;
+
+                lightContrib = (diffuse + spec) * light.strength;
+                break;
+            }
+
+        case 1: // point
+        {
+                float3 toLight = light.position.xyz - worldPos;
+                float dist = length(toLight);
+                float3 L = toLight / max(dist, 0.00001f);
+
+                float NdotL = max(dot(normal, L), 0.0f);
+
+                float attenuation = 1.0f;
+                float range = max(light.falloff_end - light.falloff_start, 0.00001f);
+
+                attenuation = saturate((light.falloff_end - dist) / range);
+
+                float3 diffuse = mat.diffuse_ * NdotL;
+
+                float3 R = normalize(reflect(-L, normal));
+                float specPow = pow(max(dot(R, viewDir), 0.000000001), mat.shiny_);
+                float3 spec = mat.spec_ * specPow;
+
+                lightContrib = (diffuse + spec) * light.strength * attenuation;
+                break;
+            }
+
+        case 2: // spot
+        {
+                float3 toLight = light.position.xyz - worldPos;
+                float dist = length(toLight);
+                float3 L = toLight / max(dist, 0.00001f);
+
+                float NdotL = max(dot(normal, L), 0.0f);
+
+                float3 spotDir = normalize(-light.direction.xyz); // ось прожектора
+                float spotCos = dot(-L, spotDir);
+
+                float spotFactor = saturate(
+                (spotCos - light.falloff_end) /
+                max(light.falloff_start - light.falloff_end, 0.00001f)
+            );
+                spotFactor = pow(spotFactor, light.spot_power);
+
+                float range = max(light.falloff_end - light.falloff_start, 0.00001f);
+                float attenuation = saturate((light.falloff_end - dist) / range);
+
+                float3 diffuse = mat.diffuse_ * NdotL;
+
+                float3 R = normalize(reflect(-L, normal));
+                float specPow = pow(max(dot(R, viewDir), 0.000000001), mat.shiny_);
+                float3 spec = mat.spec_ * specPow;
+
+                lightContrib = (diffuse + spec) * light.strength * attenuation * spotFactor;
+                break;
+            }
+    }
+
+    return lightContrib;
+}
+
+
 struct PS_IN
 {
     float4 pos : SV_POSITION;
@@ -50,25 +131,22 @@ struct PS_IN
 
 float4 main(PS_IN input) : SV_Target{
     float2 uv = input.uv;
-    float3 normal = NormalMap.Sample(samplerState, uv).xyz;
+    float3 normal = normalize(NormalMap.Sample(samplerState, uv).xyz*2 -1);
     float3 albedo = diffuseMap.Sample(samplerState, uv).xyz;
     int matIndex = MaterialIndex.Sample(samplerState, uv).x;
 
-    float depth = Depth.Sample(samplerState, uv).x;
+    float depth = Depth.Sample(samplerState, uv).x*2.0-1.0;
     
-    float4 clip = float4(uv * 2 - 1, depth, 1.0);
+    float4 clip = float4(uv, depth, 1.0);
     float4 viewPos = mul(inv_projection, clip);
     viewPos /= viewPos.w;
-    float3 worldPos = viewPos.xyz;
-    float3 finalLight = amb_light;
+    float3 worldPos = mul(inv_view, viewPos).xyz;
+    float3 finalLight = float3(0, 0, 0);
+    float3 V = normalize(cam_pos.xyz - worldPos);
     for (int i = 0; i < max_lights; i++){
-        float3 L = normalize(lights[i].position.xyz - worldPos);
-        float3 V = normalize(cam_pos.xyz - worldPos);
-        float3 diffuse_ = mats[matIndex].diffuse_ * max(dot(normal, L), 0);
-        float3 R = reflect(-L, normal);
-        float3 spec = mats[matIndex].spec_ * pow(max(dot(R, V), 0), mats[matIndex].shiny_);
-        finalLight += (diffuse_+spec) * lights[i].strength;
+        finalLight += CalcLight(lights[i], normal, worldPos, V, mats[matIndex]);
     }
-    float4 Final = float4(finalLight, 1.0);
+    finalLight += amb_light;
+    float4 Final = float4(albedo*finalLight, 1.0);
     return Final;
 }

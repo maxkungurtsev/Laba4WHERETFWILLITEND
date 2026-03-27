@@ -52,11 +52,11 @@ void RenderingSystem::CreateLightRootSign() {
 void RenderingSystem::AddLight() {
     LightData light;
     light.direction = { 1.0f, 1.0f, 1.0f, 1.0f };
-    light.falloff_end = 0.5;
-    light.falloff_start = 0.3;
+    light.falloff_end = 400.0;
+    light.falloff_start = 200.0;
     light.position = { 0.0f, 10.0f, 10.0f, 1.0f };
     light.spot_power = 10.0f;
-    light.strength = { 2.0f, 2.0f, 2.0f };
+    light.strength = { 2.0f, 2.0f, 1.0f };
     light.type = 1;
     int index = min(127, cbuffer_->GetData().max_lights);
     OutputDebugStringA(std::to_string(index).c_str());
@@ -216,8 +216,8 @@ void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_
     device_->cmd_->command_list_->SetPipelineState(light_pso_->GetPSO().Get());
     device_->cmd_->command_list_->SetGraphicsRootSignature(light_root_signature_->GetRootSign().Get());
     // set & cler dsv, rtv
-    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = g_buffer_->depth_->handle_.cpu_;
-    device_->cmd_->command_list_->OMSetRenderTargets(1, &rtvHandle, FALSE, &dsvHandle);
+    //D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = g_buffer_->depth_->handle_.cpu_;
+    device_->cmd_->command_list_->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
     device_->cmd_->command_list_->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
     //set desc tables
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, cbuffer_->GetHandle().gpu_);
@@ -265,7 +265,7 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string me
     CompileShader(L"LightPixelShader.hlsl", light_pixel_shader_, type);
     OutputDebugStringA("light shaders compiled\n");
     // formats of bullshit ima use as rtv
-    std::vector<DXGI_FORMAT> formats = {DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_B8G8R8A8_UNORM ,DXGI_FORMAT_R8G8B8A8_UNORM };
+    std::vector<DXGI_FORMAT> formats = {DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_B8G8R8A8_UNORM ,DXGI_FORMAT_R32_SINT };
     geom_pso_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, geom_pixel_shader_, device_, geom_root_signature_, 3, formats);
     OutputDebugStringA("geom pso 1 made\n");
     geom_pso_anim_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_anim_, geom_pixel_shader_, device_, geom_root_signature_, 3, formats);
@@ -315,9 +315,11 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
             Transition(g_buffer_->normal_->texture_->GetResourse()->GetResourse().Get(),
                        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET),
             Transition(g_buffer_->material_index_->texture_->GetResourse()->GetResourse().Get(),
-                       D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET)
+                       D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET),
+            Transition(g_buffer_->depth_->z_buffer_->GetResourse()->GetResourse().Get(),
+                       D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE)
         };
-        device_->cmd_->command_list_.Get()->ResourceBarrier(3, toGeom);
+        device_->cmd_->command_list_.Get()->ResourceBarrier(4, toGeom);
     }
     GeomPass(clearColor);
     D3D12_RESOURCE_BARRIER toLight[] =
@@ -327,9 +329,11 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
         Transition(g_buffer_->normal_->texture_->GetResourse()->GetResourse().Get(),
                    D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
         Transition(g_buffer_->material_index_->texture_->GetResourse()->GetResourse().Get(),
-                   D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+                   D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
+            Transition(g_buffer_->depth_->z_buffer_->GetResourse()->GetResourse().Get(),
+                       D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
     };
-    device_->cmd_->command_list_.Get()->ResourceBarrier(3, toLight);
+    device_->cmd_->command_list_.Get()->ResourceBarrier(4, toLight);
     LightPass(clearColor, rtvHandle);
 
 }

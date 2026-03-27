@@ -59,7 +59,7 @@ PS_OUT main(PS_IN input) : SV_TARGET
     float2 uv = input.uv;
     PS_OUT output;
     output.albedo = diffuseMap.Sample(samplerState, uv);
-    output.normal = float4(input.normal, 1.0);
+    output.normal = float4(input.normal, 1.0)*0.5+0.5;
     output.material_index = int4(current_mat, 0, 0, 0);
     return output;
 }
