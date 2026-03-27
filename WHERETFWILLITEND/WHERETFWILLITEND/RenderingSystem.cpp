@@ -186,32 +186,27 @@ void RenderingSystem::CreateVertexBuffer(std::shared_ptr<Model> model) {
     vertex_buffer_view_.SizeInBytes = bufferSize;
 }
 
-void RenderingSystem::CreateIndexBuffer(std::shared_ptr<Model> model) {
+
+void RenderingSystem::CreateIndexBuffer(std::shared_ptr<Model> model){
+    //device_->cmd_->ResetAllocator();
     std::vector<uint32_t> indices = model->Getindices();
-    UINT bufferSize = static_cast<UINT>(indices.size() * sizeof(uint32_t));
-    CD3DX12_HEAP_PROPERTIES heapProps(D3D12_HEAP_TYPE_DEFAULT);
-    CD3DX12_RESOURCE_DESC bufferDesc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
-    device_->GetDXDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &bufferDesc, D3D12_RESOURCE_STATE_COPY_DEST, nullptr, IID_PPV_ARGS(&index_buffer_));
-    // upload heap
-    CD3DX12_HEAP_PROPERTIES uploadHeap(D3D12_HEAP_TYPE_UPLOAD);
-    ComPtr<ID3D12Resource> index_buffer_upload_buffer_;
-    device_->GetDXDevice()->CreateCommittedResource(&uploadHeap, D3D12_HEAP_FLAG_NONE, &bufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&index_buffer_upload_buffer_));
-    // копируем данные
-    void* mappedData = nullptr;
+
+    UINT32 bufferSize = static_cast<UINT32>(indices.size() * sizeof(uint32_t));
+    D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
+    D3D12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+    device_->GetDXDevice()->CreateCommittedResource(
+        &heapProps,
+        D3D12_HEAP_FLAG_NONE,
+        &desc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&index_buffer_));
+
+    void* mapped = nullptr;
     CD3DX12_RANGE readRange(0, 0);
-
-    index_buffer_upload_buffer_->Map(0, &readRange, &mappedData);
-    memcpy(mappedData, indices.data(), bufferSize);
-    index_buffer_upload_buffer_->Unmap(0, nullptr);
-
-    // копия на GPU (через command list)
-    device_->cmd_->command_list_->CopyBufferRegion(index_buffer_.Get(), 0, index_buffer_upload_buffer_.Get(), 0, bufferSize);
-
-    // barrier
-    CD3DX12_RESOURCE_BARRIER barrier = CD3DX12_RESOURCE_BARRIER::Transition(index_buffer_.Get(), D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_INDEX_BUFFER);
-    device_->cmd_->command_list_->ResourceBarrier(1, &barrier);
-
-    // создаём view
+    index_buffer_->Map(0, &readRange, &mapped);
+    memcpy(mapped, indices.data(), static_cast<size_t>(bufferSize));
+    index_buffer_->Unmap(0, nullptr);
     index_buffer_view_.BufferLocation = index_buffer_->GetGPUVirtualAddress();
     index_buffer_view_.SizeInBytes = bufferSize;
     index_buffer_view_.Format = DXGI_FORMAT_R32_UINT;
@@ -251,10 +246,10 @@ void RenderingSystem::GeomPass(const float clearColor[4]) {
     //desc tables setup
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, cbuffer_->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, Sampler_handle_.gpu_);
+    device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     device_->cmd_->command_list_->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
     device_->cmd_->command_list_->IASetIndexBuffer(&index_buffer_view_);
-    device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
+    //OutputDebugStringA();
     for (const auto& submesh : mesh_->GetSubMeshes()) {
         //diffuse textures
        //OutputDebugStringA(std::to_string(current_mat).c_str());
@@ -271,7 +266,7 @@ void RenderingSystem::GeomPass(const float clearColor[4]) {
         else {
             device_->cmd_->command_list_->SetPipelineState(geom_pso_->GetPSO().Get());
         }
-        device_->cmd_->command_list_->DrawIndexedInstanced(static_cast<UINT>(submesh.indexCount), 1, static_cast<UINT>(submesh.firstIndex), static_cast<UINT>(submesh.baseVertex), 0);
+        device_->cmd_->command_list_->DrawIndexedInstanced(static_cast<UINT>(submesh.indexCount), 1, static_cast<UINT>(submesh.firstIndex), 0, 0);
     }
 }
 void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle) {
@@ -323,6 +318,7 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string me
     pos = { 1100,50,-10,0 };
     AddSpotLight(dir, 30,20, pos, str, 10);
     CreateVertexBuffer(mesh_);
+    CreateIndexBuffer(mesh_);
 
     std::string type = "vs_5_0";
     CompileShader(L"GeomVertexShader.hlsl", geom_vertex_shader_, type);
