@@ -3,10 +3,6 @@
   "WorkspaceRootPath": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\LightPixelShader.hlsl||{8B382828-6202-11D1-8870-0000F87579D2}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:WHERETFWILLITEND\\LightPixelShader.hlsl||{8B382828-6202-11D1-8870-0000F87579D2}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\RenderingSystem.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\RenderingSystem.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
@@ -15,16 +11,8 @@
       "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\main.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Graphics\\Constants.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Graphics\\Constants.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Model.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Model.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\GeomVertexShader.hlsl||{8B382828-6202-11D1-8870-0000F87579D2}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:WHERETFWILLITEND\\GeomVertexShader.hlsl||{8B382828-6202-11D1-8870-0000F87579D2}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\LightPixelShader.hlsl||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:WHERETFWILLITEND\\LightPixelShader.hlsl||{8B382828-6202-11D1-8870-0000F87579D2}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\RenderingSystem.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
@@ -35,24 +23,16 @@
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:WHERETFWILLITEND\\GeomPixelShader.hlsl||{8B382828-6202-11D1-8870-0000F87579D2}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Graphics\\GTexture.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Graphics\\GTexture.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\GeomVertexShader.hlsl||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:WHERETFWILLITEND\\GeomVertexShader.hlsl||{8B382828-6202-11D1-8870-0000F87579D2}"
     },
     {
-      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Graphics\\PSO.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Graphics\\PSO.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Graphics\\Constants.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Graphics\\Constants.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Graphics\\CBuffer.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Graphics\\CBuffer.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Graphics\\GBuffer.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Graphics\\GBuffer.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Graphics\\GTexture.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Graphics\\GTexture.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -66,19 +46,7 @@
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "Model.h",
-              "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Model.h",
-              "RelativeDocumentMoniker": "WHERETFWILLITEND\\Model.h",
-              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Model.h",
-              "RelativeToolTip": "WHERETFWILLITEND\\Model.h",
-              "ViewState": "AgIAAAwAAAAAAAAAAAAAACcAAABJAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2026-03-26T18:14:43.392Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 6,
               "Title": "Constants.h",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Graphics\\Constants.h",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\Graphics\\Constants.h",
@@ -90,41 +58,29 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
+              "DocumentIndex": 2,
               "Title": "LightPixelShader.hlsl",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\LightPixelShader.hlsl",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\LightPixelShader.hlsl",
               "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\LightPixelShader.hlsl",
               "RelativeToolTip": "WHERETFWILLITEND\\LightPixelShader.hlsl",
-              "ViewState": "AgIAAHgAAAAAAAAAAAAAAIUAAAAeAAAAAAAAAA==",
+              "ViewState": "AgIAAEsAAAAAAAAAAAAAAF8AAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
               "WhenOpened": "2026-03-25T17:48:23.993Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 0,
               "Title": "RenderingSystem.cpp",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\RenderingSystem.cpp",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\RenderingSystem.cpp",
               "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\RenderingSystem.cpp",
               "RelativeToolTip": "WHERETFWILLITEND\\RenderingSystem.cpp",
-              "ViewState": "AgIAAJwAAAAAAAAAAAAkwKgAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAACcAAAAAAAAAAAAqwDwAAAA5AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2026-03-25T13:04:34.126Z",
               "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 8,
-              "Title": "GTexture.h",
-              "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Graphics\\GTexture.h",
-              "RelativeDocumentMoniker": "WHERETFWILLITEND\\Graphics\\GTexture.h",
-              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Graphics\\GTexture.h",
-              "RelativeToolTip": "WHERETFWILLITEND\\Graphics\\GTexture.h",
-              "ViewState": "AgIAAAkAAAAAAAAAAAAAABUAAACGAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2026-03-27T04:47:59.522Z"
             },
             {
               "$type": "Document",
@@ -134,13 +90,14 @@
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\GeomVertexShader.hlsl",
               "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\GeomVertexShader.hlsl",
               "RelativeToolTip": "WHERETFWILLITEND\\GeomVertexShader.hlsl",
-              "ViewState": "AgIAACoAAAAAAAAAAAAAADgAAAA9AAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADgAAAA9AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2026-03-26T21:52:26.709Z"
+              "WhenOpened": "2026-03-26T21:52:26.709Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 3,
               "Title": "RenderingSystem.h",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\RenderingSystem.h",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\RenderingSystem.h",
@@ -148,24 +105,25 @@
               "RelativeToolTip": "WHERETFWILLITEND\\RenderingSystem.h",
               "ViewState": "AgIAAAwAAAAAAAAAAAAAACIAAAAcAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2026-03-25T13:54:01.141Z"
+              "WhenOpened": "2026-03-25T13:54:01.141Z",
+              "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 1,
               "Title": "main.cpp",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\main.cpp",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\main.cpp",
               "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\main.cpp",
               "RelativeToolTip": "WHERETFWILLITEND\\main.cpp",
-              "ViewState": "AgIAACEAAAAAAAAAAAAAABAAAAAOAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAAAWAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2026-03-25T13:51:26.176Z",
               "EditorCaption": ""
             },
             {
               "$type": "Document",
-              "DocumentIndex": 10,
+              "DocumentIndex": 7,
               "Title": "CBuffer.h",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Graphics\\CBuffer.h",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\Graphics\\CBuffer.h",
@@ -177,7 +135,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 7,
+              "DocumentIndex": 4,
               "Title": "GeomPixelShader.hlsl",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\GeomPixelShader.hlsl",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\GeomPixelShader.hlsl",
@@ -185,43 +143,8 @@
               "RelativeToolTip": "WHERETFWILLITEND\\GeomPixelShader.hlsl",
               "ViewState": "AgIAACoAAAAAAAAAAAAAADwAAAA4AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2026-03-26T21:52:21.773Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 9,
-              "Title": "PSO.cpp",
-              "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Graphics\\PSO.cpp",
-              "RelativeDocumentMoniker": "WHERETFWILLITEND\\Graphics\\PSO.cpp",
-              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Graphics\\PSO.cpp",
-              "RelativeToolTip": "WHERETFWILLITEND\\Graphics\\PSO.cpp",
-              "ViewState": "AgIAABIAAAAAAAAAAAAAACEAAABLAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-03-27T05:08:34.305Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 12,
-              "Title": "GTexture.cpp",
-              "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Graphics\\GTexture.cpp",
-              "RelativeDocumentMoniker": "WHERETFWILLITEND\\Graphics\\GTexture.cpp",
-              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Graphics\\GTexture.cpp",
-              "RelativeToolTip": "WHERETFWILLITEND\\Graphics\\GTexture.cpp",
-              "ViewState": "AgIAANAAAAAAAAAAAAAQwN0AAAA+AAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-03-27T04:53:05.683Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 11,
-              "Title": "GBuffer.cpp",
-              "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Graphics\\GBuffer.cpp",
-              "RelativeDocumentMoniker": "WHERETFWILLITEND\\Graphics\\GBuffer.cpp",
-              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Graphics\\GBuffer.cpp",
-              "RelativeToolTip": "WHERETFWILLITEND\\Graphics\\GBuffer.cpp",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAkAAAAZAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-03-27T04:53:54.082Z"
+              "WhenOpened": "2026-03-26T21:52:21.773Z",
+              "EditorCaption": ""
             }
           ]
         },

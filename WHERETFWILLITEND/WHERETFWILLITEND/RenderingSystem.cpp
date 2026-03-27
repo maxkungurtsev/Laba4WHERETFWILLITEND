@@ -51,13 +51,13 @@ void RenderingSystem::CreateLightRootSign() {
 
 void RenderingSystem::AddLight() {
     LightData light;
-    light.direction = { 1.0f, 1.0f, 1.0f, 1.0f };
-    light.falloff_end = 400.0;
-    light.falloff_start = 200.0;
-    light.position = { 0.0f, 10.0f, 10.0f, 1.0f };
+    light.direction = { 0.0f, 1.0f, 0.0f, 1.0f };
+    light.falloff_end = cos(30);
+    light.falloff_start = cos(60);
+    light.position = { 0.0f, 20.0f, 20.0f, 1.0f };
     light.spot_power = 10.0f;
     light.strength = { 2.0f, 2.0f, 1.0f };
-    light.type = 1;
+    light.type = 2;
     int index = min(127, cbuffer_->GetData().max_lights);
     OutputDebugStringA(std::to_string(index).c_str());
     OutputDebugStringA("\n");

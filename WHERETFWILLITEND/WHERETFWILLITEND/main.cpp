@@ -16,7 +16,7 @@ const float intensity = 0.1;
 XMFLOAT3 light_coords = {0.0, 10.0, 10.0};
 //camera stuff
 XMVECTOR cam_coords = {0.0, 0.0, 0.0, 1.0};
-XMVECTOR look_at = {1.0, 1.0, 0.0, 1.0};
+XMVECTOR look_at = {1.0, 1.0, 1.0, 1.0};
 XMVECTOR up = {0.0, 1.0, 0.0, 1.0 };
 // material stuff
 const float ambient_k = 0.3;
