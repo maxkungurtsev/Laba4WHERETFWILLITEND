@@ -27,16 +27,16 @@ struct MaterialData
 };
 struct SubMesh
 {
-    size_t firstIndex;
-    size_t indexCount;
-    size_t materialIndex;
-    size_t baseVertex;
+    uint32_t firstIndex;
+    uint32_t indexCount;
+    uint32_t materialIndex;
+    uint32_t baseVertex;
 };
 class Model
 {
 public:
     Model(const std::string& model_filename, std::shared_ptr<Gdevice> device);
-    const std::vector<size_t>& Geindices() const { return indices; }
+    const std::vector<uint32_t>& Geindices() const { return indices; }
     const std::vector<Vertex>& GetVertices() const {return vertices_;}
     std::vector<MaterialData>& GetMaterials() {return materials_;}
     const std::vector<SubMesh>& GetSubMeshes() const {return submeshes_;}
@@ -47,7 +47,7 @@ private:
     std::vector<XMFLOAT3> normals_;
     std::vector<Vertex> vertices_;
     std::vector<MaterialData> materials_;
-    std::vector<size_t> indices;
+    std::vector<uint32_t> indices;
     std::vector<SubMesh> submeshes_;
     void buildVertices();
 };
