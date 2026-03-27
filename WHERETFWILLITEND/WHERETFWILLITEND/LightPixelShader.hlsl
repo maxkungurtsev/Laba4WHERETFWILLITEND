@@ -13,9 +13,7 @@ struct LightData
     float falloff_end;
     float spot_power;
     int type;
-    float inner_cos;
-    float outer_cos;
-    float pad[3];
+    float pad;
 };
 struct shaderMaterialData
 {
@@ -54,7 +52,7 @@ float3 CalcLight(LightData light, float3 normal, float3 worldPos, float3 viewDir
     {
         case 0: // directional
         {
-                float3 L = normalize(light.direction.xyz); // если direction = "куда свет светит"
+                float3 L = normalize(-light.direction.xyz); // если direction = "куда свет светит"
                 float NdotL = max(dot(normal, L), 0.0f);
 
                 float3 diffuse = mat.diffuse_ * NdotL;
@@ -92,26 +90,38 @@ float3 CalcLight(LightData light, float3 normal, float3 worldPos, float3 viewDir
 
         case 2: // spot
         {
-                float3 toLight = worldPos - light.position.xyz;
+                float3 toLight = light.position.xyz - worldPos;
                 float dist = length(toLight);
                 float3 L = toLight / max(dist, 0.00001f);
 
                 float NdotL = max(dot(normal, L), 0.0f);
 
-                float3 spotDir = normalize(light.direction.xyz);
-                float spotCos = dot(L, spotDir);
-                float spotFactor = saturate((spotCos - light.outer_cos) / (light.inner_cos- light.outer_cos));
+                float3 spotDir = normalize(-light.direction.xyz); // ось прожектора
+                float spotCos = dot(-L, spotDir);
+
+                float spotFactor = saturate(
+                (spotCos - light.falloff_end) /
+                max(light.falloff_start - light.falloff_end, 0.00001f)
+            );
                 spotFactor = pow(spotFactor, light.spot_power);
+
+                float range = max(light.falloff_end - light.falloff_start, 0.00001f);
+                float attenuation = saturate((light.falloff_end - dist) / range);
+
                 float3 diffuse = mat.diffuse_ * NdotL;
+
                 float3 R = normalize(reflect(-L, normal));
-                float specPow = pow(max(dot(R, viewDir), 0.0f), mat.shiny_);
+                float specPow = pow(max(dot(R, viewDir), 0.000000001), mat.shiny_);
                 float3 spec = mat.spec_ * specPow;
-                lightContrib = (diffuse + spec) * light.strength* spotFactor;// * attenuation 
+
+                lightContrib = (diffuse + spec) * light.strength * attenuation * spotFactor;
                 break;
             }
     }
+
     return lightContrib;
 }
+
 
 struct PS_IN
 {
@@ -143,13 +153,9 @@ float4 main(PS_IN input) : SV_Target{
     float3 finalLight = float3(0, 0, 0);
     float3 V = normalize(cam_pos.xyz - worldPos);
     for (int i = 0; i < max_lights; i++){
-        finalLight = CalcLight(lights[i], normal, worldPos, V, mats[matIndex]);
+        finalLight += CalcLight(lights[i], normal, worldPos, V, mats[matIndex]);
     }
-    if (max_lights == 0)
-    {
-        return float4(albedo, 1.0);
-    }
-        finalLight += amb_light;
+    finalLight += amb_light;
     float4 Final = float4(albedo*finalLight, 1.0);
     return Final;
 }

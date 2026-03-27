@@ -51,15 +51,13 @@ void RenderingSystem::CreateLightRootSign() {
 
 void RenderingSystem::AddLight() {
     LightData light;
-    light.direction = { 0.0f, 0.0f, -1.0f, 0.0f };
+    light.direction = { 1.0f, 1.0f, 1.0f, 1.0f };
     light.falloff_end = 400.0;
     light.falloff_start = 200.0;
     light.position = { 0.0f, 10.0f, 10.0f, 1.0f };
     light.spot_power = 10.0f;
     light.strength = { 2.0f, 2.0f, 1.0f };
     light.type = 1;
-    light.inner_cos = cos(75);
-    light.outer_cos = cos(95);
     int index = min(127, cbuffer_->GetData().max_lights);
     OutputDebugStringA(std::to_string(index).c_str());
     OutputDebugStringA("\n");
@@ -335,8 +333,6 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
             Transition(g_buffer_->depth_->z_buffer_->GetResourse()->GetResourse().Get(),
                        D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
     };
-
-
     device_->cmd_->command_list_.Get()->ResourceBarrier(4, toLight);
     LightPass(clearColor, rtvHandle);
 

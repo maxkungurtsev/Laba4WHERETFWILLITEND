@@ -7,9 +7,7 @@ struct LightData
     float falloff_end;
     float spot_power;
     int type;
-    float inner_cos;
-    float outer_cos;
-    float pad[3];
+    float pad;
 };
 struct shaderMaterialData
 {
@@ -33,7 +31,7 @@ cbuffer PassConstants : register(b0)
     float3 amb_light;
     float time;
     LightData lights[128];
-    shaderMaterialData mats[300];
+    shaderMaterialData mats[64];
     float max_lights;
     float current_mat;
     float pad2[2];

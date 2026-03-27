@@ -16,7 +16,7 @@ const float intensity = 0.1;
 XMFLOAT3 light_coords = {0.0, 10.0, 10.0};
 //camera stuff
 XMVECTOR cam_coords = {0.0, 0.0, 0.0, 1.0};
-XMVECTOR look_at = {0.0, 0.0, -1.0, 1.0};
+XMVECTOR look_at = {1.0, 1.0, 0.0, 1.0};
 XMVECTOR up = {0.0, 1.0, 0.0, 1.0 };
 // material stuff
 const float ambient_k = 0.3;
@@ -65,16 +65,16 @@ int Run() {
             right = XMVector3TransformCoord(right, rotYaw);
         }
         if (g_Input.IsKeyDown('W')) {
-            cam_coords += forward * 10;
+            cam_coords += forward * 0.75;
         }
         if (g_Input.IsKeyDown('S')) {
-            cam_coords -= forward * 10;
+            cam_coords -= forward * 0.75;
         }
         if (g_Input.IsKeyDown('A')) {
-            cam_coords += right * 10;
+            cam_coords += right * 0.75;
         }
         if (g_Input.IsKeyDown('D')) {
-            cam_coords -= right * 10;
+            cam_coords -= right * 0.75;
         }
        auto currentTime = clock::now();
        float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();

@@ -9,9 +9,7 @@ struct LightData {
 	float falloff_end;
 	float spot_power;
 	int type; //0-dir, 1-point, 2-spot
-	float inner_cos;
-	float outer_cos;
-	float pad[3] = { 0,0,0 };
+	float pad = 0;
 };
 struct shaderMaterialData {
 	XMFLOAT3 ambient_;

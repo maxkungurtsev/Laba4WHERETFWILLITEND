@@ -7,9 +7,7 @@ struct LightData
     float falloff_end;
     float spot_power;
     int type;
-    float inner_cos;
-    float outer_cos;
-    float pad[3];
+    float pad;
 };
 struct shaderMaterialData
 {
