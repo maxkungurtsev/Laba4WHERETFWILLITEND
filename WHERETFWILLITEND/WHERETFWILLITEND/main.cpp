@@ -65,16 +65,16 @@ int Run() {
             right = XMVector3TransformCoord(right, rotYaw);
         }
         if (g_Input.IsKeyDown('W')) {
-            cam_coords += forward * 0.75;
+            cam_coords += forward * 10;
         }
         if (g_Input.IsKeyDown('S')) {
-            cam_coords -= forward * 0.75;
+            cam_coords -= forward * 10;
         }
         if (g_Input.IsKeyDown('A')) {
-            cam_coords += right * 0.75;
+            cam_coords += right * 10;
         }
         if (g_Input.IsKeyDown('D')) {
-            cam_coords -= right * 0.75;
+            cam_coords -= right * 10;
         }
        auto currentTime = clock::now();
        float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();

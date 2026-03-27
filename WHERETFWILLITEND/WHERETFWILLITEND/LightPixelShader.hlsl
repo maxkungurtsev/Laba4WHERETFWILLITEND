@@ -96,6 +96,7 @@ float3 CalcLight(LightData light, float3 normal, float3 worldPos, float3 viewDir
 
                 float spotFactor = smoothstep(light.falloff_end, light.falloff_start, spotCos);
                 spotFactor = pow(spotFactor, light.spot_power);
+                spotFactor = saturate(spotFactor);
                 float3 diffuse = mat.diffuse_ * NdotL;
 
                 float3 R = normalize(reflect(-L, normal));

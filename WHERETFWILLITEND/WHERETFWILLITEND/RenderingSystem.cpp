@@ -48,23 +48,54 @@ void RenderingSystem::CreateLightRootSign() {
     //creating root sign with said params
     light_root_signature_->CreateRootSignature(device_);
 };
-
-void RenderingSystem::AddLight() {
+/// <summary>
+///  C BUFFER
+/// </summary>
+void RenderingSystem::AddDirLight(XMFLOAT4 direction, XMFLOAT3 strength) {
     LightData light;
-    light.direction = { 0.0f, 1.0f, 0.0f, 1.0f };
-    light.falloff_end = cos(30);
-    light.falloff_start = cos(60);
-    light.position = { 0.0f, 20.0f, 20.0f, 1.0f };
-    light.spot_power = 10.0f;
-    light.strength = { 2.0f, 2.0f, 1.0f };
-    light.type = 2;
+    light.direction = direction;
+    light.strength = strength;
+    light.type = 0;
     int index = min(127, cbuffer_->GetData().max_lights);
     OutputDebugStringA(std::to_string(index).c_str());
-    OutputDebugStringA("\n");
+    OutputDebugStringA(" - index of directional light added\n");
     cbuffer_->GetData().lights[index] = light;
     cbuffer_->GetData().max_lights += 1;
     cbuffer_->Save_changes();
 };
+
+
+void RenderingSystem::AddPointLight(float falloff_end, float falloff_start, XMFLOAT4 position, XMFLOAT3 strength) {
+    LightData light;
+    light.falloff_end = falloff_end;
+    light.falloff_start = falloff_start;
+    light.position = position;
+    light.strength = strength;
+    light.type = 1;
+    int index = min(127, cbuffer_->GetData().max_lights);
+    OutputDebugStringA(std::to_string(index).c_str());
+    OutputDebugStringA(" - index of point light added\n");
+    cbuffer_->GetData().lights[index] = light;
+    cbuffer_->GetData().max_lights += 1;
+    cbuffer_->Save_changes();
+};
+void RenderingSystem::AddSpotLight(XMFLOAT4 direction, float falloff_end, float falloff_start, XMFLOAT4 position, XMFLOAT3 strength, float spot_power) {
+    LightData light;
+    light.direction = direction;
+    light.falloff_end = cos(falloff_end);
+    light.falloff_start = cos(falloff_start);
+    light.position = position;
+    light.spot_power = spot_power;
+    light.strength = strength;
+    light.type = 2;
+    int index = min(127, cbuffer_->GetData().max_lights);
+    OutputDebugStringA(std::to_string(index).c_str());
+    OutputDebugStringA(" - index of spot light added\n");
+    cbuffer_->GetData().lights[index] = light;
+    cbuffer_->GetData().max_lights += 1;
+    cbuffer_->Save_changes();
+};
+
 void RenderingSystem::FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, int time, XMFLOAT3 amb_light) {
     //identity
     XMStoreFloat4x4(&cbuffer_->GetData().model, XMMatrixIdentity());
@@ -248,7 +279,17 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string me
     cbuffer_ = std::make_shared<Cbuffer<PassConstants>>(device_);
     cbuffer_->GetData().max_lights = 0;
     FillCbuffer(cam_pos, look_at, up, time);
-    AddLight();
+    // let there be light
+    XMFLOAT4 dir = { -1,-1,0,0 };
+    XMFLOAT3 str = { 0,0,1 };
+    AddDirLight(dir, str);
+    str = { 1,0,0 };
+    XMFLOAT4 pos = { 10,10,0,0 };
+    AddPointLight(400,200, pos, str);
+    str = { 0,1,0 };
+    dir = { 1,0,0,0 };
+    pos = { 1100,50,-10,0 };
+    AddSpotLight(dir, 30,20, pos, str, 10);
     CreateVertexBuffer(mesh_);
 
 
