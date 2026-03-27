@@ -231,7 +231,7 @@ void RenderingSystem::GeomPass(const float clearColor[4]) {
         cbuffer_->Save_changes();
         device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, mesh_->GetMaterials()[submesh.materialIndex].diffuseTexture->GetResourse()->GetHandle().gpu_);
         //normal textures
-        device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, mesh_->GetMaterials()[submesh.materialIndex].NormalTexture->GetResourse()->GetHandle().gpu_);
+        device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, mesh_->GetMaterials()[submesh.materialIndex].HeightTexture->GetResourse()->GetHandle().gpu_);
         if (mesh_->GetMaterials()[submesh.materialIndex].diffuseTexPath == "textures/sponza_thorn_diff.tga" or mesh_->GetMaterials()[submesh.materialIndex].diffuseTexPath == "textures/vase_plant.tga")
         {
             device_->cmd_->command_list_->SetPipelineState(geom_pso_anim_->GetPSO().Get());
@@ -239,7 +239,7 @@ void RenderingSystem::GeomPass(const float clearColor[4]) {
         else {
             device_->cmd_->command_list_->SetPipelineState(geom_pso_->GetPSO().Get());
         }
-        device_->cmd_->command_list_->DrawInstanced(static_cast<UINT>(submesh.vertexCount), 1, static_cast<UINT>(submesh.startVertex), 0);
+        device_->cmd_->command_list_->DrawIndexedInstanced(static_cast<UINT>(submesh.indexCount), 1, static_cast<UINT>(submesh.firstIndex), static_cast<UINT>(submesh.baseVertex), 0);
     }
 }
 void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle) {
@@ -291,7 +291,6 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string me
     pos = { 1100,50,-10,0 };
     AddSpotLight(dir, 30,20, pos, str, 10);
     CreateVertexBuffer(mesh_);
-
 
     std::string type = "vs_5_0";
     CompileShader(L"GeomVertexShader.hlsl", geom_vertex_shader_, type);

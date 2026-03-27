@@ -39,18 +39,19 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
         if (AI_SUCCESS == mat->Get(AI_MATKEY_SHININESS, shininess))
             outMat.shiny_k = shininess;
         // diffuse texture
+        
         if (mat->GetTextureCount(aiTextureType_DIFFUSE) > 0)
         {
             aiString path;
             mat->GetTexture(aiTextureType_DIFFUSE, 0, &path);
             outMat.diffuseTexPath = path.C_Str();
-            OutputDebugStringA((outMat.diffuseTexPath + '\n').c_str());
             outMat.hasDiffuseTexture = true;
             TGAImage image_tga;
             const Image* image_png;
             //choose between parsers
             if (outMat.diffuseTexPath.substr(outMat.diffuseTexPath.size() - 3) == "tga"){
             image_tga.read_tga_file(outMat.diffuseTexPath.c_str());
+            OutputDebugStringA(("diffuse texture for material " + std::to_string(i) + " exists"+'\n').c_str());
             outMat.diffuseTexture = std::make_shared<GTexture>(image_tga, outMat.diffuseTexPath, device, TextureUsage::Albedo);
             }
             else {
@@ -65,7 +66,6 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
             }
 
 
-            OutputDebugStringA(("diffuse texture for material " + std::to_string(i) + " exists"+'\n').c_str());
         }
         else {
             outMat.diffuseTexPath = "diffuse texture missing";
@@ -77,37 +77,40 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
     for (unsigned i = 0; i < scene->mNumMaterials; ++i) {
         aiMaterial* mat = scene->mMaterials[i];
         MaterialData& outMat = materials_[i];
+        OutputDebugStringA((std::to_string(mat->GetTextureCount(aiTextureType_HEIGHT))).c_str());
+
         if (mat->GetTextureCount(aiTextureType_HEIGHT) > 0)
         {
             aiString path;
             mat->GetTexture(aiTextureType_HEIGHT, 0, &path);
-            outMat.normalTexPath = path.C_Str();
-            outMat.hasNormalTexture = true;
+            outMat.HeightTexPath = path.C_Str();
+            outMat.hasHeightTexture = true;
             TGAImage image_tga;
             const Image* image_png;
             //choose between parsers
-            if (outMat.normalTexPath.substr(outMat.normalTexPath.size() - 3) == "tga") {
-                image_tga.read_tga_file(outMat.normalTexPath.c_str());
-                outMat.NormalTexture = std::make_shared<GTexture>(image_tga, outMat.normalTexPath, device, TextureUsage::Normalmap);
+            OutputDebugStringA(("normal texture for material " + outMat.HeightTexPath + "loaded" + '\n').c_str());
+            if (outMat.HeightTexPath.substr(outMat.HeightTexPath.size() - 3) == "tga") {
+                image_tga.read_tga_file(outMat.HeightTexPath.c_str());
+                outMat.HeightTexture = std::make_shared<GTexture>(image_tga, outMat.HeightTexPath, device, TextureUsage::Normalmap);
             }
             else {
                 ScratchImage image;
-                std::wstring wpath(outMat.normalTexPath.begin(), outMat.normalTexPath.end());
+                std::wstring wpath(outMat.HeightTexPath.begin(), outMat.HeightTexPath.end());
                 HRESULT hr = LoadFromWICFile(wpath.c_str(), WIC_FLAGS_NONE, nullptr, image);
                 if (FAILED(hr)) {
-                    OutputDebugStringA(("normal texture for material " + outMat.normalTexPath + " failed to load" + '\n').c_str());
+                    OutputDebugStringA(("normal texture for material " + outMat.HeightTexPath + " failed to load" + '\n').c_str());
                
                     throw std::runtime_error("failed loading normal texture from png");
                 }
                 image_png = image.GetImage(0, 0, 0);
-                outMat.NormalTexture = std::make_shared<GTexture>(image_png, outMat.normalTexPath, device, TextureUsage::Normalmap);
+                outMat.HeightTexture = std::make_shared<GTexture>(image_png, outMat.HeightTexPath, device, TextureUsage::Normalmap);
             }
         }
         else {
             // for sponza normal path is just not there
             //outMat.normalTexPath = "normal texture missing";
-            outMat.NormalTexture = std::make_shared<GTexture>(dummy_, outMat.normalTexPath, device, TextureUsage::Normalmap);
-            OutputDebugStringA(("normal texture for material " + outMat.normalTexPath + " is missing" + '\n').c_str());
+            outMat.HeightTexture = std::make_shared<GTexture>(dummy_, outMat.HeightTexPath, device, TextureUsage::Normalmap);
+            OutputDebugStringA(("normal texture for material " + outMat.HeightTexPath + " is missing" + '\n').c_str());
            // OutputDebugStringA((outMat.normalTexPath + '\n').c_str());
         }
     }
@@ -115,7 +118,8 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
     for (unsigned m = 0; m < scene->mNumMeshes; ++m){
         aiMesh* mesh = scene->mMeshes[m];
         SubMesh part;
-        part.startVertex = vertices_.size();
+        part.baseVertex = vertices_.size();
+        part.firstIndex = indices.size();
         part.materialIndex = mesh->mMaterialIndex;
         //verts
         for (unsigned i = 0; i < mesh->mNumVertices; ++i){
@@ -142,7 +146,19 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
             }
             vertices_.push_back(v);
         }
-        part.vertexCount = vertices_.size() - part.startVertex;
+        for (unsigned f = 0; f < mesh->mNumFaces; ++f)
+        {
+            const aiFace& face = mesh->mFaces[f];
+
+            // Triangulate is enabled, but keep guard anyway
+            if (face.mNumIndices != 3) continue;
+
+            indices.push_back(part.baseVertex + face.mIndices[0]);
+            indices.push_back(part.baseVertex + face.mIndices[1]);
+            indices.push_back(part.baseVertex + face.mIndices[2]);
+        }
+
+        part.indexCount = static_cast<uint32_t>(indices.size()) - part.firstIndex;
         submeshes_.push_back(part);
     }
 }

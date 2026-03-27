@@ -65,16 +65,16 @@ int Run() {
             right = XMVector3TransformCoord(right, rotYaw);
         }
         if (g_Input.IsKeyDown('W')) {
-            cam_coords += forward * 10;
+            cam_coords += forward * 1;
         }
         if (g_Input.IsKeyDown('S')) {
-            cam_coords -= forward * 10;
+            cam_coords -= forward * 1;
         }
         if (g_Input.IsKeyDown('A')) {
-            cam_coords += right * 10;
+            cam_coords += right * 1;
         }
         if (g_Input.IsKeyDown('D')) {
-            cam_coords -= right * 10;
+            cam_coords -= right * 1;
         }
        auto currentTime = clock::now();
        float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
@@ -94,7 +94,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow){
     //init input device
     g_Input.Initialize(g_Window.GetHWND());
     //catch messege stuff
-    g_Renderer = std::make_shared<NewRenderer>(width,height,2, &(g_Window),"sponza.obj", cam_coords, look_at, up, 0);
+    g_Renderer = std::make_shared<NewRenderer>(width,height,2, &(g_Window),"san-miguel-low-poly.obj", cam_coords, look_at, up, 0);
 
     int messege = Run();
     return static_cast<int>(messege);

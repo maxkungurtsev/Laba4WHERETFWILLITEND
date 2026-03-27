@@ -21,20 +21,22 @@ struct MaterialData
     std::string diffuseTexPath;
     bool hasDiffuseTexture = false;
     std::shared_ptr<GTexture> diffuseTexture;
-    std::string normalTexPath;
-    bool hasNormalTexture = false;
-    std::shared_ptr<GTexture> NormalTexture;
+    std::string HeightTexPath;
+    bool hasHeightTexture = false;
+    std::shared_ptr<GTexture> HeightTexture;
 };
 struct SubMesh
 {
-    size_t startVertex;
-    size_t vertexCount;
+    size_t firstIndex;
+    size_t indexCount;
     size_t materialIndex;
+    size_t baseVertex;
 };
 class Model
 {
 public:
     Model(const std::string& model_filename, std::shared_ptr<Gdevice> device);
+    const std::vector<size_t>& Geindices() const { return indices; }
     const std::vector<Vertex>& GetVertices() const {return vertices_;}
     std::vector<MaterialData>& GetMaterials() {return materials_;}
     const std::vector<SubMesh>& GetSubMeshes() const {return submeshes_;}
@@ -45,6 +47,7 @@ private:
     std::vector<XMFLOAT3> normals_;
     std::vector<Vertex> vertices_;
     std::vector<MaterialData> materials_;
+    std::vector<size_t> indices;
     std::vector<SubMesh> submeshes_;
     void buildVertices();
 };
