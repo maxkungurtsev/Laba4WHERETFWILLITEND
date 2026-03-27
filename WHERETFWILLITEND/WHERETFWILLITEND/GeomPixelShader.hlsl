@@ -11,7 +11,9 @@ struct LightData
     float falloff_end;
     float spot_power;
     int type;
-    float pad;
+    float inner_cos;
+    float outer_cos;
+    float pad[3];
 };
 struct shaderMaterialData
 {
@@ -58,7 +60,14 @@ PS_OUT main(PS_IN input) : SV_TARGET
 {
     float2 uv = input.uv;
     PS_OUT output;
-    output.albedo = diffuseMap.Sample(samplerState, uv);
+    if (max_lights == 0)
+    {
+        output.albedo = float4(0, 0, 0, 0);
+    }
+    else
+    {
+        output.albedo = diffuseMap.Sample(samplerState, uv);
+    }
     output.normal = float4(input.normal, 1.0)*0.5+0.5;
     output.material_index = int4(current_mat, 0, 0, 0);
     return output;
