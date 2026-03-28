@@ -60,7 +60,7 @@ PS_OUT main(PS_IN input) : SV_TARGET
 {
     float2 uv = input.uv;
     PS_OUT output;
-    output.albedo = diffuseMap.Sample(samplerState, uv);
+    
     int NormalType = mats[current_mat].NormalType;
     switch (NormalType)
     {
@@ -93,6 +93,14 @@ PS_OUT main(PS_IN input) : SV_TARGET
             float3 n = float3(hu - hd, 1, hr - hl);
             output.normal = float4(normalize(mul(n, TBN)), 1.0);
             break;}
+    }
+    if (length(input.worldPos) == 0)
+    {
+        output.albedo = output.normal;
+    }
+    else
+    {
+        output.albedo = diffuseMap.Sample(samplerState, uv);
     }
     output.material_index = int4(current_mat, 0, 0, 0);
     return output;

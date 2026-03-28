@@ -22,11 +22,12 @@ void RenderingSystem::CreateGeomRootSign(int textures_amount) {
     }
     //cbv
     geom_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_ALL);
-    // textures diffuse and normal
-    geom_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
-    geom_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    // textures diffuse
+    geom_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_ALL);
+    //normal
+    geom_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_ALL);
     //sampler
-    geom_root_signature_->AddParameter(Type::sampler, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    geom_root_signature_->AddParameter(Type::sampler, 1, D3D12_SHADER_VISIBILITY_ALL);
     OutputDebugStringA("sampler made\n");
     //creating root sign with said params
     geom_root_signature_->CreateRootSignature(device_);
@@ -175,7 +176,6 @@ void RenderingSystem::CreateVertexBuffer(std::shared_ptr<Model> model) {
     vertex_buffer_view_.SizeInBytes = bufferSize;
 }
 
-
 void RenderingSystem::CreateIndexBuffer(std::shared_ptr<Model> model){
     //device_->cmd_->ResetAllocator();
     std::vector<uint32_t> indices = model->Getindices();
@@ -235,7 +235,6 @@ void RenderingSystem::GeomPass(const float clearColor[4]) {
     //desc tables setup
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, cbuffer_->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, Sampler_handle_.gpu_);
-    device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     device_->cmd_->command_list_->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
     device_->cmd_->command_list_->IASetIndexBuffer(&index_buffer_view_);
     //OutputDebugStringA();
@@ -253,7 +252,14 @@ void RenderingSystem::GeomPass(const float clearColor[4]) {
             device_->cmd_->command_list_->SetPipelineState(geom_pso_anim_->GetPSO().Get());
         }
         else {
-            device_->cmd_->command_list_->SetPipelineState(geom_pso_->GetPSO().Get());
+            if (mesh_->GetMaterials()[submesh.materialIndex].hasHeightTexture){
+                device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
+                device_->cmd_->command_list_->SetPipelineState(geom_pso_tes_->GetPSO().Get());
+            }
+            else {
+                device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+                device_->cmd_->command_list_->SetPipelineState(geom_pso_->GetPSO().Get());
+            }
         }
         device_->cmd_->command_list_->DrawIndexedInstanced(static_cast<UINT>(submesh.indexCount), 1, static_cast<UINT>(submesh.firstIndex), 0, 0);
     }
@@ -321,11 +327,23 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string me
     CompileShader(L"LightVertexShader.hlsl", light_vertex_shader_, type);
     type = "ps_5_0";
     CompileShader(L"LightPixelShader.hlsl", light_pixel_shader_, type);
+    type = "ps_5_0";
+    CompileShader(L"LightPixelShaderWire.hlsl", light_pixel_shader_wire_, type);
+
     OutputDebugStringA("light shaders compiled\n");
-    // formats of bullshit ima use as rtv
+    type = "hs_5_0";
+    CompileShader(L"HullShader.hlsl", hull_shader_, type);
+    type = "ds_5_0";
+    CompileShader(L"DomainShader.hlsl", domain_shader_, type);
+    OutputDebugStringA("hull and domain shaders compiled\n");
+    // formats of bullshit ima use as rtv// ¬ инициализации устройства (один раз):
+    
     std::vector<DXGI_FORMAT> formats = {DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_B8G8R8A8_UNORM ,DXGI_FORMAT_R32_SINT };
     geom_pso_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, geom_pixel_shader_, device_, geom_root_signature_, 3, formats);
+    geom_pso_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, geom_pixel_shader_, device_, geom_root_signature_, 3, formats);
     OutputDebugStringA("geom pso 1 made\n");
+    geom_pso_tes_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, hull_shader_, domain_shader_ , geom_pixel_shader_, device_, geom_root_signature_, 3, formats);;
+    OutputDebugStringA("geom pso with tesselation made\n");
     geom_pso_anim_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_anim_, geom_pixel_shader_, device_, geom_root_signature_, 3, formats);
     OutputDebugStringA("geom pso 2 made\n");
     formats = { DXGI_FORMAT_R8G8B8A8_UNORM };

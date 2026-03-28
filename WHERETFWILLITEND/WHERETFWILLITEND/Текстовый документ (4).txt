@@ -1,0 +1,9 @@
+newmtl Material
+Kd 1 1 1
+Ns 16
+d 1
+illum 2
+Ka 0 0 0
+Ks 0.04 0.04 0.04
+map_Kd textures\Maceta_B2_Color.png
+map_Bump textures\N_Maceta_B_Bump.png

@@ -9,10 +9,13 @@
 #include "Window.h"
 #include "Model.h"
 #include <d3dcompiler.h>
+
 class RenderingSystem {
 	std::shared_ptr<Gdevice> device_;
 	std::shared_ptr<PSO> geom_pso_;
+	std::shared_ptr<PSO> geom_pso_tes_;
 	std::shared_ptr<PSO> geom_pso_anim_;
+	std::shared_ptr<PSO> geom_pso_anim_tes_;
 	std::shared_ptr<PSO> light_pso_;
 	std::shared_ptr<RootSignature> geom_root_signature_;
 	std::shared_ptr<RootSignature> light_root_signature_;
@@ -26,10 +29,13 @@ class RenderingSystem {
 	D3D12_INDEX_BUFFER_VIEW index_buffer_view_;
 	std::shared_ptr <Cbuffer<PassConstants>> cbuffer_;
 	ComPtr<ID3DBlob> geom_vertex_shader_;
+	ComPtr<ID3DBlob> hull_shader_;
+	ComPtr<ID3DBlob> domain_shader_;
 	ComPtr<ID3DBlob> geom_vertex_shader_anim_;
 	ComPtr<ID3DBlob> geom_pixel_shader_;
 	ComPtr<ID3DBlob> light_vertex_shader_;
 	ComPtr<ID3DBlob> light_pixel_shader_;
+	ComPtr<ID3DBlob> light_pixel_shader_wire_;
 	std::shared_ptr<Model> mesh_;
 	Handle Sampler_handle_;
 	bool first_frame_ = true;
