@@ -11,6 +11,9 @@ struct Vertex
     XMFLOAT3 position;
     XMFLOAT3 normal;
     XMFLOAT2 uv;
+    XMFLOAT3 tangent;
+    XMFLOAT3 bitangent;
+
 };
 struct MaterialData
 {
@@ -21,9 +24,10 @@ struct MaterialData
     std::string diffuseTexPath;
     bool hasDiffuseTexture = false;
     std::shared_ptr<GTexture> diffuseTexture;
-    std::string HeightTexPath;
+    std::string HeightNormTexPath;
     bool hasHeightTexture = false;
-    std::shared_ptr<GTexture> HeightTexture;
+    bool hasNormTexture = false;
+    std::shared_ptr<GTexture> HeightNormTexture;
 };
 struct SubMesh
 {
@@ -50,4 +54,6 @@ private:
     std::vector<uint32_t> indices;
     std::vector<SubMesh> submeshes_;
     void buildVertices();
+    void loadNormal(std::string& path);
+    void loadHeigth(std::string& path);
 };

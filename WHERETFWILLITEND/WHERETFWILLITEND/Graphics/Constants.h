@@ -15,7 +15,8 @@ struct shaderMaterialData {
 	XMFLOAT3 ambient_;
 	float shiny_;
 	XMFLOAT3 diffuse_;
-	float pad0 = 0;
+	// if has normal texture - 1; heigth -2; or none of those-0;
+	float NormalType = 0;
 	XMFLOAT3 spec_;
 	float pad1 = 0;
 };

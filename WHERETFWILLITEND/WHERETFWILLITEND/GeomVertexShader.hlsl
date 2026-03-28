@@ -14,7 +14,7 @@ struct shaderMaterialData
     float3 ambient_;
     float shiny_;
     float3 diffuse_;
-    float pad0;
+    float NormalType;
     float3 spec_;
     float pad1;
 };
@@ -41,6 +41,8 @@ struct VS_IN {
     float3 pos : POSITION;
     float3 normal : NORMAL;
     float2 uv : TEXCOORD0;
+    float3 tangent : TEXCOORD1;
+    float3 bitangent : TEXCOORD2;
 };
 
 struct VS_OUT {
@@ -48,6 +50,8 @@ struct VS_OUT {
     float3 normal : NORMAL;  
     float2 uv : TEXCOORD0;   
     float3 worldPos : TEXCOORD1; 
+    float3 tangent : TEXCOORD2;
+    float3 bitangent : TEXCOORD3;
 };
 
 VS_OUT main(VS_IN input)
@@ -59,5 +63,7 @@ VS_OUT main(VS_IN input)
     output.worldPos = worldPosition.xyz;
     output.normal = normalize(mul((float3x3)model, input.normal));
     output.uv = input.uv;
+    output.tangent = input.tangent;
+    output.bitangent = input.bitangent;
     return output;
 }

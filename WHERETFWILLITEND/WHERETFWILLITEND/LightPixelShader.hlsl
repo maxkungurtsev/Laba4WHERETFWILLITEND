@@ -20,7 +20,7 @@ struct shaderMaterialData
     float3 ambient_;
     float shiny_;
     float3 diffuse_;
-    float pad0;
+    float NormalType;
     float3 spec_;
     float pad1;
 };

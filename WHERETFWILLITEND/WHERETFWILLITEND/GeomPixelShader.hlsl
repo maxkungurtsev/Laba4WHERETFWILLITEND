@@ -18,7 +18,7 @@ struct shaderMaterialData
     float3 ambient_;
     float shiny_;
     float3 diffuse_;
-    float pad0;
+    float NormalType;
     float3 spec_;
     float pad1;
 };
@@ -47,6 +47,8 @@ struct PS_IN
     float3 normal : NORMAL;
     float2 uv : TEXCOORD0;
     float3 worldPos : TEXCOORD1;
+    float3 tangent : TEXCOORD2;
+    float3 bitangent : TEXCOORD3;
 };
 struct PS_OUT
 {
@@ -59,7 +61,39 @@ PS_OUT main(PS_IN input) : SV_TARGET
     float2 uv = input.uv;
     PS_OUT output;
     output.albedo = diffuseMap.Sample(samplerState, uv);
-    output.normal = float4(input.normal, 1.0)*0.5+0.5;
+    int NormalType = mats[current_mat].NormalType;
+    switch (NormalType)
+    {
+        case 0:{
+            output.normal = float4(input.normal, 1.0)*0.5+0.5;
+            break; }
+        case 1:{
+            float3 T = normalize(input.tangent);
+            float3 B = normalize(input.bitangent);
+            float3 N = normalize(input.normal);
+            float3x3 TBN = float3x3(T, B, N);
+            float3 normalTex = NormalMap.Sample(samplerState, input.uv).xyz;
+            normalTex = normalTex * 2.0 - 1.0;
+            output.normal = float4(normalize(mul(normalTex, TBN)), 1.0);
+            break;}
+        case 2:{
+            float x;
+            float y;
+            NormalMap.GetDimensions(x, y);
+            float dx = 1 / x;
+            float dy = 1 / y;
+            float hr = NormalMap.Sample(samplerState, input.uv + dx).x;
+            float hl = NormalMap.Sample(samplerState, input.uv - dx).x;
+            float hu = NormalMap.Sample(samplerState, input.uv + dy).x;
+            float hd = NormalMap.Sample(samplerState, input.uv - dy).x;
+            float3 T = normalize(input.tangent);
+            float3 B = normalize(input.bitangent);
+            float3 N = normalize(input.normal);
+            float3x3 TBN = float3x3(T, B, N);
+            float3 n = float3(hu - hd, 1, hr - hl);
+            output.normal = float4(normalize(mul(n, TBN)), 1.0);
+            break;}
+    }
     output.material_index = int4(current_mat, 0, 0, 0);
     return output;
 }

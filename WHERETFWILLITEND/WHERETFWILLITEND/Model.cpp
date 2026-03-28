@@ -38,8 +38,17 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
         float shininess = 0;
         if (AI_SUCCESS == mat->Get(AI_MATKEY_SHININESS, shininess))
             outMat.shiny_k = shininess;
+        OutputDebugStringA(("material " + std::to_string(i)+'\n').c_str());
+        for (int type = aiTextureType_NONE; type <= aiTextureType_UNKNOWN; type++)
+        {
+            aiTextureType texType = (aiTextureType)type;
+
+            unsigned int count = mat->GetTextureCount(texType);
+            OutputDebugStringA(("amount of "+std::to_string(texType) + " is "+ std::to_string(count) +'\n').c_str());
+        }
+
+
         // diffuse texture
-        
         if (mat->GetTextureCount(aiTextureType_DIFFUSE) > 0)
         {
             aiString path;
@@ -77,40 +86,46 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
     for (unsigned i = 0; i < scene->mNumMaterials; ++i) {
         aiMaterial* mat = scene->mMaterials[i];
         MaterialData& outMat = materials_[i];
-        OutputDebugStringA((std::to_string(mat->GetTextureCount(aiTextureType_HEIGHT))).c_str());
 
         if (mat->GetTextureCount(aiTextureType_HEIGHT) > 0)
         {
             aiString path;
             mat->GetTexture(aiTextureType_HEIGHT, 0, &path);
-            outMat.HeightTexPath = path.C_Str();
-            outMat.hasHeightTexture = true;
+            std::string path_ = path.C_Str();
             TGAImage image_tga;
             const Image* image_png;
             //choose between parsers
-            OutputDebugStringA(("normal texture for material " + outMat.HeightTexPath + "loaded" + '\n').c_str());
-            if (outMat.HeightTexPath.substr(outMat.HeightTexPath.size() - 3) == "tga") {
-                image_tga.read_tga_file(outMat.HeightTexPath.c_str());
-                outMat.HeightTexture = std::make_shared<GTexture>(image_tga, outMat.HeightTexPath, device, TextureUsage::Normalmap);
+            if (path_.find("ddn") != std::string::npos) {
+                outMat.hasNormTexture = true;
+            }
+            else if (path_.find("bump") != std::string::npos) {
+                outMat.hasHeightTexture = true;
+            }
+            outMat.HeightNormTexPath = path_;
+            OutputDebugStringA(("normal texture for material " + path_ + "loaded" + '\n').c_str());
+            if (path_.substr(path_.size() - 3) == "tga") {
+                image_tga.read_tga_file(path_.c_str());
+                outMat.HeightNormTexture = std::make_shared<GTexture>(image_tga, path_, device, TextureUsage::Normalmap);
             }
             else {
                 ScratchImage image;
-                std::wstring wpath(outMat.HeightTexPath.begin(), outMat.HeightTexPath.end());
+                std::wstring wpath(path_.begin(), path_.end());
                 HRESULT hr = LoadFromWICFile(wpath.c_str(), WIC_FLAGS_NONE, nullptr, image);
                 if (FAILED(hr)) {
-                    OutputDebugStringA(("normal texture for material " + outMat.HeightTexPath + " failed to load" + '\n').c_str());
+                    OutputDebugStringA(("normal texture for material " + outMat.HeightNormTexPath + " failed to load" + '\n').c_str());
                
                     throw std::runtime_error("failed loading normal texture from png");
                 }
                 image_png = image.GetImage(0, 0, 0);
-                outMat.HeightTexture = std::make_shared<GTexture>(image_png, outMat.HeightTexPath, device, TextureUsage::Normalmap);
+                outMat.HeightNormTexture = std::make_shared<GTexture>(image_png, outMat.HeightNormTexPath, device, TextureUsage::Normalmap);
             }
         }
         else {
             // for sponza normal path is just not there
             //outMat.normalTexPath = "normal texture missing";
-            outMat.HeightTexture = std::make_shared<GTexture>(dummy_, outMat.HeightTexPath, device, TextureUsage::Normalmap);
-            OutputDebugStringA(("normal texture for material " + outMat.HeightTexPath + " is missing" + '\n').c_str());
+            std::string name = "no texture = no path";
+            outMat.HeightNormTexture = std::make_shared<GTexture>(dummy_, name, device, TextureUsage::Normalmap);
+            OutputDebugStringA(("normal texture for material " + std::to_string(i) + " is missing" + '\n').c_str());
            // OutputDebugStringA((outMat.normalTexPath + '\n').c_str());
         }
     }
@@ -143,6 +158,14 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
                     mesh->mTextureCoords[0][i].x,
                     mesh->mTextureCoords[0][i].y
                 };
+            }
+            if (mesh->HasTangentsAndBitangents()){
+                v.tangent = XMFLOAT3(mesh->mTangents[i][0],
+                                     mesh->mTangents[i][1], 
+                                     mesh->mTangents[i][2]);
+                v.bitangent = XMFLOAT3(mesh->mBitangents[i][0],
+                                       mesh->mBitangents[i][1],
+                                       mesh->mBitangents[i][2]);
             }
             vertices_.push_back(v);
         }

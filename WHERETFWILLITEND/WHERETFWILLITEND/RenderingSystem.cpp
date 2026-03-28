@@ -113,45 +113,34 @@ void RenderingSystem::FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR u
     cbuffer_->GetData().amb_light = amb_light;
     XMStoreFloat4(&cbuffer_->GetData().cam_pos, cam_pos);
     XMStoreFloat4(&cbuffer_->GetData().cam_forward, XMVector3Normalize(look_at - cam_pos));
+    cbuffer_->Save_changes();
+};
+void RenderingSystem::ParseModelToCBuffer() {
     for (int i = 0; i < mesh_->GetMaterials().size(); i++) {
         cbuffer_->GetData().mats[i].ambient_ = mesh_->GetMaterials()[i].ambient_k;
         cbuffer_->GetData().mats[i].diffuse_ = mesh_->GetMaterials()[i].diffuse_k;
         cbuffer_->GetData().mats[i].spec_ = mesh_->GetMaterials()[i].specular_k;
         cbuffer_->GetData().mats[i].shiny_ = mesh_->GetMaterials()[i].shiny_k;
+        if (mesh_->GetMaterials()[i].hasHeightTexture) {
+            cbuffer_->GetData().mats[i].NormalType = 2;
+        }
+        else if (mesh_->GetMaterials()[i].hasNormTexture) {
+            cbuffer_->GetData().mats[i].NormalType = 1;
+        }
+        else {
+            cbuffer_->GetData().mats[i].NormalType = 0;
+        }
     }
     cbuffer_->Save_changes();
-};
-
+}
 void RenderingSystem::CreateInputLayout() {
     input_layout_ =
     {
-        {
-            "POSITION",
-            0,
-            DXGI_FORMAT_R32G32B32_FLOAT,
-            0,
-            0,
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-            0
-        },
-        {
-            "NORMAL",
-            0,
-            DXGI_FORMAT_R32G32B32_FLOAT,
-            0,
-            12,
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-            0
-        },
-        {
-            "TEXCOORD",
-            0,
-            DXGI_FORMAT_R32G32_FLOAT,
-            0,
-            24,
-            D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA,
-            0
-        }
+        {"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}, 
+        { "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+        {"BITANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 44, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
     };
 }
 
@@ -258,7 +247,7 @@ void RenderingSystem::GeomPass(const float clearColor[4]) {
         cbuffer_->Save_changes();
         device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, mesh_->GetMaterials()[submesh.materialIndex].diffuseTexture->GetResourse()->GetHandle().gpu_);
         //normal textures
-        device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, mesh_->GetMaterials()[submesh.materialIndex].HeightTexture->GetResourse()->GetHandle().gpu_);
+        device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, mesh_->GetMaterials()[submesh.materialIndex].HeightNormTexture->GetResourse()->GetHandle().gpu_);
         if (mesh_->GetMaterials()[submesh.materialIndex].diffuseTexPath == "textures/sponza_thorn_diff.tga" or mesh_->GetMaterials()[submesh.materialIndex].diffuseTexPath == "textures/vase_plant.tga")
         {
             device_->cmd_->command_list_->SetPipelineState(geom_pso_anim_->GetPSO().Get());
@@ -306,6 +295,7 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string me
     cbuffer_ = std::make_shared<Cbuffer<PassConstants>>(device_);
     cbuffer_->GetData().max_lights = 0;
     FillCbuffer(cam_pos, look_at, up, time);
+    ParseModelToCBuffer();
     // let there be light
     XMFLOAT4 dir = { -1,-1,0,0 };
     XMFLOAT3 str = { 0,0,1 };
