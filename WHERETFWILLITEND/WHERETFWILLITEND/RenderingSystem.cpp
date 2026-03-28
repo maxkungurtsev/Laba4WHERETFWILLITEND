@@ -329,9 +329,6 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string me
     CompileShader(L"LightVertexShader.hlsl", light_vertex_shader_, type);
     type = "ps_5_0";
     CompileShader(L"LightPixelShader.hlsl", light_pixel_shader_, type);
-    type = "ps_5_0";
-    CompileShader(L"LightPixelShaderWire.hlsl", light_pixel_shader_wire_, type);
-
     OutputDebugStringA("light shaders compiled\n");
     type = "hs_5_0";
     CompileShader(L"HullShader.hlsl", hull_shader_, type);

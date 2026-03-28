@@ -80,6 +80,7 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
             unsigned int count = mat->GetTextureCount(texType);
             OutputDebugStringA(("amount of "+std::to_string(texType) + " is "+ std::to_string(count) +'\n').c_str());
         }
+        
 
 
         // diffuse texture

@@ -28,7 +28,7 @@ PSO::PSO(std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout, ComPtr<ID3DBlob> ve
 
 
     psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
-    psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+    psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
     psoDesc.RasterizerState.FrontCounterClockwise = FALSE;
     psoDesc.RasterizerState.DepthClipEnable = TRUE;
     psoDesc.BlendState.AlphaToCoverageEnable = FALSE;
@@ -51,7 +51,7 @@ PSO::PSO(std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout, ComPtr<ID3DBlob> ve
     //RasterizerState
     D3D12_RASTERIZER_DESC rasterDesc{};
     rasterDesc.FillMode = D3D12_FILL_MODE_SOLID;
-    rasterDesc.CullMode = D3D12_CULL_MODE_BACK;
+    rasterDesc.CullMode = D3D12_CULL_MODE_NONE;
     rasterDesc.FrontCounterClockwise = FALSE;
     rasterDesc.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
     rasterDesc.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
@@ -165,7 +165,7 @@ PSO::PSO(std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout, ComPtr<ID3DBlob> ve
 
 
     psoDesc.RasterizerState.FillMode = D3D12_FILL_MODE_SOLID;
-    psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_BACK;
+    psoDesc.RasterizerState.CullMode = D3D12_CULL_MODE_NONE;
     psoDesc.RasterizerState.FrontCounterClockwise = FALSE;
     psoDesc.RasterizerState.DepthClipEnable = TRUE;
     psoDesc.BlendState.AlphaToCoverageEnable = FALSE;
@@ -188,7 +188,7 @@ PSO::PSO(std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout, ComPtr<ID3DBlob> ve
     //RasterizerState
     D3D12_RASTERIZER_DESC rasterDesc{};
     rasterDesc.FillMode = D3D12_FILL_MODE_SOLID;
-    rasterDesc.CullMode = D3D12_CULL_MODE_BACK;
+    rasterDesc.CullMode = D3D12_CULL_MODE_NONE;
     rasterDesc.FrontCounterClockwise = FALSE;
     rasterDesc.DepthBias = D3D12_DEFAULT_DEPTH_BIAS;
     rasterDesc.DepthBiasClamp = D3D12_DEFAULT_DEPTH_BIAS_CLAMP;
