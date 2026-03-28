@@ -136,11 +136,11 @@ void RenderingSystem::ParseModelToCBuffer() {
 void RenderingSystem::CreateInputLayout() {
     input_layout_ =
     {
-        {"POSITION",0,DXGI_FORMAT_R32G32B32_FLOAT,0, 0, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-        {"NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}, 
-        { "TANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
-        {"BITANGENT", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 44, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0 },
+        {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}, 
+        {"TEXCOORD", 1, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 2, DXGI_FORMAT_R32G32B32_FLOAT, 0, 44, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
     };
 }
 
@@ -332,16 +332,6 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string me
     std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout;
     light_pso_ = std::make_shared<PSO>(input_layout, light_vertex_shader_, light_pixel_shader_, device_, light_root_signature_, 1, formats);
     OutputDebugStringA("light pso made\n");
-    D3D12_RESOURCE_BARRIER toRenderframe[] =
-    {
-        Transition(g_buffer_->albedo_->texture_->GetResourse()->GetResourse().Get(),
-                   D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
-        Transition(g_buffer_->normal_->texture_->GetResourse()->GetResourse().Get(),
-                   D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
-        Transition(g_buffer_->material_index_->texture_->GetResourse()->GetResourse().Get(),
-                   D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
-    };
-    device_->cmd_->command_list_.Get()->ResourceBarrier(3, toRenderframe);
 
 
 }

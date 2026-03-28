@@ -54,6 +54,8 @@ private:
     std::vector<uint32_t> indices;
     std::vector<SubMesh> submeshes_;
     void buildVertices();
-    void loadNormal(std::string& path);
-    void loadHeigth(std::string& path);
+    XMFLOAT3 summ(XMFLOAT3& a, XMFLOAT3& b);
+    XMFLOAT3 diff(XMFLOAT3& a, XMFLOAT3& b);
+    XMFLOAT2 summ(XMFLOAT2& a, XMFLOAT2& b);
+    XMFLOAT2 diff(XMFLOAT2& a, XMFLOAT2& b);
 };

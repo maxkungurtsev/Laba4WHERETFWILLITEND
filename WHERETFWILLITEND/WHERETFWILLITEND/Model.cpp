@@ -2,6 +2,40 @@
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
 #include "Model.h"
+
+XMFLOAT3 Model::summ(XMFLOAT3& a, XMFLOAT3& b) {
+    XMVECTOR va = XMLoadFloat3(&a);
+    XMVECTOR vb = XMLoadFloat3(&b);
+    XMVECTOR vAdd = va + vb;
+    XMFLOAT3 sum;
+    XMStoreFloat3(&sum, vAdd);
+    return sum;
+}
+XMFLOAT3 Model::diff(XMFLOAT3& a, XMFLOAT3& b) {
+    XMVECTOR va = XMLoadFloat3(&a);
+    XMVECTOR vb = XMLoadFloat3(&b);
+    XMVECTOR vAdd = va - vb;
+    XMFLOAT3 sum;
+    XMStoreFloat3(&sum, vAdd);
+    return sum;
+}
+XMFLOAT2 Model::summ(XMFLOAT2& a, XMFLOAT2& b) {
+    XMVECTOR va = XMLoadFloat2(&a);
+    XMVECTOR vb = XMLoadFloat2(&b);
+    XMVECTOR vAdd = va + vb;
+    XMFLOAT2 sum;
+    XMStoreFloat2(&sum, vAdd);
+    return sum;
+}
+XMFLOAT2 Model::diff(XMFLOAT2& a, XMFLOAT2& b) {
+    XMVECTOR va = XMLoadFloat2(&a);
+    XMVECTOR vb = XMLoadFloat2(&b);
+    XMVECTOR vAdd = va - vb;
+    XMFLOAT2 sum;
+    XMStoreFloat2(&sum, vAdd);
+    return sum;
+}
+
 Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
 {
     Assimp::Importer importer;
@@ -130,6 +164,7 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
         }
     }
     // meshs
+
     for (unsigned m = 0; m < scene->mNumMeshes; ++m){
         aiMesh* mesh = scene->mMeshes[m];
         SubMesh part;
@@ -166,23 +201,73 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
                 v.bitangent = XMFLOAT3(mesh->mBitangents[i][0],
                                        mesh->mBitangents[i][1],
                                        mesh->mBitangents[i][2]);
+                //OutputDebugStringA((std::to_string(mesh->mBitangents[i][0])+" "+ std::to_string(mesh->mBitangents[i][1]) + " " + std::to_string(mesh->mBitangents[i][2]) + "\n").c_str());
             }
             vertices_.push_back(v);
         }
+    std::vector<int> tangentCount(vertices_.size(), 0);
+    std::vector<int> bitangentCount(vertices_.size(), 0);
+        //meshs
         for (unsigned f = 0; f < mesh->mNumFaces; ++f)
         {
             const aiFace& face = mesh->mFaces[f];
 
             // Triangulate is enabled, but keep guard anyway
             if (face.mNumIndices != 3) continue;
-
             indices.push_back(part.baseVertex + face.mIndices[0]);
             indices.push_back(part.baseVertex + face.mIndices[1]);
             indices.push_back(part.baseVertex + face.mIndices[2]);
         }
-
         part.indexCount = static_cast<uint32_t>(indices.size()) - part.firstIndex;
         submeshes_.push_back(part);
+    }
+    std::vector<int> tangentCount(vertices_.size(), 0);
+    std::vector<int> bitangentCount(vertices_.size(), 0);
+    for (unsigned m = 0; m < scene->mNumMeshes; ++m) {
+        aiMesh* mesh = scene->mMeshes[m];
+        SubMesh part=submeshes_[m];
+        for (unsigned f = 0; f < mesh->mNumFaces; ++f){
+            const aiFace& face = mesh->mFaces[f];
+            // Triangulate is enabled, but keep guard anyway
+            if (face.mNumIndices != 3) continue;
+            // count tangents
+            if (!mesh->HasTangentsAndBitangents()) {
+                Vertex v1 = vertices_[part.baseVertex + face.mIndices[0]];
+                Vertex v2 = vertices_[part.baseVertex + face.mIndices[1]];
+                Vertex v3 = vertices_[part.baseVertex + face.mIndices[2]];
+                //OutputDebugStringA(std::to_string(vertices_.size()).c_str());
+                XMFLOAT3 edge1 = diff(v2.position, v1.position);
+                XMFLOAT3 edge2 = diff(v3.position, v1.position);
+                XMFLOAT2 deltaUV1 = diff(v2.uv, v1.uv);
+                XMFLOAT2 deltaUV2 = diff(v3.uv, v1.uv);
+                float f = 1 / (deltaUV1.x * deltaUV2.y - deltaUV2.x * deltaUV1.y);
+                XMFLOAT3 tangent;
+                XMFLOAT3 bitangent;
+                tangent.x = f * (deltaUV2.y * edge1.x - deltaUV1.y * edge2.x);
+                tangent.y = f * (deltaUV2.y * edge1.y - deltaUV1.y * edge2.y);
+                tangent.z = f * (deltaUV2.y * edge1.z - deltaUV1.y * edge2.z);
+                bitangent.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
+                bitangent.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
+                bitangent.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
+                vertices_[part.baseVertex + face.mIndices[0]].tangent = summ(vertices_[face.mIndices[0]].tangent, tangent);
+                tangentCount[part.baseVertex + face.mIndices[0]] += 1;
+                vertices_[part.baseVertex + face.mIndices[1]].tangent = summ(vertices_[face.mIndices[1]].tangent, tangent);
+                tangentCount[part.baseVertex + face.mIndices[1]] += 1;
+                vertices_[part.baseVertex + face.mIndices[2]].tangent = summ(vertices_[face.mIndices[2]].tangent, tangent);
+                tangentCount[part.baseVertex + face.mIndices[2]] += 1;
+                vertices_[part.baseVertex + face.mIndices[0]].bitangent = summ(vertices_[face.mIndices[0]].bitangent, tangent);
+                bitangentCount[part.baseVertex + face.mIndices[0]] += 1;
+                vertices_[part.baseVertex + face.mIndices[1]].bitangent = summ(vertices_[face.mIndices[1]].bitangent, tangent);
+                bitangentCount[part.baseVertex + face.mIndices[1]] += 1;
+                vertices_[part.baseVertex + face.mIndices[2]].bitangent = summ(vertices_[face.mIndices[2]].bitangent, tangent);
+                bitangentCount[part.baseVertex + face.mIndices[2]] += 1;
+            }
+        }
+    }
+    //усреднить тангенты
+    for (int i = 0; i < vertices_.size(); i++) {
+        vertices_[i].tangent = XMFLOAT3(vertices_[i].tangent.x / tangentCount[i], vertices_[i].tangent.y / tangentCount[i], vertices_[i].tangent.z / tangentCount[i]);
+        vertices_[i].bitangent = XMFLOAT3(vertices_[i].bitangent.x / bitangentCount[i], vertices_[i].bitangent.y / bitangentCount[i], vertices_[i].bitangent.z / bitangentCount[i]);
     }
 }
 void Model::buildVertices()

@@ -74,7 +74,7 @@ PS_OUT main(PS_IN input) : SV_TARGET
             float3x3 TBN = float3x3(T, B, N);
             float3 normalTex = NormalMap.Sample(samplerState, input.uv).xyz;
             normalTex = normalTex * 2.0 - 1.0;
-            output.normal = float4(normalize(mul(normalTex, TBN)), 1.0);
+                output.normal = float4(mul(normalTex, TBN), 1.0) * 0.5 + 0.5;
             break;}
         case 2:{
             float x;
