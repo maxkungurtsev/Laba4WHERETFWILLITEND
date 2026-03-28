@@ -94,14 +94,7 @@ PS_OUT main(PS_IN input) : SV_TARGET
             output.normal = float4(normalize(mul(n, TBN)), 1.0);
             break;}
     }
-    if (length(input.worldPos) == 0)
-    {
-        output.albedo = output.normal;
-    }
-    else
-    {
-        output.albedo = diffuseMap.Sample(samplerState, uv);
-    }
+    output.albedo = diffuseMap.Sample(samplerState, uv);
     output.material_index = int4(current_mat, 0, 0, 0);
     return output;
 }
