@@ -253,8 +253,10 @@ void RenderingSystem::GeomPass(const float clearColor[4]) {
         }
         else {
             if (mesh_->GetMaterials()[submesh.materialIndex].hasHeightTexture){
-             //   device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
-            //    device_->cmd_->command_list_->SetPipelineState(geom_pso_tes_->GetPSO().Get());
+                //device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+                //device_->cmd_->command_list_->SetPipelineState(geom_pso_->GetPSO().Get());
+                device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
+                device_->cmd_->command_list_->SetPipelineState(geom_pso_tes_->GetPSO().Get());
             }
             else {
                 device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
@@ -304,11 +306,11 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string me
     ParseModelToCBuffer();
     // let there be light
     XMFLOAT4 dir = { -1,-1,0,0 };
-    XMFLOAT3 str = { 0,0,1 };
+    XMFLOAT3 str = { 1,1,1 };
     AddDirLight(dir, str);
-    str = { 1,0,0 };
-    XMFLOAT4 pos = { 10,10,0,0 };
-    AddPointLight(400,200, pos, str);
+    //str = { 1,1,1 };
+    XMFLOAT4 pos = { 10,10,10,0 };
+    //AddPointLight(400,200, pos, str);
     str = { 0,1,0 };
     dir = { 1,0,0,0 };
     pos = { 1100,50,-10,0 };

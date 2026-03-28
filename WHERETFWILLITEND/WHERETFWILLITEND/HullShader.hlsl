@@ -97,7 +97,7 @@ CONST_DATA_OUT HSConstants(InputPatch<HS_IN, 3> patch){
     output.tes_factor[1] = lerp(8.0f, 1.0f, t);
     mid = (p1 + p0) * 0.5f;
     d = distance(mid, cam_pos.xyz);
-    t = saturate(d / 25.0f);
+    t = saturate(d / 10000.0f);
     t = t * t;
     output.tes_factor[2] = lerp(8.0f, 1.0f, t);
     output.inside = (output.tes_factor[0] + output.tes_factor[1] + output.tes_factor[2]) / 3.0f;;
