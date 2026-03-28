@@ -46,20 +46,8 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 5,
+          "SelectedChildIndex": 1,
           "Children": [
-            {
-              "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "GeomPixelShader.hlsl",
-              "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\GeomPixelShader.hlsl",
-              "RelativeDocumentMoniker": "WHERETFWILLITEND\\GeomPixelShader.hlsl",
-              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\GeomPixelShader.hlsl",
-              "RelativeToolTip": "WHERETFWILLITEND\\GeomPixelShader.hlsl",
-              "ViewState": "AgIAAEYAAAAAAAAAAAAAwGAAAAAdAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2026-03-28T18:06:29.982Z"
-            },
             {
               "$type": "Document",
               "DocumentIndex": 6,
@@ -71,6 +59,31 @@
               "ViewState": "AgIAAEgAAAAAAAAAAAAcwFMAAAAeAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
               "WhenOpened": "2026-03-28T15:05:40.989Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "DomainShader.hlsl",
+              "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\DomainShader.hlsl",
+              "RelativeDocumentMoniker": "WHERETFWILLITEND\\DomainShader.hlsl",
+              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\DomainShader.hlsl",
+              "RelativeToolTip": "WHERETFWILLITEND\\DomainShader.hlsl",
+              "ViewState": "AgIAADkAAAAAAAAAAAAAwEQAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-28T14:04:30.565Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "GeomPixelShader.hlsl",
+              "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\GeomPixelShader.hlsl",
+              "RelativeDocumentMoniker": "WHERETFWILLITEND\\GeomPixelShader.hlsl",
+              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\GeomPixelShader.hlsl",
+              "RelativeToolTip": "WHERETFWILLITEND\\GeomPixelShader.hlsl",
+              "ViewState": "AgIAAEYAAAAAAAAAAAAAwGAAAAAdAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-03-28T18:06:29.982Z"
             },
             {
               "$type": "Document",
@@ -109,19 +122,6 @@
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAACAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
               "WhenOpened": "2026-03-28T14:31:28.241Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "DomainShader.hlsl",
-              "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\DomainShader.hlsl",
-              "RelativeDocumentMoniker": "WHERETFWILLITEND\\DomainShader.hlsl",
-              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\DomainShader.hlsl",
-              "RelativeToolTip": "WHERETFWILLITEND\\DomainShader.hlsl",
-              "ViewState": "AgIAAEQAAAAAAAAAAAAAwEsAAAArAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2026-03-28T14:04:30.565Z",
-              "EditorCaption": ""
             },
             {
               "$type": "Document",
