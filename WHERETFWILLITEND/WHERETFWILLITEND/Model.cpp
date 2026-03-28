@@ -260,15 +260,19 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
                 bitangentCount[part.baseVertex + face.mIndices[0]] += 1;
                 vertices_[part.baseVertex + face.mIndices[1]].bitangent = summ(vertices_[part.baseVertex + face.mIndices[1]].bitangent, bitangent);
                 bitangentCount[part.baseVertex + face.mIndices[1]] += 1;
-                vertices_[part.baseVertex + face.mIndices[2]].bitangent = summ(vertices_[face.mIndices[2]].bitangent, bitangent);
+                vertices_[part.baseVertex + face.mIndices[2]].bitangent = summ(vertices_[part.baseVertex + face.mIndices[2]].bitangent, bitangent);
                 bitangentCount[part.baseVertex + face.mIndices[2]] += 1;
             }
         }
     }
     //усреднить тангенты
     for (int i = 0; i < vertices_.size(); i++) {
-        vertices_[i].tangent = XMFLOAT3(vertices_[i].tangent.x / tangentCount[i], vertices_[i].tangent.y / tangentCount[i], vertices_[i].tangent.z / tangentCount[i]);
-        vertices_[i].bitangent = XMFLOAT3(vertices_[i].bitangent.x / bitangentCount[i], vertices_[i].bitangent.y / bitangentCount[i], vertices_[i].bitangent.z / bitangentCount[i]);
+        if (tangentCount[i] > 0) {
+            vertices_[i].tangent = XMFLOAT3(vertices_[i].tangent.x / tangentCount[i], vertices_[i].tangent.y / tangentCount[i], vertices_[i].tangent.z / tangentCount[i]);
+        }
+        if (bitangentCount[i] > 0) {
+            vertices_[i].bitangent = XMFLOAT3(vertices_[i].bitangent.x / bitangentCount[i], vertices_[i].bitangent.y / bitangentCount[i], vertices_[i].bitangent.z / bitangentCount[i]);
+        }
     }
 }
 void Model::buildVertices()
