@@ -72,13 +72,15 @@ DS_OUT main(
 {
     DS_OUT output;
     output.normal = bary.x * patch[0].normal + bary.y * patch[1].normal + bary.z * patch[2].normal;
+    output.normal = normalize(output.normal);
     output.uv = bary.x * patch[0].uv + bary.y * patch[1].uv + bary.z * patch[2].uv;
     output.worldPos = bary.x * patch[0].worldPos + bary.y * patch[1].worldPos + bary.z * patch[2].worldPos;
     output.tangent = bary.x * patch[0].tangent + bary.y * patch[1].tangent + bary.z * patch[2].tangent;
     output.bitangent = bary.x * patch[0].bitangent + bary.y * patch[1].bitangent + bary.z * patch[2].bitangent;
     float disp = NormalMap.SampleLevel(samplerState, output.uv,0).x;
-    disp = disp* 10.0f; // 10 -scale  bias can go suck itself off i got a deadline to fit into
+    disp = disp* 100.0f; // 10 -scale  bias can go suck itself off i got a deadline to fit into
     output.worldPos += output.normal * disp;
-    output.pos = mul(float4(output.worldPos, 1.0), projection);
+    output.pos = mul(projection, mul(view, float4(output.worldPos,1.0)));
+    
     return output;
 }
