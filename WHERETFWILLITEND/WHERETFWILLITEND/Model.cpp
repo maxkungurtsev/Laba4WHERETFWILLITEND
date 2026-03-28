@@ -250,17 +250,17 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
                 bitangent.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
                 bitangent.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
                 bitangent.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
-                vertices_[part.baseVertex + face.mIndices[0]].tangent = summ(vertices_[face.mIndices[0]].tangent, tangent);
+                vertices_[part.baseVertex + face.mIndices[0]].tangent = summ(vertices_[part.baseVertex + face.mIndices[0]].tangent, tangent);
                 tangentCount[part.baseVertex + face.mIndices[0]] += 1;
-                vertices_[part.baseVertex + face.mIndices[1]].tangent = summ(vertices_[face.mIndices[1]].tangent, tangent);
+                vertices_[part.baseVertex + face.mIndices[1]].tangent = summ(vertices_[part.baseVertex + face.mIndices[1]].tangent, tangent);
                 tangentCount[part.baseVertex + face.mIndices[1]] += 1;
-                vertices_[part.baseVertex + face.mIndices[2]].tangent = summ(vertices_[face.mIndices[2]].tangent, tangent);
+                vertices_[part.baseVertex + face.mIndices[2]].tangent = summ(vertices_[part.baseVertex + face.mIndices[2]].tangent, tangent);
                 tangentCount[part.baseVertex + face.mIndices[2]] += 1;
-                vertices_[part.baseVertex + face.mIndices[0]].bitangent = summ(vertices_[face.mIndices[0]].bitangent, tangent);
+                vertices_[part.baseVertex + face.mIndices[0]].bitangent = summ(vertices_[part.baseVertex + face.mIndices[0]].bitangent, bitangent);
                 bitangentCount[part.baseVertex + face.mIndices[0]] += 1;
-                vertices_[part.baseVertex + face.mIndices[1]].bitangent = summ(vertices_[face.mIndices[1]].bitangent, tangent);
+                vertices_[part.baseVertex + face.mIndices[1]].bitangent = summ(vertices_[part.baseVertex + face.mIndices[1]].bitangent, bitangent);
                 bitangentCount[part.baseVertex + face.mIndices[1]] += 1;
-                vertices_[part.baseVertex + face.mIndices[2]].bitangent = summ(vertices_[face.mIndices[2]].bitangent, tangent);
+                vertices_[part.baseVertex + face.mIndices[2]].bitangent = summ(vertices_[face.mIndices[2]].bitangent, bitangent);
                 bitangentCount[part.baseVertex + face.mIndices[2]] += 1;
             }
         }

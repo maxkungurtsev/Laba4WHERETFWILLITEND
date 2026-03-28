@@ -91,7 +91,7 @@ PS_OUT main(PS_IN input) : SV_TARGET
             float3 N = normalize(input.normal);
             float3x3 TBN = float3x3(T, B, N);
             float3 n = float3(hu - hd, 1, hr - hl);
-            output.normal = float4(normalize(mul(n, TBN)), 1.0);
+            output.normal = float4(normalize(mul(n, TBN)), 1.0)*0.5+0.5;
             break;}
     }
     output.albedo = diffuseMap.Sample(samplerState, uv);
