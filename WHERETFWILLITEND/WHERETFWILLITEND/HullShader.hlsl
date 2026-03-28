@@ -84,14 +84,22 @@ CONST_DATA_OUT HSConstants(InputPatch<HS_IN, 3> patch){
     float3 p0 = patch[0].worldPos.xyz;
     float3 p1 = patch[1].worldPos.xyz;
     float3 p2 = patch[2].worldPos.xyz;
-    float3 center = (p0 + p1 + p2) / 3.0f;
-    float dist = distance(center, cam_pos.xyz);
-    float t = saturate(dist/25.0f); // 25 - max dist
+    
+    float3 mid = (p1 + p2) * 0.5f;
+    float d = distance(mid, cam_pos.xyz);
+    float t = saturate(d / 25.0f);
     t = t * t;
-    float tess = lerp(8.0f, 1.0f, t);
-    output.tes_factor[0] = tess;
-    output.tes_factor[1] = tess;
-    output.tes_factor[2] = tess;
-    output.inside = tess;
+    output.tes_factor[0] =lerp(8.0f, 1.0f, t);
+    mid = (p2 + p0) * 0.5f;
+    d = distance(mid, cam_pos.xyz);
+    t = saturate(d / 25.0f);
+    t = t * t;
+    output.tes_factor[1] = lerp(8.0f, 1.0f, t);
+    mid = (p1 + p0) * 0.5f;
+    d = distance(mid, cam_pos.xyz);
+    t = saturate(d / 25.0f);
+    t = t * t;
+    output.tes_factor[2] = lerp(8.0f, 1.0f, t);
+    output.inside = (output.tes_factor[0] + output.tes_factor[1] + output.tes_factor[2]) / 3.0f;;
     return output;
 }
