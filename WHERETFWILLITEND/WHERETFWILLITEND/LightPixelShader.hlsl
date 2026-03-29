@@ -13,8 +13,11 @@ struct LightData
     float falloff_end;
     float spot_power;
     int type;
-    float pad;
+    float velocity;
 };
+
+StructuredBuffer<LightData> lights : register(t4);
+
 struct shaderMaterialData
 {
     float3 ambient_;
@@ -36,11 +39,9 @@ cbuffer PassConstants : register(b0)
     float4 cam_forward;
     float3 amb_light;
     float time;
-    LightData lights[128];
     shaderMaterialData mats[300];
-    float max_lights;
     int current_mat;
-    float pad2[2];
+    float pad2[3];
 };
 
 
