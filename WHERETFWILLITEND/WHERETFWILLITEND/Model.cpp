@@ -51,6 +51,8 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
     vertices_.clear();
     materials_.clear();
     submeshes_.clear();
+    aiMesh* mesh = scene->mMeshes[0];
+    OutputDebugStringA(std::to_string(mesh->mNumFaces).c_str());
     //mats and diffuse textures
     materials_.resize(scene->mNumMaterials);
     OutputDebugStringA("material amount:\n");
@@ -230,12 +232,18 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
         for (unsigned f = 0; f < mesh->mNumFaces; ++f){
             const aiFace& face = mesh->mFaces[f];
             // Triangulate is enabled, but keep guard anyway
+            OutputDebugStringA((std::to_string(face.mIndices[0])+" "+ std::to_string(face.mIndices[1])+ " "+ std::to_string(face.mIndices[2])+'\n').c_str());
+
             if (face.mNumIndices != 3) continue;
             // count tangents
             if (!mesh->HasTangentsAndBitangents()) {
                 Vertex v1 = vertices_[part.baseVertex + face.mIndices[0]];
                 Vertex v2 = vertices_[part.baseVertex + face.mIndices[1]];
                 Vertex v3 = vertices_[part.baseVertex + face.mIndices[2]];
+                OutputDebugStringA((std::to_string(v1.position.x) + " " + std::to_string(v1.position.z) + '\n').c_str());
+                OutputDebugStringA((std::to_string(v2.position.x) + " " + std::to_string(v2.position.z) + '\n').c_str());
+                OutputDebugStringA((std::to_string(v3.position.x) + " " + std::to_string(v3.position.z) + '\n').c_str());
+                OutputDebugStringA((std::to_string(mesh->mNumFaces)+"\n").c_str());
                 //OutputDebugStringA(std::to_string(vertices_.size()).c_str());
                 XMFLOAT3 edge1 = diff(v2.position, v1.position);
                 XMFLOAT3 edge2 = diff(v3.position, v1.position);
