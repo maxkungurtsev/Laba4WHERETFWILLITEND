@@ -44,7 +44,7 @@ public:
 	};
 	StructBuffer(std::shared_ptr<Gdevice> device, UINT max_element_count):element_stride_(sizeof(T)), max_element_count_(max_element_count) {
         UINT64 bufferSize = static_cast<UINT64>(max_element_count_) * element_stride_;
-
+        structb_data_.resize(max_element_count_);
         // === 1. GPU buffer (DEFAULT heap) ===
         D3D12_HEAP_PROPERTIES defaultHeap = {};
         defaultHeap.Type = D3D12_HEAP_TYPE_DEFAULT;

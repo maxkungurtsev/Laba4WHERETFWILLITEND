@@ -1,6 +1,7 @@
 #include "Lights.h"
 Lights::Lights(std::shared_ptr<Gdevice> device) {
-	lights_ =std::make_unique<StructBuffer<LightData>>(device, 200);
+	lights_ =std::make_shared<StructBuffer<LightData>>(device, 200);
+	max_lights_ = std::make_shared<Cbuffer<XMFLOAT4>>(device);
 }
 
 
@@ -18,6 +19,8 @@ void Lights::Addlight(XMFLOAT3 strength, float falloff_start, XMFLOAT4 direction
 };
 void Lights::AddAmbientlight(XMFLOAT3 strength) {
 	LightData newlight;
+	max_lights_->GetData().x += 1;
+	max_lights_->Save_changes();
 	newlight.strength = strength;
 	newlight.type = 3;
 	lights_->AddElement(newlight);
@@ -27,4 +30,7 @@ void Lights::RemoveLastLight() {
 }
 std::shared_ptr<StructBuffer<LightData>> Lights::GetBuffer() {
 	return lights_;
+}
+std::shared_ptr <Cbuffer<XMFLOAT4>> Lights::GetMaxLights() {
+	return max_lights_;
 }

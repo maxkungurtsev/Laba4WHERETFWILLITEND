@@ -46,6 +46,9 @@ void RenderingSystem::CreateLightRootSign() {
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     // Lights 
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    //lights amount
+    light_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+
     //sampler
     light_root_signature_->AddParameter(Type::sampler, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     //creating root sign with said params
@@ -237,7 +240,8 @@ void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, g_buffer_->depth_->z_buffer_->GetResourse()->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(4, g_buffer_->material_index_->texture_->GetResourse()->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(5, light_buffer_->GetBuffer()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(6, Sampler_handle_.gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(6, light_buffer_->GetMaxLights()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(7, Sampler_handle_.gpu_);
     // draw
     device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     device_->cmd_->command_list_->DrawInstanced(3, 1, 0, 0);

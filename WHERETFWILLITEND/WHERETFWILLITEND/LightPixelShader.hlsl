@@ -42,6 +42,10 @@ cbuffer PassConstants : register(b0)
     int current_mat;
     float pad2[2];
 };
+cbuffer MaxLights : register(b1)
+{
+    float4 max_lights;
+}
 
 
 float3 CalcLight(LightData light, float3 normal, float3 worldPos, float3 viewDir, shaderMaterialData mat)
@@ -150,11 +154,14 @@ float4 main(PS_IN input) : SV_Target{
     uint elementCount;
     uint stride;
     lights.GetDimensions(elementCount, stride);
-    elementCount /= stride;
-    for (int i = 0; i < elementCount; i++)
+    for (int i = 0; i < max_lights.x; i++)
     {
         finalLight += CalcLight(lights[i], normal, worldPos, V, mats[matIndex]);
     }
-    float4 Final = float4(albedo*finalLight, 1.0);
+    if (max_lights.x==1)
+    {
+    return float4(lights[0].strength, 1);
+    }
+        float4 Final = float4(albedo, 1.0);
     return Final;
 }
