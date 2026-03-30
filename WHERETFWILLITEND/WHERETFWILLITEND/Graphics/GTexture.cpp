@@ -230,5 +230,13 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 		srv_format = formats[index];
 		break;
 	}
-	Gresourse_ = std::make_shared<GResourse>(desc, srv_format, heapProps, name, device,initial_states_[index], clear_value_pointer);
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
+	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
+	srvDesc.Format = srv_format;
+	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	srvDesc.Texture2D.MostDetailedMip = 0;
+	srvDesc.Texture2D.MipLevels = 1;
+	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
+	D3D12_SRV_DIMENSION dimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+	Gresourse_ = std::make_shared<GResourse>(desc, srvDesc, heapProps, name, device,initial_states_[index], clear_value_pointer);
 }

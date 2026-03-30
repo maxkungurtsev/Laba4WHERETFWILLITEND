@@ -29,9 +29,8 @@ struct PassConstants {
 	XMFLOAT4X4 inv_projection;
 	XMFLOAT4 cam_pos;
 	XMFLOAT4 cam_forward;
-	XMFLOAT3 amb_light;
-	float time;
 	shaderMaterialData mats[300];
+	float time;
 	int current_mat;
-	float pad2[3];
+	float pad2[2];
 };

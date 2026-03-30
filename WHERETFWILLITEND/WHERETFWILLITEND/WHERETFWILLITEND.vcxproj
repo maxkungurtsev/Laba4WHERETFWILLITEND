@@ -139,6 +139,7 @@
     <ClCompile Include="Graphics\RootSignature.cpp" />
     <ClCompile Include="Graphics\ZBuffer.cpp" />
     <ClCompile Include="InputDevice.cpp" />
+    <ClCompile Include="Lights.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="NEWRenderer.cpp" />
@@ -160,8 +161,10 @@
     <ClInclude Include="Graphics\PSO.h" />
     <ClInclude Include="Graphics\RenderTarget.h" />
     <ClInclude Include="Graphics\RootSignature.h" />
+    <ClInclude Include="Graphics\StructBuffer.h" />
     <ClInclude Include="Graphics\ZBuffer.h" />
     <ClInclude Include="InputDevice.h" />
+    <ClInclude Include="Lights.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="NEWRenderer.h" />
     <ClInclude Include="RenderingSystem.h" />

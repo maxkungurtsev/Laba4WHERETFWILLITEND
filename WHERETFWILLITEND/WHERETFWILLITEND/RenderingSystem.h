@@ -7,6 +7,7 @@
 #include "Graphics/CBuffer.h"
 #include "Graphics/PSO.h"
 #include "Window.h"
+#include "Lights.h"
 #include "Model.h"
 #include <d3dcompiler.h>
 
@@ -28,6 +29,7 @@ class RenderingSystem {
 	ComPtr<ID3D12Resource> index_buffer_upload_buffer_;
 	D3D12_INDEX_BUFFER_VIEW index_buffer_view_;
 	std::shared_ptr <Cbuffer<PassConstants>> cbuffer_;
+	std::shared_ptr <Lights> light_buffer_;
 	ComPtr<ID3DBlob> geom_vertex_shader_;
 	ComPtr<ID3DBlob> hull_shader_;
 	ComPtr<ID3DBlob> domain_shader_;
@@ -44,11 +46,8 @@ public:
 	void CreateLightRootSign();
 	void CreateVertexBuffer(std::shared_ptr<Model> mesh);
 	void CreateIndexBuffer(std::shared_ptr<Model> model);
-	void AddDirLight(XMFLOAT4 direction, XMFLOAT3 strength);
-	void AddPointLight(float falloff_end, float falloff_start, XMFLOAT4 position, XMFLOAT3 strength);
-	void AddSpotLight(XMFLOAT4 direction, float falloff_end, float falloff_start, XMFLOAT4 position, XMFLOAT3 strength, float spot_power);
 	void CreateInputLayout();
-	void FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, int time, XMFLOAT3 amb_light = { 0.4f,0.4f,0.4f });
+	void FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, int time);
 	RenderingSystem(std::shared_ptr<Gdevice> device, std::string mesh_path, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, int time);
 	void CompileShader(std::wstring path, ComPtr<ID3DBlob>& shader, std::string& type);
 	void GeomPass(const float clearColor[4]);

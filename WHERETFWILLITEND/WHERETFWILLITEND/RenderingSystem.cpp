@@ -44,60 +44,17 @@ void RenderingSystem::CreateLightRootSign() {
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    // Lights 
+    light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     //sampler
     light_root_signature_->AddParameter(Type::sampler, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     //creating root sign with said params
     light_root_signature_->CreateRootSignature(device_);
 };
-/// <summary>
+
+
 ///  C BUFFER
-/// </summary>
-void RenderingSystem::AddDirLight(XMFLOAT4 direction, XMFLOAT3 strength) {
-    LightData light;
-    light.direction = direction;
-    light.strength = strength;
-    light.type = 0;
-    int index = min(127, cbuffer_->GetData().max_lights);
-    OutputDebugStringA(std::to_string(index).c_str());
-    OutputDebugStringA(" - index of directional light added\n");
-    cbuffer_->GetData().lights[index] = light;
-    cbuffer_->GetData().max_lights += 1;
-    cbuffer_->Save_changes();
-};
-
-
-void RenderingSystem::AddPointLight(float falloff_end, float falloff_start, XMFLOAT4 position, XMFLOAT3 strength) {
-    LightData light;
-    light.falloff_end = falloff_end;
-    light.falloff_start = falloff_start;
-    light.position = position;
-    light.strength = strength;
-    light.type = 1;
-    int index = min(127, cbuffer_->GetData().max_lights);
-    OutputDebugStringA(std::to_string(index).c_str());
-    OutputDebugStringA(" - index of point light added\n");
-    cbuffer_->GetData().lights[index] = light;
-    cbuffer_->GetData().max_lights += 1;
-    cbuffer_->Save_changes();
-};
-void RenderingSystem::AddSpotLight(XMFLOAT4 direction, float falloff_end, float falloff_start, XMFLOAT4 position, XMFLOAT3 strength, float spot_power) {
-    LightData light;
-    light.direction = direction;
-    light.falloff_end = cos(falloff_end);
-    light.falloff_start = cos(falloff_start);
-    light.position = position;
-    light.spot_power = spot_power;
-    light.strength = strength;
-    light.type = 2;
-    int index = min(127, cbuffer_->GetData().max_lights);
-    OutputDebugStringA(std::to_string(index).c_str());
-    OutputDebugStringA(" - index of spot light added\n");
-    cbuffer_->GetData().lights[index] = light;
-    cbuffer_->GetData().max_lights += 1;
-    cbuffer_->Save_changes();
-};
-
-void RenderingSystem::FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, int time, XMFLOAT3 amb_light) {
+void RenderingSystem::FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, int time) {
     //identity
     XMStoreFloat4x4(&cbuffer_->GetData().model, XMMatrixIdentity());
     //view
@@ -111,7 +68,6 @@ void RenderingSystem::FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR u
     //inv projection
     XMStoreFloat4x4(&cbuffer_->GetData().inv_projection, XMMatrixInverse(nullptr, XMLoadFloat4x4(&cbuffer_->GetData().projection)));
     cbuffer_->GetData().time = time;
-    cbuffer_->GetData().amb_light = amb_light;
     XMStoreFloat4(&cbuffer_->GetData().cam_pos, cam_pos);
     XMStoreFloat4(&cbuffer_->GetData().cam_forward, XMVector3Normalize(look_at - cam_pos));
     cbuffer_->Save_changes();
@@ -280,7 +236,8 @@ void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, g_buffer_->normal_->texture_->GetResourse()->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, g_buffer_->depth_->z_buffer_->GetResourse()->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(4, g_buffer_->material_index_->texture_->GetResourse()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(5, Sampler_handle_.gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(5, light_buffer_->GetBuffer()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(6, Sampler_handle_.gpu_);
     // draw
     device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     device_->cmd_->command_list_->DrawInstanced(3, 1, 0, 0);
@@ -301,20 +258,11 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string me
     OutputDebugStringA("light root sign made\n");
     CreateInputLayout();
     cbuffer_ = std::make_shared<Cbuffer<PassConstants>>(device_);
-    cbuffer_->GetData().max_lights = 0;
     FillCbuffer(cam_pos, look_at, up, time);
     ParseModelToCBuffer();
     // let there be light
-    XMFLOAT4 dir = { -1,-1,0,0 };
-    XMFLOAT3 str = { 1,1,1 };
-    AddDirLight(dir, str);
-    //str = { 1,1,1 };
-    XMFLOAT4 pos = { 10,10,10,0 };
-    //AddPointLight(400,200, pos, str);
-    str = { 0,1,0 };
-    dir = { 1,0,0,0 };
-    pos = { 1100,50,-10,0 };
-    //AddSpotLight(dir, 30,20, pos, str, 10);
+    light_buffer_ = std::make_shared<Lights>(device_);
+    light_buffer_->AddAmbientlight({0.3,0.3,0.3});
     CreateVertexBuffer(mesh_);
     CreateIndexBuffer(mesh_);
 

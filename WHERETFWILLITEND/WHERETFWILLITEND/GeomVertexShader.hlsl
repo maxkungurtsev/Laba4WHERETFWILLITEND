@@ -17,11 +17,10 @@ cbuffer PassConstants : register(b0)
     float4x4 inv_projection;
     float4 cam_pos;
     float4 cam_forward;
-    float3 amb_light;
-    float time;
     shaderMaterialData mats[300];
+    float time;
     int current_mat;
-    float pad2[3];
+    float pad2[2];
 };
 
 struct VS_IN {

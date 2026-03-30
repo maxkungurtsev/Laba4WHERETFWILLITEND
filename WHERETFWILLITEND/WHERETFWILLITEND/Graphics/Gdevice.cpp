@@ -39,3 +39,15 @@ Gdevice::Gdevice(UINT width, UINT height, int num_descriptors) {
     heaps_=std::make_shared<GHeaps>(num_descriptors, device_);
     ViewportScissorSetup();
 }
+
+void Gdevice::WaitForGpu() {
+    fence_->IncrementFenceValue();
+    cmd_->command_queue_->Signal(fence_->GetFence().Get(), fence_->GetFenceValue());
+
+    if (fence_->GetFence()->GetCompletedValue() < fence_->GetFenceValue()) {
+        HANDLE eventHandle = CreateEvent(nullptr, FALSE, FALSE, nullptr);
+        fence_->GetFence()->SetEventOnCompletion(fence_->GetFenceValue(), eventHandle);
+        WaitForSingleObject(eventHandle, INFINITE);
+        CloseHandle(eventHandle);
+    }
+}

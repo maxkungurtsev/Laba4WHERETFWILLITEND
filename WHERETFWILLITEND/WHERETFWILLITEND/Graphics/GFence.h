@@ -14,5 +14,5 @@ public:
 	UINT GetFenceValue();
 	void IncrementFenceValue();
 	ComPtr<ID3D12Fence> GetFence();
-	GFence(ComPtr<ID3D12Device> device);
+	GFence(ComPtr<ID3D12Device>& device);
 };
