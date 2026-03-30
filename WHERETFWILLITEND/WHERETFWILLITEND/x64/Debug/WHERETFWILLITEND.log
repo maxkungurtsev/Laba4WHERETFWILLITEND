@@ -1,9 +1,26 @@
 ﻿  Lights.cpp
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Lights.cpp(19,54): warning C4244: аргумент: преобразование "float" в "int", возможна потеря данных
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Lights.cpp(27,54): warning C4244: аргумент: преобразование "float" в "int", возможна потеря данных
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\StructBuffer.h(100,32): warning C4018: >: несоответствие типов со знаком и без знака
+  (компиляция исходного файла "Lights.cpp")
+      C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\StructBuffer.h(100,32):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Lights.cpp(19,2):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "StructBuffer<LightData>"
+          C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\StructBuffer.h(99,10):
+          во время компиляции функции-члена класс шаблон "void StructBuffer<LightData>::AddElement(T &,int)"
+          with
+          [
+              T=LightData
+          ]
+              C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Lights.cpp(19,21):
+              см. первую ссылку на "StructBuffer<LightData>::AddElement" в "Lights::Addlight"
+  
 C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\CBuffer.h(38,37): warning C4244: =: преобразование "UINT64" в "UINT", возможна потеря данных
   (компиляция исходного файла "Lights.cpp")
       C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\CBuffer.h(38,37):
       контекст создания экземпляра шаблона (сначала самый старый)
-          C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Lights.cpp(22,2):
+          C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Lights.cpp(5,2):
           выполняется компиляция ссылки на экземпляр класс шаблон функции "Cbuffer<DirectX::XMFLOAT4>"
           C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\CBuffer.h(12,2):
           во время компиляции функции-члена класс шаблон "Cbuffer<DirectX::XMFLOAT4>::Cbuffer(std::shared_ptr<_Ty>)"

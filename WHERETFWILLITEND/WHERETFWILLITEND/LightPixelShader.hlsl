@@ -160,7 +160,7 @@ float4 main(PS_IN input) : SV_Target{
     }
     if (max_lights.x==1)
     {
-    return float4(lights[0].strength, 1);
+    return float4(1,1,1, 1);
     }
         float4 Final = float4(albedo, 1.0);
     return Final;

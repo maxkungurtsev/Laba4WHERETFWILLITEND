@@ -96,8 +96,8 @@ public:
 	Handle GetHandle() {
 		return structb_->GetHandle();
 	};
-    void AddElement(T& element) {
-        if (max_element_count_ > structb_data_.size()) {
+    void AddElement(T& element, int max_lights) {
+        if (max_element_count_ > max_lights) {
             structb_data_.push_back(element);
             SaveChanges();
         }
