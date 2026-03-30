@@ -1,16 +1,18 @@
-﻿  RenderingSystem.cpp
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(60,15): warning C4244: инициализация: преобразование "float" в "int", возможна потеря данных
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(76,15): warning C4244: инициализация: преобразование "float" в "int", возможна потеря данных
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(92,15): warning C4244: инициализация: преобразование "float" в "int", возможна потеря данных
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(113,32): warning C4244: =: преобразование "int" в "float", возможна потеря данных
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(150,34): warning C4267: =: преобразование из "size_t" в "UINT"; возможна потеря данных
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(296,50): warning C4267: аргумент: преобразование из "size_t" в "int"; возможна потеря данных
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(357,39): warning C4244: аргумент: преобразование "float" в "int", возможна потеря данных
+﻿  Lights.cpp
+  NEWRenderer.cpp
+  RenderingSystem.cpp
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(70,32): warning C4244: =: преобразование "int" в "float", возможна потеря данных
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(106,34): warning C4267: =: преобразование из "size_t" в "UINT"; возможна потеря данных
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(255,50): warning C4267: аргумент: преобразование из "size_t" в "int"; возможна потеря данных
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(265,45): warning C4305: аргумент: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(265,41): warning C4305: аргумент: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(265,37): warning C4305: аргумент: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(304,39): warning C4244: аргумент: преобразование "float" в "int", возможна потеря данных
 C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\CBuffer.h(38,37): warning C4244: =: преобразование "UINT64" в "UINT", возможна потеря данных
   (компиляция исходного файла "RenderingSystem.cpp")
       C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\CBuffer.h(38,37):
       контекст создания экземпляра шаблона (сначала самый старый)
-          C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(60,17):
+          C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(59,22):
           выполняется компиляция ссылки на экземпляр класс шаблон функции "Cbuffer<PassConstants>"
           C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\CBuffer.h(12,2):
           во время компиляции функции-члена класс шаблон "Cbuffer<PassConstants>::Cbuffer(std::shared_ptr<_Ty>)"
@@ -28,6 +30,15 @@ C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWIL
 C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\CBuffer.h(39,55): warning C4244: аргумент: преобразование "UINT64" в "UINT", возможна потеря данных
   (компиляция исходного файла "RenderingSystem.cpp")
   
+  main.cpp
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\main.cpp(15,25): warning C4305: инициализация: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\main.cpp(22,25): warning C4305: инициализация: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\main.cpp(24,26): warning C4305: инициализация: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\main.cpp(48,61): warning C4305: аргумент: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\main.cpp(53,61): warning C4305: аргумент: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\main.cpp(58,56): warning C4305: аргумент: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\main.cpp(63,56): warning C4305: аргумент: усечение из "double" в "float"
+  Создание кода...
   WHERETFWILLITEND.vcxproj -> C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\x64\Debug\WHERETFWILLITEND.exe
   "pwsh.exe" не является внутренней или внешней
   командой, исполняемой программой или пакетным файлом.

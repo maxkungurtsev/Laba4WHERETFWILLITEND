@@ -50,7 +50,7 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
     }
     vertices_.clear();
     materials_.clear();
-    submeshes_.clear();
+    submeshes_.clear(); 
     //mats and diffuse textures
     materials_.resize(scene->mNumMaterials);
     OutputDebugStringA("material amount:\n");
@@ -80,6 +80,7 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
             unsigned int count = mat->GetTextureCount(texType);
             OutputDebugStringA(("amount of "+std::to_string(texType) + " is "+ std::to_string(count) +'\n').c_str());
         }
+        
 
 
         // diffuse texture
@@ -228,14 +229,13 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
         SubMesh part=submeshes_[m];
         for (unsigned f = 0; f < mesh->mNumFaces; ++f){
             const aiFace& face = mesh->mFaces[f];
-            // Triangulate is enabled, but keep guard anyway
+
             if (face.mNumIndices != 3) continue;
             // count tangents
             if (!mesh->HasTangentsAndBitangents()) {
                 Vertex v1 = vertices_[part.baseVertex + face.mIndices[0]];
                 Vertex v2 = vertices_[part.baseVertex + face.mIndices[1]];
                 Vertex v3 = vertices_[part.baseVertex + face.mIndices[2]];
-                //OutputDebugStringA(std::to_string(vertices_.size()).c_str());
                 XMFLOAT3 edge1 = diff(v2.position, v1.position);
                 XMFLOAT3 edge2 = diff(v3.position, v1.position);
                 XMFLOAT2 deltaUV1 = diff(v2.uv, v1.uv);
@@ -249,25 +249,29 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
                 bitangent.x = f * (-deltaUV2.x * edge1.x + deltaUV1.x * edge2.x);
                 bitangent.y = f * (-deltaUV2.x * edge1.y + deltaUV1.x * edge2.y);
                 bitangent.z = f * (-deltaUV2.x * edge1.z + deltaUV1.x * edge2.z);
-                vertices_[part.baseVertex + face.mIndices[0]].tangent = summ(vertices_[face.mIndices[0]].tangent, tangent);
+                vertices_[part.baseVertex + face.mIndices[0]].tangent = summ(vertices_[part.baseVertex + face.mIndices[0]].tangent, tangent);
                 tangentCount[part.baseVertex + face.mIndices[0]] += 1;
-                vertices_[part.baseVertex + face.mIndices[1]].tangent = summ(vertices_[face.mIndices[1]].tangent, tangent);
+                vertices_[part.baseVertex + face.mIndices[1]].tangent = summ(vertices_[part.baseVertex + face.mIndices[1]].tangent, tangent);
                 tangentCount[part.baseVertex + face.mIndices[1]] += 1;
-                vertices_[part.baseVertex + face.mIndices[2]].tangent = summ(vertices_[face.mIndices[2]].tangent, tangent);
+                vertices_[part.baseVertex + face.mIndices[2]].tangent = summ(vertices_[part.baseVertex + face.mIndices[2]].tangent, tangent);
                 tangentCount[part.baseVertex + face.mIndices[2]] += 1;
-                vertices_[part.baseVertex + face.mIndices[0]].bitangent = summ(vertices_[face.mIndices[0]].bitangent, tangent);
+                vertices_[part.baseVertex + face.mIndices[0]].bitangent = summ(vertices_[part.baseVertex + face.mIndices[0]].bitangent, bitangent);
                 bitangentCount[part.baseVertex + face.mIndices[0]] += 1;
-                vertices_[part.baseVertex + face.mIndices[1]].bitangent = summ(vertices_[face.mIndices[1]].bitangent, tangent);
+                vertices_[part.baseVertex + face.mIndices[1]].bitangent = summ(vertices_[part.baseVertex + face.mIndices[1]].bitangent, bitangent);
                 bitangentCount[part.baseVertex + face.mIndices[1]] += 1;
-                vertices_[part.baseVertex + face.mIndices[2]].bitangent = summ(vertices_[face.mIndices[2]].bitangent, tangent);
+                vertices_[part.baseVertex + face.mIndices[2]].bitangent = summ(vertices_[part.baseVertex + face.mIndices[2]].bitangent, bitangent);
                 bitangentCount[part.baseVertex + face.mIndices[2]] += 1;
             }
         }
     }
     //усреднить тангенты
     for (int i = 0; i < vertices_.size(); i++) {
-        vertices_[i].tangent = XMFLOAT3(vertices_[i].tangent.x / tangentCount[i], vertices_[i].tangent.y / tangentCount[i], vertices_[i].tangent.z / tangentCount[i]);
-        vertices_[i].bitangent = XMFLOAT3(vertices_[i].bitangent.x / bitangentCount[i], vertices_[i].bitangent.y / bitangentCount[i], vertices_[i].bitangent.z / bitangentCount[i]);
+        if (tangentCount[i] > 0) {
+            vertices_[i].tangent = XMFLOAT3(vertices_[i].tangent.x / tangentCount[i], vertices_[i].tangent.y / tangentCount[i], vertices_[i].tangent.z / tangentCount[i]);
+        }
+        if (bitangentCount[i] > 0) {
+            vertices_[i].bitangent = XMFLOAT3(vertices_[i].bitangent.x / bitangentCount[i], vertices_[i].bitangent.y / bitangentCount[i], vertices_[i].bitangent.z / bitangentCount[i]);
+        }
     }
 }
 void Model::buildVertices()

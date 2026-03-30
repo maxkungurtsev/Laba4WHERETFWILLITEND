@@ -2,17 +2,6 @@ Texture2D diffuseMap : register(t0);
 Texture2D NormalMap : register(t1);
 SamplerState samplerState : register(s0);
 
-struct LightData
-{
-    float3 strength;
-    float falloff_start;
-    float4 direction;
-    float4 position;
-    float falloff_end;
-    float spot_power;
-    int type;
-    float pad;
-};
 struct shaderMaterialData
 {
     float3 ambient_;
@@ -32,11 +21,8 @@ cbuffer PassConstants : register(b0)
     float4x4 inv_projection;
     float4 cam_pos;
     float4 cam_forward;
-    float3 amb_light;
-    float time;
-    LightData lights[128];
     shaderMaterialData mats[300];
-    float max_lights;
+    float time;
     int current_mat;
     float pad2[2];
 };
@@ -91,17 +77,10 @@ PS_OUT main(PS_IN input) : SV_TARGET
             float3 N = normalize(input.normal);
             float3x3 TBN = float3x3(T, B, N);
             float3 n = float3(hu - hd, 1, hr - hl);
-            output.normal = float4(normalize(mul(n, TBN)), 1.0);
+            output.normal = float4(normalize(mul(n, TBN)), 1.0)*0.5+0.5;
             break;}
     }
-    if (length(input.worldPos) == 0)
-    {
-        output.albedo = output.normal;
-    }
-    else
-    {
-        output.albedo = diffuseMap.Sample(samplerState, uv);
-    }
+    output.albedo = diffuseMap.Sample(samplerState, uv).bgra;
     output.material_index = int4(current_mat, 0, 0, 0);
     return output;
 }

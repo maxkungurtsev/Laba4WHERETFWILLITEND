@@ -1,17 +1,5 @@
 Texture2D NormalMap : register(t1);
 SamplerState samplerState : register(s0);
-
-struct LightData
-{
-    float3 strength;
-    float falloff_start;
-    float4 direction;
-    float4 position;
-    float falloff_end;
-    float spot_power;
-    int type;
-    float pad;
-};
 struct shaderMaterialData
 {
     float3 ambient_;
@@ -31,11 +19,8 @@ cbuffer PassConstants : register(b0)
     float4x4 inv_projection;
     float4 cam_pos;
     float4 cam_forward;
-    float3 amb_light;
-    float time;
-    LightData lights[128];
     shaderMaterialData mats[300];
-    float max_lights;
+    float time;
     int current_mat;
     float pad2[2];
 };
@@ -78,7 +63,7 @@ DS_OUT main(
     output.tangent = bary.x * patch[0].tangent + bary.y * patch[1].tangent + bary.z * patch[2].tangent;
     output.bitangent = bary.x * patch[0].bitangent + bary.y * patch[1].bitangent + bary.z * patch[2].bitangent;
     float disp = NormalMap.SampleLevel(samplerState, output.uv,0).x;
-    disp = disp* 100.0f; // 10 -scale  bias can go suck itself off i got a deadline to fit into
+    disp = disp * 10.0f * cos(time + output.uv.x * 10 - output.uv.y * 10); // 10 -scale  bias can go suck itself off i got a deadline to fit into
     output.worldPos += output.normal * disp;
     output.pos = mul(projection, mul(view, float4(output.worldPos,1.0)));
     

@@ -57,13 +57,5 @@ void NewRenderer::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XM
     back_buffer_->SetCurrentBackBuffer();
 
     //Fence
-    device_->fence_->IncrementFenceValue();
-    device_->cmd_->command_queue_->Signal(device_->fence_->GetFence().Get(), device_->fence_->GetFenceValue());
-
-    if (device_->fence_->GetFence()->GetCompletedValue() < device_->fence_->GetFenceValue()) {
-        HANDLE eventHandle = CreateEvent(nullptr, FALSE, FALSE, nullptr);
-        device_->fence_->GetFence()->SetEventOnCompletion(device_->fence_->GetFenceValue(), eventHandle);
-        WaitForSingleObject(eventHandle, INFINITE);
-        CloseHandle(eventHandle);
-    }
+    device_->WaitForGpu();
 }

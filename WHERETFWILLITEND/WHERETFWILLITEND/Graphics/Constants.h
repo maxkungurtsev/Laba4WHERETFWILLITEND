@@ -9,7 +9,7 @@ struct LightData {
 	float falloff_end;
 	float spot_power;
 	int type; //0-dir, 1-point, 2-spot
-	float pad = 0;
+	float velocity= 0;
 };
 struct shaderMaterialData {
 	XMFLOAT3 ambient_;
@@ -29,11 +29,8 @@ struct PassConstants {
 	XMFLOAT4X4 inv_projection;
 	XMFLOAT4 cam_pos;
 	XMFLOAT4 cam_forward;
-	XMFLOAT3 amb_light;
-	float time;
-	LightData lights[128];
 	shaderMaterialData mats[300];
-	float max_lights;
+	float time;
 	int current_mat;
 	float pad2[2];
 };

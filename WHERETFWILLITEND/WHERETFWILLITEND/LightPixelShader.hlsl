@@ -13,8 +13,11 @@ struct LightData
     float falloff_end;
     float spot_power;
     int type;
-    float pad;
+    float velocity;
 };
+
+StructuredBuffer<LightData> lights : register(t4);
+
 struct shaderMaterialData
 {
     float3 ambient_;
@@ -34,11 +37,8 @@ cbuffer PassConstants : register(b0)
     float4x4 inv_projection;
     float4 cam_pos;
     float4 cam_forward;
-    float3 amb_light;
-    float time;
-    LightData lights[128];
     shaderMaterialData mats[300];
-    float max_lights;
+    float time;
     int current_mat;
     float pad2[2];
 };
@@ -106,6 +106,12 @@ float3 CalcLight(LightData light, float3 normal, float3 worldPos, float3 viewDir
                 lightContrib = (diffuse + spec) * light.strength * spotFactor;
                 break;
             }
+        case 3: // ambient
+        {
+                
+                lightContrib = light.strength;
+                break;
+            }
     }
 
     return lightContrib;
@@ -141,10 +147,14 @@ float4 main(PS_IN input) : SV_Target{
     float3 worldPos = mul(inv_view, viewPos).xyz;
     float3 finalLight = float3(0, 0, 0);
     float3 V = normalize(cam_pos.xyz - worldPos);
-    for (int i = 0; i < max_lights; i++){
+    uint elementCount;
+    uint stride;
+    lights.GetDimensions(elementCount, stride);
+    elementCount /= stride;
+    for (int i = 0; i < elementCount; i++)
+    {
         finalLight += CalcLight(lights[i], normal, worldPos, V, mats[matIndex]);
     }
-    finalLight += amb_light;
     float4 Final = float4(albedo*finalLight, 1.0);
     return Final;
 }

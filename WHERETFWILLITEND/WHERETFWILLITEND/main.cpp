@@ -15,9 +15,9 @@ int texture_height = 800;
 const float intensity = 0.1;
 XMFLOAT3 light_coords = {0.0, 10.0, 10.0};
 //camera stuff
-XMVECTOR cam_coords = {0.0, 0.0, 0.0, 1.0};
-XMVECTOR look_at = {1.0, 1.0, 1.0, 1.0};
-XMVECTOR up = {0.0, 1.0, 0.0, 1.0 };
+XMVECTOR cam_coords = {0.0, -10.0, 0.0, 1.0};
+XMVECTOR look_at = {0.0, 0.0, 0.0, 1.0};
+XMVECTOR up = {0.0, 0.0, 1.0, 1.0 };
 // material stuff
 const float ambient_k = 0.3;
 const float diffuse_k = 0.5;
@@ -94,7 +94,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow){
     //init input device
     g_Input.Initialize(g_Window.GetHWND());
     //catch messege stuff
-    g_Renderer = std::make_shared<NewRenderer>(width,height,2, &(g_Window),"sponza.obj", cam_coords, look_at, up, 0);
+    g_Renderer = std::make_shared<NewRenderer>(width,height,2, &(g_Window),"water.obj", cam_coords, look_at, up, 0);
 
     int messege = Run();
     return static_cast<int>(messege);
