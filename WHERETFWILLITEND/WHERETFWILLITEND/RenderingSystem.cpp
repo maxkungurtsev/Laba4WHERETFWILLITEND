@@ -267,6 +267,7 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string me
     // let there be light
     light_buffer_ = std::make_shared<Lights>(device_);
     light_buffer_->AddAmbientlight({0.3,0.3,0.3});
+    OutputDebugStringA((std::to_string(light_buffer_->GetBuffer()->GetData()[0].type)+'\n').c_str());
     CreateVertexBuffer(mesh_);
     CreateIndexBuffer(mesh_);
 

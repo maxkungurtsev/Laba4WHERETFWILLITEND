@@ -112,7 +112,7 @@ float3 CalcLight(LightData light, float3 normal, float3 worldPos, float3 viewDir
             }
         case 3: // ambient
         {
-                
+                return float4(1, 1, 1, 1);
                 lightContrib = light.strength;
                 break;
             }
@@ -158,10 +158,6 @@ float4 main(PS_IN input) : SV_Target{
     {
         finalLight += CalcLight(lights[i], normal, worldPos, V, mats[matIndex]);
     }
-    if (max_lights.x==1)
-    {
-    return float4(1,1,1, 1);
-    }
-        float4 Final = float4(albedo, 1.0);
+    float4 Final = float4(albedo*finalLight, 1.0);
     return Final;
 }

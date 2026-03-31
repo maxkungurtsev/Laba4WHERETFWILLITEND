@@ -18,7 +18,7 @@ public:
         D3D12_RESOURCE_BARRIER barrier = {};
         barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
         barrier.Transition.pResource = structb_->GetResourse().Get();
-        barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+        barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
         barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
         barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
@@ -37,10 +37,12 @@ public:
         barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
         barrier.Transition.pResource = structb_->GetResourse().Get();
         barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
-        barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE;
+        barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
         barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
         structb_->GetDevice()->cmd_->command_list_->ResourceBarrier(1, &barrier);
+        structb_->GetDevice()->cmd_->Execute();
+        structb_->GetDevice()->WaitForGpu();
 	};
 	StructBuffer(std::shared_ptr<Gdevice> device, UINT max_element_count):element_stride_(sizeof(T)), max_element_count_(max_element_count) {
         UINT64 bufferSize = static_cast<UINT64>(max_element_count_) * element_stride_;
@@ -76,7 +78,7 @@ public:
         heapProps.CreationNodeMask = 1;
         heapProps.VisibleNodeMask = 1;
         std::string name = "struct buffer";
-        structb_ = std::make_shared<GResourse>(res_desc, srv_desc_, heapProps, name, device, D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE);
+        structb_ = std::make_shared<GResourse>(res_desc, srv_desc_, heapProps, name, device, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
         
 
         // === 2. Upload buffer ===
@@ -98,7 +100,7 @@ public:
 	};
     void AddElement(T& element, int max_lights) {
         if (max_element_count_ > max_lights) {
-            structb_data_.push_back(element);
+            structb_data_[max_lights]= element;
             SaveChanges();
         }
         else {

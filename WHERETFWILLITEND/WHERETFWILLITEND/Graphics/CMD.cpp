@@ -33,3 +33,9 @@ void CMD::ResetAllocator() {
 	command_allocator_->Reset();
 	command_list_->Reset(command_allocator_.Get(), nullptr);
 }
+
+void CMD::Execute() {
+	command_list_->Close();
+	ID3D12CommandList* lists[] = { command_list_.Get() };
+	command_queue_->ExecuteCommandLists(1, lists);
+}

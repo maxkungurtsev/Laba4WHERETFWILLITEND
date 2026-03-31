@@ -48,9 +48,7 @@ void NewRenderer::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XM
     device_->cmd_->command_list_->ResourceBarrier(1, &toPresent);
 
     //close cmd
-    device_->cmd_->command_list_->Close();
-    ID3D12CommandList* lists[] = { device_->cmd_->command_list_.Get() };
-    device_->cmd_->command_queue_->ExecuteCommandLists(1, lists);
+    device_->cmd_->Execute();
     
     //Present
     swap_chain_->Present(1, 0);

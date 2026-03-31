@@ -14,6 +14,7 @@ public:
 	ComPtr<ID3D12Device> device_;
 	CMD(ComPtr<ID3D12Device> device, D3D12_COMMAND_LIST_TYPE type = D3D12_COMMAND_LIST_TYPE_DIRECT);
 	void ResetAllocator();
+	void Execute();
 private:
 	void CreateCMDList(D3D12_COMMAND_LIST_TYPE type);
 	void CreateCMDQueue(D3D12_COMMAND_LIST_TYPE type);
