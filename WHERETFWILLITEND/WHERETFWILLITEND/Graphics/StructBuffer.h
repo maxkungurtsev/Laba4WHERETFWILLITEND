@@ -14,7 +14,10 @@ private:
     ComPtr<ID3D12Resource> upload_;
     D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc_ = {};
 public:	
-    void SaveChanges() {
+    void SaveChanges(bool InRenderFrame) {
+        if (!InRenderFrame){
+            structb_->GetDevice()->cmd_->ResetAllocator();
+        }
         D3D12_RESOURCE_BARRIER barrier = {};
         barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
         barrier.Transition.pResource = structb_->GetResourse().Get();
@@ -39,10 +42,11 @@ public:
         barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
         barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
         barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
-
-        structb_->GetDevice()->cmd_->command_list_->ResourceBarrier(1, &barrier);
-        structb_->GetDevice()->cmd_->Execute();
-        structb_->GetDevice()->WaitForGpu();
+        if (!InRenderFrame) {
+            structb_->GetDevice()->cmd_->command_list_->ResourceBarrier(1, &barrier);
+            structb_->GetDevice()->cmd_->Execute();
+            structb_->GetDevice()->WaitForGpu();
+        }
 	};
 	StructBuffer(std::shared_ptr<Gdevice> device, UINT max_element_count):element_stride_(sizeof(T)), max_element_count_(max_element_count) {
         UINT64 bufferSize = static_cast<UINT64>(max_element_count_) * element_stride_;
@@ -98,19 +102,19 @@ public:
 	Handle GetHandle() {
 		return structb_->GetHandle();
 	};
-    void AddElement(T& element, int max_lights) {
+    void AddElement(T& element, int max_lights, bool in_render_frame) {
         if (max_element_count_ > max_lights) {
             structb_data_[max_lights]= element;
-            SaveChanges();
+            SaveChanges(in_render_frame);
         }
         else {
             OutputDebugStringA("struct buffer limit Reached!");
         }
     }
-    void RemoveLastElement() {
+    void RemoveLastElement(bool in_render_frame) {
         if (0 < structb_data_.size()) {
             structb_data_.pop_back();
-            SaveChanges();
+            SaveChanges(in_render_frame);
         }
         else {
             OutputDebugStringA("struct buffer is empty!");

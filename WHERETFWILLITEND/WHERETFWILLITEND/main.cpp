@@ -15,7 +15,7 @@ int texture_height = 800;
 const float intensity = 0.1;
 XMFLOAT3 light_coords = {0.0, 10.0, 10.0};
 //camera stuff
-XMVECTOR cam_coords = {0.0, -10.0, 0.0, 1.0};
+XMVECTOR cam_coords = {0.0, 10.0, 0.0, 1.0};
 XMVECTOR look_at = {0.0, 0.0, 0.0, 1.0};
 XMVECTOR up = {0.0, 0.0, 1.0, 1.0 };
 // material stuff
@@ -29,7 +29,9 @@ int Run() {
     using clock = std::chrono::high_resolution_clock;
     auto lastTime = clock::now();
     float time = 0;
+    bool shootLight = false;
     while (running) {
+        shootLight = false;
         while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
             if (msg.message == WM_QUIT) {
                 running = false;
@@ -43,6 +45,9 @@ int Run() {
         up = XMVector3Normalize((XMVector3Cross(right, forward)));
         if (g_Input.IsKeyDown(VK_ESCAPE)) {
             PostQuitMessage(0);
+        }
+        if (g_Input.IsKeyDown(VK_SPACE)) {
+            shootLight = true;
         }
         if (g_Input.IsKeyDown(VK_UP)) {
             XMMATRIX rotPitch = XMMatrixRotationAxis(right, 0.05);
@@ -81,7 +86,7 @@ int Run() {
        lastTime = currentTime;
        time += deltaTime;
        look_at = cam_coords + forward;
-       g_Renderer->RenderFrame(time, look_at, cam_coords, up);
+       g_Renderer->RenderFrame(time, look_at, cam_coords, up, shootLight);
     }
     return (int)msg.wParam;
 }
@@ -94,7 +99,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow){
     //init input device
     g_Input.Initialize(g_Window.GetHWND());
     //catch messege stuff
-    g_Renderer = std::make_shared<NewRenderer>(width,height,2, &(g_Window),"water.obj", cam_coords, look_at, up, 0);
+    g_Renderer = std::make_shared<NewRenderer>(width,height,2, &(g_Window),"sponza.obj", cam_coords, look_at, up, 0);
 
     int messege = Run();
     return static_cast<int>(messege);

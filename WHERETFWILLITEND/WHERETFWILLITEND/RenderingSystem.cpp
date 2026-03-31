@@ -266,7 +266,7 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string me
     ParseModelToCBuffer();
     // let there be light
     light_buffer_ = std::make_shared<Lights>(device_);
-    light_buffer_->AddAmbientlight({0.3,0.3,0.3});
+    light_buffer_->AddAmbientlight({0.3,0.3,0.3}, false);
     OutputDebugStringA((std::to_string(light_buffer_->GetBuffer()->GetData()[0].type)+'\n').c_str());
     CreateVertexBuffer(mesh_);
     CreateIndexBuffer(mesh_);
@@ -305,7 +305,15 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string me
 
 
 }
-void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up, D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle) {
+void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up, D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle, bool shootlight) {
+    if (shootlight) {
+        XMFLOAT4 camera_pos;
+        XMStoreFloat4(&camera_pos, cam_pos);
+        XMVECTOR forward = look_at - cam_pos;
+        XMFLOAT4 forw;
+        XMStoreFloat4(&forw, forward);
+        light_buffer_->AddPointlight({ 0.0,0.8,0.8 }, camera_pos, 100, 300, true, 50, time, forw);
+    }
     FillCbuffer(cam_pos, look_at, up, time);
     ID3D12DescriptorHeap* heaps[] = {
         device_->heaps_->GetCBV_SRV_UAV_Heap().Get(),
