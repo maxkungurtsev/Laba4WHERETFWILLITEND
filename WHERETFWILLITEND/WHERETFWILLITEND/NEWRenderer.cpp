@@ -1,6 +1,6 @@
 #include "NEWRenderer.h"
 
-NewRenderer::NewRenderer(UINT width, UINT height, int frame_count, Window* hwnd, std::string mesh_path, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, int time) {
+NewRenderer::NewRenderer(UINT width, UINT height, int frame_count, Window* hwnd, std::string mesh_path, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time) {
     frame_count_ = frame_count;
 	//device, cmd, fence, heaps, viewport, scissor
 	device_ = std::make_shared<Gdevice>(width, height, 2048+frame_count);

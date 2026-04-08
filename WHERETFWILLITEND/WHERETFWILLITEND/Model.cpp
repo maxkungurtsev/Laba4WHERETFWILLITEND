@@ -226,7 +226,19 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
     std::vector<int> bitangentCount(vertices_.size(), 0);
     for (unsigned m = 0; m < scene->mNumMeshes; ++m) {
         aiMesh* mesh = scene->mMeshes[m];
-        SubMesh part=submeshes_[m];
+        
+        SubMesh part=submeshes_[m]; 
+        std::vector<DirectX::XMFLOAT3> points;
+        points.reserve(part.indexCount);
+
+        for (uint32_t i = 0; i < part.indexCount; ++i)
+        {
+            uint32_t index = indices[part.firstIndex + i];
+            uint32_t vertexIndex =index;
+            points.push_back(vertices_[vertexIndex].position);
+        }
+        
+        BoundingSphere::CreateFromPoints(part.bounding_shere_,points.size(),points.data(),sizeof(DirectX::XMFLOAT3));
         for (unsigned f = 0; f < mesh->mNumFaces; ++f){
             const aiFace& face = mesh->mFaces[f];
 

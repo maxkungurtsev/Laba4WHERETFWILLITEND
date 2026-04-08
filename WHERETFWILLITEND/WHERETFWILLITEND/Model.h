@@ -5,6 +5,7 @@
 #include <DirectXMath.h>
 #include "Graphics\GTexture.h"
 #include <DirectXTex.h>
+#include <DirectXCollision.h>
 using namespace DirectX;
 struct Vertex
 {
@@ -31,6 +32,7 @@ struct MaterialData
 };
 struct SubMesh
 {
+    BoundingSphere bounding_shere_;
     uint32_t firstIndex;
     uint32_t indexCount;
     uint32_t materialIndex;

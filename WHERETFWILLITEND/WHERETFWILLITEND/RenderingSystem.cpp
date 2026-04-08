@@ -57,7 +57,7 @@ void RenderingSystem::CreateLightRootSign() {
 
 
 ///  C BUFFER
-void RenderingSystem::FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, int time) {
+void RenderingSystem::FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time) {
     //identity
     XMStoreFloat4x4(&cbuffer_->GetData().model, XMMatrixIdentity());
     //view
@@ -201,28 +201,35 @@ void RenderingSystem::GeomPass(const float clearColor[4]) {
         //diffuse textures
        //OutputDebugStringA(std::to_string(current_mat).c_str());
         //OutputDebugStringA("\n");
-        cbuffer_->GetData().current_mat = submesh.materialIndex;
-        cbuffer_->Save_changes();
-        device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, mesh_->GetMaterials()[submesh.materialIndex].diffuseTexture->GetResourse()->GetHandle().gpu_);
-        //normal textures
-        device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, mesh_->GetMaterials()[submesh.materialIndex].HeightNormTexture->GetResourse()->GetHandle().gpu_);
-        if (mesh_->GetMaterials()[submesh.materialIndex].diffuseTexPath == "textures/sponza_thorn_diff.tga" or mesh_->GetMaterials()[submesh.materialIndex].diffuseTexPath == "textures/vase_plant.tga")
-        {
-            device_->cmd_->command_list_->SetPipelineState(geom_pso_anim_->GetPSO().Get());
-        }
-        else {
-            if (mesh_->GetMaterials()[submesh.materialIndex].hasHeightTexture){
-                //device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-                //device_->cmd_->command_list_->SetPipelineState(geom_pso_->GetPSO().Get());
-                device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
-                device_->cmd_->command_list_->SetPipelineState(geom_pso_tes_->GetPSO().Get());
+        XMMATRIX world = XMLoadFloat4x4(&cbuffer_->GetData().inv_model);
+        BoundingSphere world_sphere;
+        submesh.bounding_shere_.Transform(world_sphere, world);
+        if (frustum_.Intersects(world_sphere)){
+            cbuffer_->GetData().current_mat = submesh.materialIndex;
+            cbuffer_->Save_changes();
+            device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, mesh_->GetMaterials()[submesh.materialIndex].diffuseTexture->GetResourse()->GetHandle().gpu_);
+            //normal textures
+            device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, mesh_->GetMaterials()[submesh.materialIndex].HeightNormTexture->GetResourse()->GetHandle().gpu_);
+            if (mesh_->GetMaterials()[submesh.materialIndex].diffuseTexPath == "textures/sponza_thorn_diff.tga" or mesh_->GetMaterials()[submesh.materialIndex].diffuseTexPath == "textures/vase_plant.tga")
+            {
+                device_->cmd_->command_list_->SetPipelineState(geom_pso_anim_->GetPSO().Get());
             }
             else {
-                device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-                device_->cmd_->command_list_->SetPipelineState(geom_pso_->GetPSO().Get());
+                if (mesh_->GetMaterials()[submesh.materialIndex].hasHeightTexture){
+                    //device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+                    //device_->cmd_->command_list_->SetPipelineState(geom_pso_->GetPSO().Get());
+                    device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
+                    device_->cmd_->command_list_->SetPipelineState(geom_pso_tes_->GetPSO().Get());
+                }
+                else {
+                    device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+                    device_->cmd_->command_list_->SetPipelineState(geom_pso_->GetPSO().Get());
+                }
             }
+            device_->cmd_->command_list_->DrawIndexedInstanced(static_cast<UINT>(submesh.indexCount), 1, static_cast<UINT>(submesh.firstIndex), 0, 0);
+        }else{
+            OutputDebugStringA("submesh culled");
         }
-        device_->cmd_->command_list_->DrawIndexedInstanced(static_cast<UINT>(submesh.indexCount), 1, static_cast<UINT>(submesh.firstIndex), 0, 0);
     }
 }
 void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle) {
@@ -246,7 +253,7 @@ void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_
     device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     device_->cmd_->command_list_->DrawInstanced(3, 1, 0, 0);
 }
-RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string mesh_path, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, int time) {
+RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string mesh_path, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time) {
     device_ = device;
     mesh_ = std::make_shared<Model>(mesh_path, device_);
     OutputDebugStringA("model loaded\n");
@@ -314,12 +321,20 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
         XMStoreFloat4(&forw, forward);
         light_buffer_->AddPointlight({ 0.0,0.8,0.8 }, camera_pos, 100, 300, true, 50, time, forw);
     }
+    //fill buffer
     FillCbuffer(cam_pos, look_at, up, time);
+
+    // make frustum
+    XMMATRIX proj = XMLoadFloat4x4(&(cbuffer_->GetData().projection));
+    BoundingFrustum::CreateFromMatrix(frustum_, proj);
+
+    //heaps shi
     ID3D12DescriptorHeap* heaps[] = {
         device_->heaps_->GetCBV_SRV_UAV_Heap().Get(),
         device_->heaps_->GetSamplerHeap().Get()
     };
     device_->cmd_->command_list_->SetDescriptorHeaps(_countof(heaps), heaps);
+
     const float clearColor[4] = { 0.2f, 0.4f, 0.6f, 1.0f };
     if (first_frame_) {
         D3D12_RESOURCE_BARRIER toRenderframe[] =

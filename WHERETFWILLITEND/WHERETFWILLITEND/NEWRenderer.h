@@ -18,6 +18,6 @@ private:
 	std::shared_ptr <BackBuffer> back_buffer_;
 	std::shared_ptr<RenderingSystem> render_system_;
 public:
-	NewRenderer(UINT width, UINT height, int frame_count, Window* hwnd, std::string mesh_path, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, int time);
+	NewRenderer(UINT width, UINT height, int frame_count, Window* hwnd, std::string mesh_path, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time);
 	void RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up, bool shootlight);
 };

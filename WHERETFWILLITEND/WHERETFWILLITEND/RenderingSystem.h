@@ -38,6 +38,7 @@ class RenderingSystem {
 	ComPtr<ID3DBlob> light_vertex_shader_;
 	ComPtr<ID3DBlob> light_pixel_shader_;
 	ComPtr<ID3DBlob> light_pixel_shader_wire_;
+	BoundingFrustum frustum_;
 	std::shared_ptr<Model> mesh_;
 	Handle Sampler_handle_;
 	bool first_frame_ = true;
@@ -47,8 +48,8 @@ public:
 	void CreateVertexBuffer(std::shared_ptr<Model> mesh);
 	void CreateIndexBuffer(std::shared_ptr<Model> model);
 	void CreateInputLayout();
-	void FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, int time);
-	RenderingSystem(std::shared_ptr<Gdevice> device, std::string mesh_path, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, int time);
+	void FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time);
+	RenderingSystem(std::shared_ptr<Gdevice> device, std::string mesh_path, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time);
 	void CompileShader(std::wstring path, ComPtr<ID3DBlob>& shader, std::string& type);
 	void GeomPass(const float clearColor[4]);
 	void ParseModelToCBuffer();
