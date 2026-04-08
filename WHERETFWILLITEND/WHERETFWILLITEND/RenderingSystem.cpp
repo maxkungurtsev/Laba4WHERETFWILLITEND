@@ -197,13 +197,16 @@ void RenderingSystem::GeomPass(const float clearColor[4]) {
     device_->cmd_->command_list_->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
     device_->cmd_->command_list_->IASetIndexBuffer(&index_buffer_view_);
     //OutputDebugStringA();
+    int culled = 0;
     for (const auto& submesh : mesh_->GetSubMeshes()) {
         //diffuse textures
        //OutputDebugStringA(std::to_string(current_mat).c_str());
         //OutputDebugStringA("\n");
-        XMMATRIX world = XMLoadFloat4x4(&cbuffer_->GetData().inv_model);
+        XMMATRIX world = XMLoadFloat4x4(&cbuffer_->GetData().model);
         BoundingSphere world_sphere;
         submesh.bounding_shere_.Transform(world_sphere, world);
+        world = XMLoadFloat4x4(&cbuffer_->GetData().view);
+        world_sphere.Transform(world_sphere, world);
         if (frustum_.Intersects(world_sphere)){
             cbuffer_->GetData().current_mat = submesh.materialIndex;
             cbuffer_->Save_changes();
@@ -228,9 +231,10 @@ void RenderingSystem::GeomPass(const float clearColor[4]) {
             }
             device_->cmd_->command_list_->DrawIndexedInstanced(static_cast<UINT>(submesh.indexCount), 1, static_cast<UINT>(submesh.firstIndex), 0, 0);
         }else{
-            OutputDebugStringA("submesh culled");
+            culled++;
         }
     }
+    OutputDebugStringA((std::to_string(culled)+" submeshes culled this frame\n").c_str());
 }
 void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle) {
     // set pso
