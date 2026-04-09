@@ -143,6 +143,7 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Model.cpp" />
     <ClCompile Include="NEWRenderer.cpp" />
+    <ClCompile Include="OctreeNode.cpp" />
     <ClCompile Include="RenderingSystem.cpp" />
     <ClCompile Include="tgaimage.cpp" />
     <ClCompile Include="Window.cpp" />

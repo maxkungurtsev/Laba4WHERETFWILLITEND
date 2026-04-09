@@ -1,13 +1,4 @@
 ﻿  main.cpp
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\OctreeNode.h(15,52): warning C4244: аргумент: преобразование "double" в "float", возможна потеря данных
-  (компиляция исходного файла "main.cpp")
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\OctreeNode.h(15,39): warning C4244: аргумент: преобразование "double" в "float", возможна потеря данных
-  (компиляция исходного файла "main.cpp")
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\OctreeNode.h(15,26): warning C4244: аргумент: преобразование "double" в "float", возможна потеря данных
-  (компиляция исходного файла "main.cpp")
-  
 C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\main.cpp(15,25): warning C4305: инициализация: усечение из "double" в "float"
 C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\main.cpp(22,25): warning C4305: инициализация: усечение из "double" в "float"
 C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\main.cpp(24,26): warning C4305: инициализация: усечение из "double" в "float"
@@ -38,90 +29,12 @@ C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.3520
               _Ty=NewRenderer
           ]
   
-  Model.cpp
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Model.cpp(172,41): warning C4267: =: преобразование из "size_t" в "uint32_t"; возможна потеря данных
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Model.cpp(173,39): warning C4267: =: преобразование из "size_t" в "uint32_t"; возможна потеря данных
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\quaternion.inl(207,15): warning C4244: =: преобразование "double" в "TReal", возможна потеря данных
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\quaternion.inl(207,15): warning C4244:         with
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\quaternion.inl(207,15): warning C4244:         [
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\quaternion.inl(207,15): warning C4244:             TReal=float
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\quaternion.inl(207,15): warning C4244:         ]
-  (компиляция исходного файла "Model.cpp")
-      C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\quaternion.inl(207,15):
-      контекст создания экземпляра шаблона (сначала самый старый)
-          C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\anim.h(107,24):
-          выполняется компиляция ссылки на экземпляр класс шаблон функции "aiQuaterniont<float>"
-          C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\quaternion.inl(186,1):
-          во время компиляции функции-члена класс шаблон "void aiQuaterniont<float>::Interpolate(aiQuaterniont<float> &,const aiQuaterniont<float> &,const aiQuaterniont<float> &,TReal)"
-          with
-          [
-              TReal=float
-          ]
-              C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\anim.h(435,28):
-              см. первую ссылку на "aiQuaterniont<float>::Interpolate" в "Assimp::Interpolator<aiQuaternion>::operator ()"
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\quaternion.inl(208,14): warning C4244: =: преобразование "double" в "TReal", возможна потеря данных
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\quaternion.inl(208,14): warning C4244:         with
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\quaternion.inl(208,14): warning C4244:         [
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\quaternion.inl(208,14): warning C4244:             TReal=float
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\quaternion.inl(208,14): warning C4244:         ]
-  (компиляция исходного файла "Model.cpp")
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\quaternion.inl(209,61): warning C4244: =: преобразование "double" в "TReal", возможна потеря данных
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\quaternion.inl(209,61): warning C4244:         with
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\quaternion.inl(209,61): warning C4244:         [
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\quaternion.inl(209,61): warning C4244:             TReal=float
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\quaternion.inl(209,61): warning C4244:         ]
-  (компиляция исходного файла "Model.cpp")
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\quaternion.inl(210,33): warning C4244: =: преобразование "double" в "TReal", возможна потеря данных
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\quaternion.inl(210,33): warning C4244:         with
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\quaternion.inl(210,33): warning C4244:         [
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\quaternion.inl(210,33): warning C4244:             TReal=float
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\quaternion.inl(210,33): warning C4244:         ]
-  (компиляция исходного файла "Model.cpp")
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\vector3.inl(93,13): warning C4244: return: преобразование "double" в "TReal", возможна потеря данных
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\vector3.inl(93,13): warning C4244:         with
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\vector3.inl(93,13): warning C4244:         [
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\vector3.inl(93,13): warning C4244:             TReal=float
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\vector3.inl(93,13): warning C4244:         ]
-  (компиляция исходного файла "Model.cpp")
-      C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\vector3.inl(93,13):
-      контекст создания экземпляра шаблона (сначала самый старый)
-          C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\camera.h(193,25):
-          выполняется компиляция ссылки на экземпляр шаблон функции "aiVector3t<float> operator ^<float>(const aiVector3t<float> &,const aiVector3t<float> &)"
-          C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\vector3.inl(92,57):
-          во время компиляции функции-члена класс шаблон "TReal aiVector3t<TReal>::Length(void) const"
-          with
-          [
-              TReal=float
-          ]
-              C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\vector3.inl(98,8):
-              см. первую ссылку на "aiVector3t<float>::Length" в "aiVector3t<float>::Normalize"
-              C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\packages\Assimp.3.0.0\build\native\include\assimp\camera.h(191,50):
-              см. первую ссылку на "aiVector3t<float>::Normalize" в "aiCamera::GetCameraMatrix"
-  
   NEWRenderer.cpp
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\OctreeNode.h(15,52): warning C4244: аргумент: преобразование "double" в "float", возможна потеря данных
-  (компиляция исходного файла "NEWRenderer.cpp")
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\OctreeNode.h(15,39): warning C4244: аргумент: преобразование "double" в "float", возможна потеря данных
-  (компиляция исходного файла "NEWRenderer.cpp")
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\OctreeNode.h(15,26): warning C4244: аргумент: преобразование "double" в "float", возможна потеря данных
-  (компиляция исходного файла "NEWRenderer.cpp")
-  
+  OctreeNode.cpp
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\OctreeNode.cpp(10,51): warning C4244: аргумент: преобразование "double" в "float", возможна потеря данных
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\OctreeNode.cpp(10,38): warning C4244: аргумент: преобразование "double" в "float", возможна потеря данных
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\OctreeNode.cpp(10,25): warning C4244: аргумент: преобразование "double" в "float", возможна потеря данных
   RenderingSystem.cpp
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\OctreeNode.h(15,52): warning C4244: аргумент: преобразование "double" в "float", возможна потеря данных
-  (компиляция исходного файла "RenderingSystem.cpp")
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\OctreeNode.h(15,39): warning C4244: аргумент: преобразование "double" в "float", возможна потеря данных
-  (компиляция исходного файла "RenderingSystem.cpp")
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\OctreeNode.h(15,26): warning C4244: аргумент: преобразование "double" в "float", возможна потеря данных
-  (компиляция исходного файла "RenderingSystem.cpp")
-  
 C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(109,34): warning C4267: =: преобразование из "size_t" в "UINT"; возможна потеря данных
 C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(270,50): warning C4267: аргумент: преобразование из "size_t" в "int"; возможна потеря данных
 C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(280,45): warning C4305: аргумент: усечение из "double" в "float"
