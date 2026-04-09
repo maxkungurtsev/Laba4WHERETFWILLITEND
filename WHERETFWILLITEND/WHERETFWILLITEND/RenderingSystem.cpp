@@ -204,7 +204,7 @@ void RenderingSystem::GeomPass(const float clearColor[4]) {
         //OutputDebugStringA("\n");
         XMMATRIX world = XMLoadFloat4x4(&cbuffer_->GetData().model);
         BoundingSphere world_sphere;
-        submesh.bounding_shere_.Transform(world_sphere, world);
+        submesh.bounding_sphere_.Transform(world_sphere, world);
         world = XMLoadFloat4x4(&cbuffer_->GetData().view);
         world_sphere.Transform(world_sphere, world);
         if (frustum_.Intersects(world_sphere)){

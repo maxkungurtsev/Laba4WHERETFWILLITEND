@@ -6,6 +6,7 @@
 #include "Graphics/GBuffer.h"
 #include "Graphics/CBuffer.h"
 #include "Graphics/PSO.h"
+#include "OctreeNode.h"
 #include "Window.h"
 #include "Lights.h"
 #include "Model.h"

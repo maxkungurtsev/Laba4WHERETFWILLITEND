@@ -32,7 +32,7 @@ struct MaterialData
 };
 struct SubMesh
 {
-    BoundingSphere bounding_shere_;
+    BoundingSphere bounding_sphere_;
     uint32_t firstIndex;
     uint32_t indexCount;
     uint32_t materialIndex;

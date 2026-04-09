@@ -238,7 +238,7 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
             points.push_back(vertices_[vertexIndex].position);
         }
         
-        BoundingSphere::CreateFromPoints(submeshes_[m].bounding_shere_,points.size(),points.data(),sizeof(DirectX::XMFLOAT3));
+        BoundingSphere::CreateFromPoints(submeshes_[m].bounding_sphere_,points.size(),points.data(),sizeof(DirectX::XMFLOAT3));
         for (unsigned f = 0; f < mesh->mNumFaces; ++f){
             const aiFace& face = mesh->mFaces[f];
 
