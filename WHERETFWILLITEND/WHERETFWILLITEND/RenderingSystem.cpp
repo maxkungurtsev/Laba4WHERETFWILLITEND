@@ -314,7 +314,12 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string me
     type = "hs_5_0";
     CompileShader(L"HullShader.hlsl", hull_shader_, type);
     type = "ds_5_0";
-    CompileShader(L"DomainShader.hlsl", domain_shader_, type);
+    if (mesh_path == "water.obj") {
+        CompileShader(L"DomainShaderWater.hlsl", domain_shader_, type);
+    }
+    else {
+        CompileShader(L"DomainShader.hlsl", domain_shader_, type);
+    }
     OutputDebugStringA("hull and domain shaders compiled\n");
     // formats of bullshit ima use as rtv// ¬ инициализации устройства (один раз):
     
