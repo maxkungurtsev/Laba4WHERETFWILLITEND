@@ -1,11 +1,15 @@
 #include "OctreeNode.h"
 
-OctreeNode::OctreeNode(int current_depth, BoundingBox& box, bool is_root, std::vector<int>& parent_indices, Model &mesh) {
+OctreeNode::OctreeNode(int current_depth, BoundingBox& box, bool is_root, std::vector<int>& parent_indices, std::shared_ptr<Model> mesh) {
 	bounding_box_ = box;
 
 	for (int i = 0; i < parent_indices.size(); i++) {
-		if (box.Contains(mesh.GetSubMeshes()[parent_indices[i]].bounding_sphere_)) {
+		if (box.Contains(mesh->GetSubMeshes()[parent_indices[i]].bounding_sphere_)) {
 			submesh_indices_.push_back(parent_indices[i]);
+			OutputDebugStringA(std::to_string(parent_indices[i]).c_str());
+			if (!is_root) {
+				OutputDebugStringA(" Putting submesh into child\n");
+			}
 		}
 	}
 	for (int i = 0; i < submesh_indices_.size(); i++) {
@@ -34,7 +38,7 @@ void OctreeNode::GetIndeciesToDraw(std::vector<int>& indicies, BoundingFrustum& 
 		indicies.insert(indicies.end(), submesh_indices_.begin(), submesh_indices_.end());
 		if (!leaf_){
 			for (int i = 0; i < 8; i++) {
-				children_[i]->GetIndeciesToDraw(indicies, frustum);
+				//children_[i]->GetIndeciesToDraw(indicies, frustum);
 			}
 		}
 	}

@@ -201,9 +201,9 @@ void RenderingSystem::GeomPass(const float clearColor[4]) {
     std::vector<int> submeshes;
     octree_->GetIndeciesToDraw(submeshes, frustum_);
     for (int i = 0; i < submeshes.size(); i++) {
-        OutputDebugStringA((std::to_string(submeshes[i])+" ").c_str());
+        //OutputDebugStringA((std::to_string(submeshes[i])+" ").c_str());
     }
-    OutputDebugStringA("\n");
+    //OutputDebugStringA("\n");
     for (const auto& submesh : mesh_->GetSubMeshes()) {
         //diffuse textures/
        //OutputDebugStringA(std::to_string(current_mat).c_str());

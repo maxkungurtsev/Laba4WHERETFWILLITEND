@@ -7,6 +7,6 @@ class OctreeNode {
 	BoundingBox bounding_box_;
 	bool leaf_ = false;
 public:
-	OctreeNode(int current_depth, BoundingBox& box, bool is_root, std::vector<int>& parent_indices, Model & mesh);
+	OctreeNode(int current_depth, BoundingBox& box, bool is_root, std::vector<int>& parent_indices, std::shared_ptr<Model> mesh);
 	void GetIndeciesToDraw(std::vector<int>& indecies, BoundingFrustum& frustum);
 };
