@@ -42,6 +42,7 @@ class RenderingSystem {
 	BoundingFrustum frustum_;
 	std::shared_ptr<Model> mesh_;
 	std::shared_ptr<OctreeNode> octree_;
+	bool culling_enabled_=true;
 	Handle Sampler_handle_;
 	bool first_frame_ = true;
 public:
@@ -56,5 +57,5 @@ public:
 	void GeomPass(const float clearColor[4]);
 	void ParseModelToCBuffer();
 	void LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle);
-	void RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up, D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle, bool shootlight);
+	void RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up, D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle, bool shootlight, bool culling_enabled);
 };

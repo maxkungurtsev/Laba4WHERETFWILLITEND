@@ -2,30 +2,22 @@
 
 OctreeNode::OctreeNode(int current_depth, BoundingBox& box, bool is_root, std::vector<int>& parent_indices, std::shared_ptr<Model> mesh) {
 	bounding_box_ = box;
+	
 	std::vector<int> new_parent_indices;
 	for (int i = 0; i < parent_indices.size(); i++) {
-		if (box.Contains(mesh->GetSubMeshes()[parent_indices[i]].bounding_sphere_)) {
+		if (box.Contains(mesh->GetSubMeshes()[parent_indices[i]].bounding_sphere_) == DirectX::CONTAINS) {
 			submesh_indices_.push_back(parent_indices[i]);
-			if (!is_root) {
-				//OutputDebugStringA(" Putting submesh into child\n");
-			}
 		}
 		else {
 			new_parent_indices.push_back(parent_indices[i]);
 		}
 	}
-	
+	for (int i = 0; i < submesh_indices_.size(); i++) {
+		OutputDebugStringA((std::to_string(submesh_indices_[i]) + " ").c_str());
+	}
+	OutputDebugStringA("\n");
 	parent_indices = new_parent_indices;
-/*
-	OutputDebugStringA(("\nOctree node is being created, depth:" + std::to_string(current_depth)+'\n'+
-						"is root:"+ std::to_string(is_root)+
-						"submeshes in this node:" + std::to_string(submesh_indices_.size())+
-						"submeshes in parent"+ std::to_string(parent_indices.size())).c_str());
-
-*/
-	
-
-	if (current_depth < 3 and submesh_indices_.size()>20){
+	if (current_depth < 2 and submesh_indices_.size()>20){
 		for (int i = 0; i < 8; i++) {
 			XMFLOAT3 center = bounding_box_.Center;
 			XMFLOAT3 ext = bounding_box_.Extents;
@@ -41,6 +33,13 @@ OctreeNode::OctreeNode(int current_depth, BoundingBox& box, bool is_root, std::v
 	else {
 		leaf_ = true;
 	}
+	OutputDebugStringA(("\nOctree node is being created, depth:" + std::to_string(current_depth) + 
+		"\nis root:" + std::to_string(is_root) +
+		"\nsubmeshes in this node:").c_str());
+	for (int i = 0; i < submesh_indices_.size(); i++) {
+		OutputDebugStringA((std::to_string(submesh_indices_[i]) +" ").c_str());
+	}
+	OutputDebugStringA("\n");
 };
 
 void OctreeNode::GetIndeciesToDraw(std::vector<int>& indicies, BoundingFrustum& frustum) {

@@ -9,7 +9,7 @@ NewRenderer::NewRenderer(UINT width, UINT height, int frame_count, Window* hwnd,
     render_system_ = std::make_shared<RenderingSystem>(device_,mesh_path, cam_pos, look_at, up, time);
     
 }
-void NewRenderer::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up, bool shootlight) {
+void NewRenderer::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up, bool shootlight, bool culling_enabled) {
     device_->cmd_->ResetAllocator();
     D3D12_RESOURCE_BARRIER barriersBegin[2];
     UINT barrierCount = 0;
@@ -36,7 +36,7 @@ void NewRenderer::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XM
     D3D12_CPU_DESCRIPTOR_HANDLE rtvHandle = back_buffer_->GetCurrentHandle().cpu_;
     //fill cbv
     //renderframe
-    render_system_->RenderFrame(time, look_at, cam_pos, up, rtvHandle, shootlight);
+    render_system_->RenderFrame(time, look_at, cam_pos, up, rtvHandle, shootlight, culling_enabled);
 
     D3D12_RESOURCE_BARRIER toPresent{};
     toPresent.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;

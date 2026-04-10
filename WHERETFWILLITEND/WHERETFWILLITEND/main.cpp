@@ -30,6 +30,7 @@ int Run() {
     auto lastTime = clock::now();
     float time = 0;
     bool shootLight = false;
+    bool culling_enabled = true;
     while (running) {
         shootLight = false;
         while (PeekMessage(&msg, nullptr, 0, 0, PM_REMOVE)) {
@@ -69,6 +70,12 @@ int Run() {
             forward = XMVector3TransformCoord(forward, rotYaw);
             right = XMVector3TransformCoord(right, rotYaw);
         }
+        if (g_Input.IsKeyDown('E')) {
+            culling_enabled = false;
+        }
+        if (g_Input.IsKeyDown('Q')) {
+            culling_enabled = true;
+        }
         if (g_Input.IsKeyDown('W')) {
             cam_coords += forward * 1;
         }
@@ -86,7 +93,7 @@ int Run() {
        lastTime = currentTime;
        time += deltaTime;
        look_at = cam_coords + forward;
-       g_Renderer->RenderFrame(time, look_at, cam_coords, up, shootLight);
+       g_Renderer->RenderFrame(time, look_at, cam_coords, up, shootLight, culling_enabled);
     }
     return (int)msg.wParam;
 }
@@ -99,7 +106,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow){
     //init input device
     g_Input.Initialize(g_Window.GetHWND());
     //catch messege stuff
-    g_Renderer = std::make_shared<NewRenderer>(width,height,2, &(g_Window),"sponza.obj", cam_coords, look_at, up, 0);
+    g_Renderer = std::make_shared<NewRenderer>(width,height,2, &(g_Window),"water.obj", cam_coords, look_at, up, 0);
 
     int messege = Run();
     return static_cast<int>(messege);

@@ -198,19 +198,30 @@ void RenderingSystem::GeomPass(const float clearColor[4]) {
     device_->cmd_->command_list_->IASetIndexBuffer(&index_buffer_view_);
 
 
-
+    // culling bullshit
     std::vector<int> submeshes;
-    BoundingFrustum frust;
-    XMMATRIX invworld = XMLoadFloat4x4(&cbuffer_->GetData().inv_view);
-    frustum_.Transform(frust, invworld);
-    invworld = XMLoadFloat4x4(&cbuffer_->GetData().inv_model);
-    frust.Transform(frust, invworld);
-    octree_->GetIndeciesToDraw(submeshes, frust);
-    OutputDebugStringA("meshes drawn this frame: ");
-    for (int i = 0; i < submeshes.size(); i++) {
-        OutputDebugStringA((std::to_string(submeshes[i])+" ").c_str());
+    if (!culling_enabled_) {
+        OutputDebugStringA("CULLING DISABLED\n");
+        for (int i = 0; i < mesh_->GetSubMeshes().size(); i++) {
+            submeshes.push_back(i);
+        }
     }
-    OutputDebugStringA("\n");
+    else {
+        BoundingFrustum frust;
+        XMMATRIX invworld = XMLoadFloat4x4(&cbuffer_->GetData().inv_view);
+        frustum_.Transform(frust, invworld);
+        invworld = XMLoadFloat4x4(&cbuffer_->GetData().inv_model);
+        frust.Transform(frust, invworld);
+        octree_->GetIndeciesToDraw(submeshes, frust);
+        OutputDebugStringA("meshes drawn this frame: ");
+        for (int i = 0; i < submeshes.size(); i++) {
+            OutputDebugStringA((std::to_string(submeshes[i]) + " ").c_str());
+        }
+        OutputDebugStringA("others are culled\n");
+    }
+
+
+    // drawing cycle
     for (int i = 0; i < submeshes.size(); i++) {
         //diffuse textures/
         SubMesh submesh = mesh_->GetSubMeshes()[submeshes[i]];
@@ -260,6 +271,7 @@ void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_
 RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string mesh_path, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time) {
     device_ = device;
     mesh_ = std::make_shared<Model>(mesh_path, device_);
+    // making up "all submesh indices" array for octree to be based on.
     std::vector<int> all_submesh_indices;
     for (int i = 0; i < mesh_->GetSubMeshes().size(); i++) {
         all_submesh_indices.push_back(i);
@@ -321,7 +333,7 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string me
 
 
 }
-void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up, D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle, bool shootlight) {
+void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up, D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle, bool shootlight, bool culling_enabled) {
     if (shootlight) {
         XMFLOAT4 camera_pos;
         XMStoreFloat4(&camera_pos, cam_pos);
@@ -330,6 +342,7 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
         XMStoreFloat4(&forw, forward);
         light_buffer_->AddPointlight({ 0.0,0.8,0.8 }, camera_pos, 100, 300, true, 50, time, forw);
     }
+    culling_enabled_ = culling_enabled;
     //fill buffer
     FillCbuffer(cam_pos, look_at, up, time);
 
