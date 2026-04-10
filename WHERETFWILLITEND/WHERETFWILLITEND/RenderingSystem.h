@@ -41,6 +41,7 @@ class RenderingSystem {
 	ComPtr<ID3DBlob> light_pixel_shader_wire_;
 	BoundingFrustum frustum_;
 	std::shared_ptr<Model> mesh_;
+	std::shared_ptr<OctreeNode> octree_;
 	Handle Sampler_handle_;
 	bool first_frame_ = true;
 public:

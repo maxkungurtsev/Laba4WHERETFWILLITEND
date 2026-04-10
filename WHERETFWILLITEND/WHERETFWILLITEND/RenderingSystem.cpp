@@ -198,8 +198,14 @@ void RenderingSystem::GeomPass(const float clearColor[4]) {
     device_->cmd_->command_list_->IASetIndexBuffer(&index_buffer_view_);
     //OutputDebugStringA();
     int culled = 0;
+    std::vector<int> submeshes;
+    octree_->GetIndeciesToDraw(submeshes, frustum_);
+    for (int i = 0; i < submeshes.size(); i++) {
+        OutputDebugStringA((std::to_string(submeshes[i])+" ").c_str());
+    }
+    OutputDebugStringA("\n");
     for (const auto& submesh : mesh_->GetSubMeshes()) {
-        //diffuse textures
+        //diffuse textures/
        //OutputDebugStringA(std::to_string(current_mat).c_str());
         //OutputDebugStringA("\n");
         XMMATRIX world = XMLoadFloat4x4(&cbuffer_->GetData().model);
@@ -260,6 +266,11 @@ void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_
 RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string mesh_path, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time) {
     device_ = device;
     mesh_ = std::make_shared<Model>(mesh_path, device_);
+    std::vector<int> all_submesh_indices;
+    for (int i = 0; i < mesh_->GetSubMeshes().size(); i++) {
+        all_submesh_indices.push_back(i);
+    }
+    octree_ = std::make_shared<OctreeNode>(0, mesh_->GetBoundBox(),true, all_submesh_indices, mesh_);
     OutputDebugStringA("model loaded\n");
     //g buffer
     g_buffer_ = std::make_shared<GBuffer>(device_->width_, device_->height_, device_);

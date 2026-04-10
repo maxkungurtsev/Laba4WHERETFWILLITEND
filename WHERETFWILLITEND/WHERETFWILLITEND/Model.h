@@ -46,16 +46,14 @@ public:
     const std::vector<Vertex>& GetVertices() const {return vertices_;}
     std::vector<MaterialData>& GetMaterials() {return materials_;}
     const std::vector<SubMesh>& GetSubMeshes() const {return submeshes_;}
+    BoundingBox& GetBoundBox() { return mesh_box_; }
 private:
     TGAImage dummy_;
-    std::vector<XMFLOAT3> positions_;
-    std::vector<XMFLOAT2> texcoords_;
-    std::vector<XMFLOAT3> normals_;
     std::vector<Vertex> vertices_;
     std::vector<MaterialData> materials_;
     std::vector<uint32_t> indices;
     std::vector<SubMesh> submeshes_;
-    void buildVertices();
+    BoundingBox mesh_box_;
     XMFLOAT3 summ(XMFLOAT3& a, XMFLOAT3& b);
     XMFLOAT3 diff(XMFLOAT3& a, XMFLOAT3& b);
     XMFLOAT2 summ(XMFLOAT2& a, XMFLOAT2& b);

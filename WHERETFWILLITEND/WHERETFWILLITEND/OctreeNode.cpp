@@ -1,9 +1,17 @@
 #include "OctreeNode.h"
 
-
-OctreeNode::OctreeNode(int current_depth, BoundingBox& box) {
+OctreeNode::OctreeNode(int current_depth, BoundingBox& box, bool is_root, std::vector<int>& parent_indices, Model &mesh) {
 	bounding_box_ = box;
-	if (current_depth > 0) {
+
+	for (int i = 0; i < parent_indices.size(); i++) {
+		if (box.Contains(mesh.GetSubMeshes()[parent_indices[i]].bounding_sphere_)) {
+			submesh_indices_.push_back(parent_indices[i]);
+		}
+	}
+	for (int i = 0; i < submesh_indices_.size(); i++) {
+		parent_indices.erase(std::remove(parent_indices.begin(), parent_indices.end(), 2), parent_indices.end());
+	}
+	if (current_depth < 4 and submesh_indices_.size()>20){
 		for (int i = 0; i < 8; i++) {
 			XMFLOAT3 center = bounding_box_.Center;
 			XMFLOAT3 ext = bounding_box_.Extents;
@@ -13,39 +21,20 @@ OctreeNode::OctreeNode(int current_depth, BoundingBox& box) {
 			int z_offset = (i & 4) ? 1 : -1;
 			center = XMFLOAT3(center.x + x_offset * ext.x, center.y + y_offset * ext.y, center.z + z_offset * ext.z);
 			BoundingBox box(center, ext);
-			children_[i] = std::make_unique<OctreeNode>(current_depth - 1, box);
+			children_[i] = std::make_unique<OctreeNode>(current_depth + 1, box, false, submesh_indices_, mesh);
 		}
 	}
 	else {
 		leaf_ = true;
 	}
 };
-void OctreeNode::AddSubmeshToTree(SubMesh& sub_mesh_, int index) {
-	bool in_child = false;
-	if (leaf_) {
-		submesh_indices.push_back(index);
-		return;
-	}
-	for (int i = 0; i < 8; i++) {
-		if (children_[i]->bounding_box_.Contains(sub_mesh_.bounding_sphere_)) {
-			children_[i]->AddSubmeshToTree(sub_mesh_, index);
-			in_child = true;
-			break;
-		};
-	}
-	if (!in_child) {
-		submesh_indices.push_back(index);
-	}
-	return;
-};
 
-
-void OctreeNode::GetIndeciesToDraw(std::vector<int>& indecies, BoundingFrustum& frustum) {
+void OctreeNode::GetIndeciesToDraw(std::vector<int>& indicies, BoundingFrustum& frustum) {
 	if (frustum.Intersects(bounding_box_)) {
-		indecies.insert(indecies.end(), submesh_indices.begin(), submesh_indices.end());
+		indicies.insert(indicies.end(), submesh_indices_.begin(), submesh_indices_.end());
 		if (!leaf_){
 			for (int i = 0; i < 8; i++) {
-				children_[i]->GetIndeciesToDraw(indecies, frustum);
+				children_[i]->GetIndeciesToDraw(indicies, frustum);
 			}
 		}
 	}

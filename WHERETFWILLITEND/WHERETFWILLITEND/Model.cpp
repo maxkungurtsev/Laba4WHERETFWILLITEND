@@ -224,6 +224,8 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
     }
     std::vector<int> tangentCount(vertices_.size(), 0);
     std::vector<int> bitangentCount(vertices_.size(), 0);
+    XMFLOAT3 minPt = { FLT_MAX, FLT_MAX, FLT_MAX };
+    XMFLOAT3 maxPt = { -FLT_MAX, -FLT_MAX, -FLT_MAX };
     for (unsigned m = 0; m < scene->mNumMeshes; ++m) {
         aiMesh* mesh = scene->mMeshes[m];
         
@@ -239,6 +241,20 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
         }
         
         BoundingSphere::CreateFromPoints(submeshes_[m].bounding_sphere_,points.size(),points.data(),sizeof(DirectX::XMFLOAT3));
+        XMFLOAT3 c = submeshes_[m].bounding_sphere_.Center;
+        float r = submeshes_[m].bounding_sphere_.Radius;
+
+        XMFLOAT3 smin = { c.x - r, c.y - r, c.z - r };
+        XMFLOAT3 smax = { c.x + r, c.y + r, c.z + r };
+
+        minPt.x = min(minPt.x, smin.x);
+        minPt.y = min(minPt.y, smin.y);
+        minPt.z = min(minPt.z, smin.z);
+
+        maxPt.x = max(maxPt.x, smax.x);
+        maxPt.y = max(maxPt.y, smax.y);
+        maxPt.z = max(maxPt.z, smax.z);
+
         for (unsigned f = 0; f < mesh->mNumFaces; ++f){
             const aiFace& face = mesh->mFaces[f];
 
@@ -276,6 +292,9 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
             }
         }
     }
+    XMVECTOR minVec = XMLoadFloat3(&minPt);
+    XMVECTOR maxVec = XMLoadFloat3(&maxPt);
+    BoundingBox::CreateFromPoints(mesh_box_, minVec, maxVec);
     //усреднить тангенты
     for (int i = 0; i < vertices_.size(); i++) {
         if (tangentCount[i] > 0) {
@@ -284,21 +303,5 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
         if (bitangentCount[i] > 0) {
             vertices_[i].bitangent = XMFLOAT3(vertices_[i].bitangent.x / bitangentCount[i], vertices_[i].bitangent.y / bitangentCount[i], vertices_[i].bitangent.z / bitangentCount[i]);
         }
-    }
-}
-void Model::buildVertices()
-{
-    size_t vertexCount = positions_.size();
-    if (normals_.size() < positions_.size())
-        normals_.resize(positions_.size(), XMFLOAT3{ 0.0f, 0.0f, 0.0f });
-    if (texcoords_.size() < positions_.size())
-        texcoords_.resize(positions_.size(), XMFLOAT2{ 0.0f, 0.0f });
-    vertices_.reserve(vertexCount);
-    for (size_t i = 0; i < vertexCount; ++i){
-        Vertex v;
-        v.position = positions_[i];
-        v.normal = normals_[i];
-        v.uv = texcoords_[i];
-        vertices_.push_back(v);
     }
 }
