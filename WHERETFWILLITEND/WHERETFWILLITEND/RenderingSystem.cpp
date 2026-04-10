@@ -196,51 +196,45 @@ void RenderingSystem::GeomPass(const float clearColor[4]) {
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, Sampler_handle_.gpu_);
     device_->cmd_->command_list_->IASetVertexBuffers(0, 1, &vertex_buffer_view_);
     device_->cmd_->command_list_->IASetIndexBuffer(&index_buffer_view_);
-    //OutputDebugStringA();
-    int culled = 0;
+
+
+
     std::vector<int> submeshes;
-    octree_->GetIndeciesToDraw(submeshes, frustum_);
+    BoundingFrustum frust;
+    XMMATRIX invworld = XMLoadFloat4x4(&cbuffer_->GetData().inv_view);
+    frustum_.Transform(frust, invworld);
+    invworld = XMLoadFloat4x4(&cbuffer_->GetData().inv_model);
+    frust.Transform(frust, invworld);
+    octree_->GetIndeciesToDraw(submeshes, frust);
+    OutputDebugStringA("meshes drawn this frame: ");
     for (int i = 0; i < submeshes.size(); i++) {
-        //OutputDebugStringA((std::to_string(submeshes[i])+" ").c_str());
+        OutputDebugStringA((std::to_string(submeshes[i])+" ").c_str());
     }
-    //OutputDebugStringA("\n");
-    for (const auto& submesh : mesh_->GetSubMeshes()) {
+    OutputDebugStringA("\n");
+    for (int i = 0; i < submeshes.size(); i++) {
         //diffuse textures/
-       //OutputDebugStringA(std::to_string(current_mat).c_str());
-        //OutputDebugStringA("\n");
-        XMMATRIX world = XMLoadFloat4x4(&cbuffer_->GetData().model);
-        BoundingSphere world_sphere;
-        submesh.bounding_sphere_.Transform(world_sphere, world);
-        world = XMLoadFloat4x4(&cbuffer_->GetData().view);
-        world_sphere.Transform(world_sphere, world);
-        if (frustum_.Intersects(world_sphere)){
-            cbuffer_->GetData().current_mat = submesh.materialIndex;
-            cbuffer_->Save_changes();
-            device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, mesh_->GetMaterials()[submesh.materialIndex].diffuseTexture->GetResourse()->GetHandle().gpu_);
-            //normal textures
-            device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, mesh_->GetMaterials()[submesh.materialIndex].HeightNormTexture->GetResourse()->GetHandle().gpu_);
-            if (mesh_->GetMaterials()[submesh.materialIndex].diffuseTexPath == "textures/sponza_thorn_diff.tga" or mesh_->GetMaterials()[submesh.materialIndex].diffuseTexPath == "textures/vase_plant.tga")
-            {
-                device_->cmd_->command_list_->SetPipelineState(geom_pso_anim_->GetPSO().Get());
+        SubMesh submesh = mesh_->GetSubMeshes()[submeshes[i]];
+        cbuffer_->GetData().current_mat = submesh.materialIndex;
+        cbuffer_->Save_changes();
+        device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, mesh_->GetMaterials()[submesh.materialIndex].diffuseTexture->GetResourse()->GetHandle().gpu_);
+        //normal textures
+        device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, mesh_->GetMaterials()[submesh.materialIndex].HeightNormTexture->GetResourse()->GetHandle().gpu_);
+        if (mesh_->GetMaterials()[submesh.materialIndex].diffuseTexPath == "textures/sponza_thorn_diff.tga" or mesh_->GetMaterials()[submesh.materialIndex].diffuseTexPath == "textures/vase_plant.tga")
+        {
+            device_->cmd_->command_list_->SetPipelineState(geom_pso_anim_->GetPSO().Get());
+        }
+        else {
+            if (mesh_->GetMaterials()[submesh.materialIndex].hasHeightTexture){
+                device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
+                device_->cmd_->command_list_->SetPipelineState(geom_pso_tes_->GetPSO().Get());
             }
             else {
-                if (mesh_->GetMaterials()[submesh.materialIndex].hasHeightTexture){
-                    //device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-                    //device_->cmd_->command_list_->SetPipelineState(geom_pso_->GetPSO().Get());
-                    device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
-                    device_->cmd_->command_list_->SetPipelineState(geom_pso_tes_->GetPSO().Get());
-                }
-                else {
-                    device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-                    device_->cmd_->command_list_->SetPipelineState(geom_pso_->GetPSO().Get());
-                }
+                device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+                device_->cmd_->command_list_->SetPipelineState(geom_pso_->GetPSO().Get());
             }
-            device_->cmd_->command_list_->DrawIndexedInstanced(static_cast<UINT>(submesh.indexCount), 1, static_cast<UINT>(submesh.firstIndex), 0, 0);
-        }else{
-            culled++;
         }
+        device_->cmd_->command_list_->DrawIndexedInstanced(static_cast<UINT>(submesh.indexCount), 1, static_cast<UINT>(submesh.firstIndex), 0, 0);
     }
-    OutputDebugStringA((std::to_string(culled)+" submeshes culled this frame\n").c_str());
 }
 void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle) {
     // set pso
