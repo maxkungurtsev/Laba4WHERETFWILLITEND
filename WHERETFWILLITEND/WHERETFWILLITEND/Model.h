@@ -41,13 +41,17 @@ struct SubMesh
 class Model
 {
 public:
-    Model(const std::string& model_filename, std::shared_ptr<Gdevice> device);
+    Model(const std::string& model_filename, std::shared_ptr<Gdevice> device, bool bill_boardable);
     const std::vector<uint32_t>& Getindices() const { return indices; }
     const std::vector<Vertex>& GetVertices() const {return vertices_;}
     std::vector<MaterialData>& GetMaterials() {return materials_;}
     const std::vector<SubMesh>& GetSubMeshes() const {return submeshes_;}
     BoundingBox& GetBoundBox() { return mesh_box_; }
+    XMFLOAT4 GetPosition() { return position_; }
+    bool GetBillBoardable() { return bill_boardable_; }
 private:
+    bool bill_boardable_ = false;
+    XMFLOAT4 position_ = {0,0,0,1};
     TGAImage dummy_;
     std::vector<Vertex> vertices_;
     std::vector<MaterialData> materials_;

@@ -36,8 +36,9 @@ XMFLOAT2 Model::diff(XMFLOAT2& a, XMFLOAT2& b) {
     return sum;
 }
 
-Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device)
+Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool bill_boardable)
 {
+    bill_boardable_ = bill_boardable;
     Assimp::Importer importer;
     dummy_.read_tga_file("dummy.tga");
     const aiScene* scene = importer.ReadFile(

@@ -202,22 +202,26 @@ void RenderingSystem::GeomPass(const float clearColor[4]) {
     std::vector<int> submeshes;
     if (!culling_enabled_) {
         OutputDebugStringA("CULLING DISABLED\n");
-        for (int i = 0; i < mesh_->GetSubMeshes().size(); i++) {
-            submeshes.push_back(i);
-        }
+            for (int i = 0; i < mesh_->GetSubMeshes().size(); i++) {
+                submeshes.push_back(i);
+            }
     }
     else {
-        BoundingFrustum frust;
-        XMMATRIX invworld = XMLoadFloat4x4(&cbuffer_->GetData().inv_view);
-        frustum_.Transform(frust, invworld);
-        invworld = XMLoadFloat4x4(&cbuffer_->GetData().inv_model);
-        frust.Transform(frust, invworld);
-        octree_->GetIndeciesToDraw(submeshes, frust);
-        OutputDebugStringA("meshes drawn this frame: ");
-        for (int i = 0; i < submeshes.size(); i++) {
-            OutputDebugStringA((std::to_string(submeshes[i]) + " ").c_str());
+        XMFLOAT4 distance = XMFLOAT4(mesh_->GetPosition().x - cbuffer_->GetData().cam_pos.x, mesh_->GetPosition().y - cbuffer_->GetData().cam_pos.y, mesh_->GetPosition().z - cbuffer_->GetData().cam_pos.z, mesh_->GetPosition().w - cbuffer_->GetData().cam_pos.w);
+        float dist = XMVectorGetX(XMVector4Length(XMLoadFloat4(&distance)));
+        if (dist < 5000 or not(mesh_->GetBillBoardable())) {
+            BoundingFrustum frust;
+            XMMATRIX invworld = XMLoadFloat4x4(&cbuffer_->GetData().inv_view);
+            frustum_.Transform(frust, invworld);
+            invworld = XMLoadFloat4x4(&cbuffer_->GetData().inv_model);
+            frust.Transform(frust, invworld);
+            octree_->GetIndeciesToDraw(submeshes, frust);
+            OutputDebugStringA("meshes drawn this frame: ");
+            for (int i = 0; i < submeshes.size(); i++) {
+                OutputDebugStringA((std::to_string(submeshes[i]) + " ").c_str());
+            }
+            OutputDebugStringA("others are culled\n");
         }
-        OutputDebugStringA("others are culled\n");
     }
 
 
@@ -270,7 +274,7 @@ void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_
 }
 RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string mesh_path, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time) {
     device_ = device;
-    mesh_ = std::make_shared<Model>(mesh_path, device_);
+    mesh_ = std::make_shared<Model>(mesh_path, device_, true);
     // making up "all submesh indices" array for octree to be based on.
     std::vector<int> all_submesh_indices;
     for (int i = 0; i < mesh_->GetSubMeshes().size(); i++) {
