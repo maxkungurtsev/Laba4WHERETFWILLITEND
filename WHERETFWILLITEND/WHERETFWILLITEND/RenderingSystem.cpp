@@ -57,9 +57,9 @@ void RenderingSystem::CreateLightRootSign() {
 
 
 ///  C BUFFER
-void RenderingSystem::FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time) {
+void RenderingSystem::FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time, XMMATRIX world) {
     //identity
-    XMStoreFloat4x4(&cbuffer_->GetData().model, XMMatrixIdentity());
+    XMStoreFloat4x4(&cbuffer_->GetData().model, world);
     //view
     XMStoreFloat4x4(&cbuffer_->GetData().view, XMMatrixLookAtLH(cam_pos, look_at, up));
     //projection
@@ -310,8 +310,42 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
     }
     culling_enabled_ = culling_enabled;
     //fill buffer
-    FillCbuffer(cam_pos, look_at, up, time);
-
+    XMFLOAT4 distance = XMFLOAT4(mesh_->GetPosition().x - cbuffer_->GetData().cam_pos.x, mesh_->GetPosition().y - cbuffer_->GetData().cam_pos.y, mesh_->GetPosition().z - cbuffer_->GetData().cam_pos.z, mesh_->GetPosition().w - cbuffer_->GetData().cam_pos.w);
+    float dist = XMVectorGetX(XMVector4Length(XMLoadFloat4(&distance)));
+    if (mesh_->GetBillBoardable() and dist > 5000) {
+        XMFLOAT4 obj = mesh_->GetPosition();
+        XMVECTOR objpos = XMLoadFloat4(&obj); 
+        XMVECTOR forward = XMVector3Normalize(cam_pos - objpos);
+        XMVECTOR right = XMVector3Normalize(XMVector3Cross(up, forward)); 
+        XMVECTOR newUp = XMVector3Normalize(XMVector3Cross(forward, right));
+        XMMATRIX rotation = XMMATRIX(
+            right,
+            forward,
+            newUp,
+            XMVectorSet(0, 0, 0, 1)
+        );
+        XMMATRIX translation = XMMatrixTranslationFromVector(objpos);
+        XMMATRIX world = rotation * translation;
+        DirectX::XMFLOAT4X4 m;
+        DirectX::XMStoreFloat4x4(&m, world);
+        char buffer[512];
+        sprintf_s(buffer,
+            "Matrix:\n"
+            "[%.3f %.3f %.3f %.3f]\n"
+            "[%.3f %.3f %.3f %.3f]\n"
+            "[%.3f %.3f %.3f %.3f]\n"
+            "[%.3f %.3f %.3f %.3f]\n\n",
+            m._11, m._12, m._13, m._14,
+            m._21, m._22, m._23, m._24,
+            m._31, m._32, m._33, m._34,
+            m._41, m._42, m._43, m._44
+        );
+        OutputDebugStringA(buffer);
+        OutputDebugStringA("\n");
+        FillCbuffer(cam_pos, look_at, up, time, world);
+    }else{
+        FillCbuffer(cam_pos, look_at, up, time);
+    }
     // make frustum
     XMMATRIX proj = XMLoadFloat4x4(&(cbuffer_->GetData().projection));
     BoundingFrustum::CreateFromMatrix(frustum_, proj);

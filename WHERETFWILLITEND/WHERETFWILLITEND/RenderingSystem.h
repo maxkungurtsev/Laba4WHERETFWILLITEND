@@ -44,7 +44,7 @@ public:
 	void CreateGeomRootSign(int textures_amount);
 	void CreateLightRootSign();
 	void CreateInputLayout();
-	void FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time);
+	void FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time, XMMATRIX world = XMMatrixIdentity());
 	RenderingSystem(std::shared_ptr<Gdevice> device, std::string mesh_path, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time);
 	void CompileShader(std::wstring path, ComPtr<ID3DBlob>& shader, std::string& type);
 	void GeomPass(const float clearColor[4]);
