@@ -36,9 +36,7 @@ XMFLOAT2 Model::diff(XMFLOAT2& a, XMFLOAT2& b) {
     return sum;
 }
 
-
-
-void Model::CreateVertexBuffer(std::shared_ptr<Gdevice> device_) {
+void Model::CreateVertexBuffer() {
     vertex_count_ = vertices_.size();
     UINT bufferSize = vertex_count_ * sizeof(Vertex);
     D3D12_RESOURCE_DESC bufferDesc{};
@@ -68,7 +66,9 @@ void Model::CreateVertexBuffer(std::shared_ptr<Gdevice> device_) {
     vertex_buffer_view_.SizeInBytes = bufferSize;
 }
 
-void Model::CreateIndexBuffer(std::shared_ptr<Gdevice> device_) {
+void Model::CreateIndexBuffer() {
+    //device_->cmd_->ResetAllocator();
+
     UINT32 bufferSize = static_cast<UINT32>(indices.size() * sizeof(uint32_t));
     D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
     D3D12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
@@ -79,6 +79,7 @@ void Model::CreateIndexBuffer(std::shared_ptr<Gdevice> device_) {
         D3D12_RESOURCE_STATE_GENERIC_READ,
         nullptr,
         IID_PPV_ARGS(&index_buffer_));
+
     void* mapped = nullptr;
     CD3DX12_RANGE readRange(0, 0);
     index_buffer_->Map(0, &readRange, &mapped);
@@ -89,9 +90,9 @@ void Model::CreateIndexBuffer(std::shared_ptr<Gdevice> device_) {
     index_buffer_view_.Format = DXGI_FORMAT_R32_UINT;
 }
 
-
 Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool bill_boardable)
 {
+    device_ = device;
     bill_boardable_ = bill_boardable;
     Assimp::Importer importer;
     dummy_.read_tga_file("dummy.tga");
@@ -359,6 +360,6 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool 
             vertices_[i].bitangent = XMFLOAT3(vertices_[i].bitangent.x / bitangentCount[i], vertices_[i].bitangent.y / bitangentCount[i], vertices_[i].bitangent.z / bitangentCount[i]);
         }
     }
-    CreateVertexBuffer(device);
-    CreateIndexBuffer(device);
+    CreateVertexBuffer();
+    CreateIndexBuffer();
 }

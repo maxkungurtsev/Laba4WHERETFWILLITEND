@@ -69,7 +69,7 @@ d 0.000000
 illum 2
 map_Kd textures/spnza_bricks_a_diff.tga
 map_bump textures/spnza_bricks_a_ddn.tga
-map_Ka textures/spnza_bricks_a_diff.tga
+map_Ka textures/spnza_bricks_a_diff.tga 
 
 newmtl ceiling
 Ns 7.843137

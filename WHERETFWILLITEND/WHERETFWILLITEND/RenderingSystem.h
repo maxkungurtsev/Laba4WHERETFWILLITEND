@@ -35,7 +35,7 @@ class RenderingSystem {
 	ComPtr<ID3DBlob> light_pixel_shader_wire_;
 	BoundingFrustum frustum_;
 	std::shared_ptr<Model> mesh_;
-	std::shared_ptr<Model> billboard_;
+	std::shared_ptr<Model> bilboard_;
 	std::shared_ptr<OctreeNode> octree_;
 	bool culling_enabled_=true;
 	Handle Sampler_handle_;
@@ -47,7 +47,7 @@ public:
 	void FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time);
 	RenderingSystem(std::shared_ptr<Gdevice> device, std::string mesh_path, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time);
 	void CompileShader(std::wstring path, ComPtr<ID3DBlob>& shader, std::string& type);
-	void GeomPass(const float clearColor[4], XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up);
+	void GeomPass(const float clearColor[4]);
 	void ParseModelToCBuffer();
 	void LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle);
 	void RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up, D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle, bool shootlight, bool culling_enabled);
