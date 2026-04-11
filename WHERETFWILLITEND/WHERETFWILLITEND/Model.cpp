@@ -36,6 +36,60 @@ XMFLOAT2 Model::diff(XMFLOAT2& a, XMFLOAT2& b) {
     return sum;
 }
 
+
+
+void Model::CreateVertexBuffer(std::shared_ptr<Gdevice> device_) {
+    vertex_count_ = vertices_.size();
+    UINT bufferSize = vertex_count_ * sizeof(Vertex);
+    D3D12_RESOURCE_DESC bufferDesc{};
+    bufferDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+    bufferDesc.Width = bufferSize;
+    bufferDesc.Height = 1;
+    bufferDesc.DepthOrArraySize = 1;
+    bufferDesc.MipLevels = 1;
+    bufferDesc.Format = DXGI_FORMAT_UNKNOWN;
+    bufferDesc.SampleDesc.Count = 1;
+    bufferDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+    bufferDesc.Flags = D3D12_RESOURCE_FLAG_NONE;
+    D3D12_HEAP_PROPERTIES heapProps{};
+    heapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
+    HRESULT hr = device_->GetDXDevice()->CreateCommittedResource(&heapProps, D3D12_HEAP_FLAG_NONE, &bufferDesc, D3D12_RESOURCE_STATE_GENERIC_READ, nullptr, IID_PPV_ARGS(&vertex_buffer_));
+    if (FAILED(hr))
+        throw std::runtime_error("Failed to create vertex buffer");
+    void* mappedData = nullptr;
+    D3D12_RANGE readRange{ 0, 0 };
+    hr = vertex_buffer_->Map(0, &readRange, &mappedData);
+    if (FAILED(hr))
+        throw std::runtime_error("Failed to fill vertex buffer");
+    memcpy(mappedData, vertices_.data(), bufferSize);
+    vertex_buffer_->Unmap(0, nullptr);
+    vertex_buffer_view_.BufferLocation = vertex_buffer_->GetGPUVirtualAddress();
+    vertex_buffer_view_.StrideInBytes = sizeof(Vertex);
+    vertex_buffer_view_.SizeInBytes = bufferSize;
+}
+
+void Model::CreateIndexBuffer(std::shared_ptr<Gdevice> device_) {
+    UINT32 bufferSize = static_cast<UINT32>(indices.size() * sizeof(uint32_t));
+    D3D12_RESOURCE_DESC desc = CD3DX12_RESOURCE_DESC::Buffer(bufferSize);
+    D3D12_HEAP_PROPERTIES heapProps = CD3DX12_HEAP_PROPERTIES(D3D12_HEAP_TYPE_UPLOAD);
+    device_->GetDXDevice()->CreateCommittedResource(
+        &heapProps,
+        D3D12_HEAP_FLAG_NONE,
+        &desc,
+        D3D12_RESOURCE_STATE_GENERIC_READ,
+        nullptr,
+        IID_PPV_ARGS(&index_buffer_));
+    void* mapped = nullptr;
+    CD3DX12_RANGE readRange(0, 0);
+    index_buffer_->Map(0, &readRange, &mapped);
+    memcpy(mapped, indices.data(), static_cast<size_t>(bufferSize));
+    index_buffer_->Unmap(0, nullptr);
+    index_buffer_view_.BufferLocation = index_buffer_->GetGPUVirtualAddress();
+    index_buffer_view_.SizeInBytes = bufferSize;
+    index_buffer_view_.Format = DXGI_FORMAT_R32_UINT;
+}
+
+
 Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool bill_boardable)
 {
     bill_boardable_ = bill_boardable;
@@ -305,4 +359,6 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool 
             vertices_[i].bitangent = XMFLOAT3(vertices_[i].bitangent.x / bitangentCount[i], vertices_[i].bitangent.y / bitangentCount[i], vertices_[i].bitangent.z / bitangentCount[i]);
         }
     }
+    CreateVertexBuffer(device);
+    CreateIndexBuffer(device);
 }

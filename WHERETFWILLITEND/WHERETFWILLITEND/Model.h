@@ -6,6 +6,7 @@
 #include "Graphics\GTexture.h"
 #include <DirectXTex.h>
 #include <DirectXCollision.h>
+#include "Graphics/Gdevice.h"
 using namespace DirectX;
 struct Vertex
 {
@@ -41,6 +42,8 @@ struct SubMesh
 class Model
 {
 public:
+    void CreateVertexBuffer(std::shared_ptr<Gdevice> device_);
+    void CreateIndexBuffer(std::shared_ptr<Gdevice> device_);
     Model(const std::string& model_filename, std::shared_ptr<Gdevice> device, bool bill_boardable);
     const std::vector<uint32_t>& Getindices() const { return indices; }
     const std::vector<Vertex>& GetVertices() const {return vertices_;}
@@ -49,6 +52,8 @@ public:
     BoundingBox& GetBoundBox() { return mesh_box_; }
     XMFLOAT4 GetPosition() { return position_; }
     bool GetBillBoardable() { return bill_boardable_; }
+    D3D12_INDEX_BUFFER_VIEW GetIBV() { return index_buffer_view_; }
+    D3D12_VERTEX_BUFFER_VIEW GetVBV() { return vertex_buffer_view_; }
 private:
     bool bill_boardable_ = false;
     XMFLOAT4 position_ = {0,0,0,1};
@@ -58,6 +63,12 @@ private:
     std::vector<uint32_t> indices;
     std::vector<SubMesh> submeshes_;
     BoundingBox mesh_box_;
+    UINT vertex_count_;
+    ComPtr<ID3D12Resource> vertex_buffer_;
+    D3D12_VERTEX_BUFFER_VIEW vertex_buffer_view_;
+    ComPtr<ID3D12Resource> index_buffer_;
+    ComPtr<ID3D12Resource> index_buffer_upload_buffer_;
+    D3D12_INDEX_BUFFER_VIEW index_buffer_view_;
     XMFLOAT3 summ(XMFLOAT3& a, XMFLOAT3& b);
     XMFLOAT3 diff(XMFLOAT3& a, XMFLOAT3& b);
     XMFLOAT2 summ(XMFLOAT2& a, XMFLOAT2& b);
