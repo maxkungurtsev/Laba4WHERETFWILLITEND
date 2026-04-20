@@ -1,6 +1,6 @@
 #include "OctreeNode.h"
 
-OctreeNode::OctreeNode(int current_depth, BoundingBox& box, bool is_root, std::vector<int>& parent_indices, std::shared_ptr<Model> mesh) {
+OctreeNode::OctreeNode(int current_depth, BoundingBox& box, bool is_root, std::vector<int>& parent_indices, std::vector<BoundingSphere>& all_spheres) {
 	bounding_box_ = box;
 	
 	if (is_root) {
@@ -9,7 +9,7 @@ OctreeNode::OctreeNode(int current_depth, BoundingBox& box, bool is_root, std::v
 	}else{
 		std::vector<int> new_parent_indices;
 		for (int i = 0; i < parent_indices.size(); i++) {
-			if (box.Contains(mesh->GetSubMeshes()[parent_indices[i]].bounding_sphere_) == DirectX::CONTAINS) {
+			if (box.Contains(all_spheres[parent_indices[i]]) == DirectX::CONTAINS) {
 				submesh_indices_.push_back(parent_indices[i]);
 			}
 			else {
@@ -33,7 +33,7 @@ OctreeNode::OctreeNode(int current_depth, BoundingBox& box, bool is_root, std::v
 			int z_offset = (i & 4) ? 1 : -1;
 			center = XMFLOAT3(center.x + x_offset * ext.x, center.y + y_offset * ext.y, center.z + z_offset * ext.z);
 			BoundingBox box(center, ext);
-			children_[i] = std::make_unique<OctreeNode>(current_depth + 1, box, false, submesh_indices_, mesh);
+			children_[i] = std::make_unique<OctreeNode>(current_depth + 1, box, false, submesh_indices_, all_spheres);
 		}
 	}
 	else {

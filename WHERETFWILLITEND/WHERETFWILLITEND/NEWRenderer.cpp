@@ -1,12 +1,12 @@
 #include "NEWRenderer.h"
 
-NewRenderer::NewRenderer(UINT width, UINT height, int frame_count, Window* hwnd, std::string mesh_path, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time) {
+NewRenderer::NewRenderer(UINT width, UINT height, int frame_count, Window* hwnd, std::vector<std::string> mesh_pathes, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time) {
     frame_count_ = frame_count;
 	//device, cmd, fence, heaps, viewport, scissor
 	device_ = std::make_shared<Gdevice>(width, height, 2048+frame_count);
     swap_chain_=hwnd->CreateSwapChain(device_);
     back_buffer_ = std::make_shared<BackBuffer>(frame_count, swap_chain_, device_);
-    render_system_ = std::make_shared<RenderingSystem>(device_,mesh_path, cam_pos, look_at, up, time);
+    render_system_ = std::make_shared<RenderingSystem>(device_, mesh_pathes, cam_pos, look_at, up, time);
     
 }
 void NewRenderer::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up, bool shootlight, bool culling_enabled) {

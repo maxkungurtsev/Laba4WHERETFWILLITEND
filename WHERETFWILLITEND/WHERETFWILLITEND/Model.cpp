@@ -362,4 +362,16 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool 
     }
     CreateVertexBuffer();
     CreateIndexBuffer();
+    MakeOctree();
+}
+
+
+void Model::MakeOctree() {
+    std::vector<int> all_submesh_indices;
+    std::vector<BoundingSphere> all_spheres;
+    for (int i = 0; i < submeshes_.size(); i++) {
+        all_submesh_indices.push_back(i);
+        all_spheres.push_back(submeshes_[i].bounding_sphere_);
+    }
+    octree_ = std::make_shared<OctreeNode>(0, mesh_box_, true, all_submesh_indices, all_spheres);
 }

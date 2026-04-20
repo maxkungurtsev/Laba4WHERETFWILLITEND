@@ -16,7 +16,7 @@ static inline D3D12_RESOURCE_BARRIER Transition(
 }
 
 
-void RenderingSystem::CreateGeomRootSign(int textures_amount) {
+void RenderingSystem::CreateGeomRootSign() {
     if (geom_root_signature_ == nullptr) {
         geom_root_signature_ = std::make_shared<RootSignature>();
     }
@@ -75,16 +75,16 @@ void RenderingSystem::FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR u
     XMStoreFloat4(&cbuffer_->GetData().cam_forward, XMVector3Normalize(look_at - cam_pos));
     cbuffer_->Save_changes();
 };
-void RenderingSystem::ParseModelToCBuffer() {
-    for (int i = 0; i < mesh_->GetMaterials().size(); i++) {
-        cbuffer_->GetData().mats[i].ambient_ = mesh_->GetMaterials()[i].ambient_k;
-        cbuffer_->GetData().mats[i].diffuse_ = mesh_->GetMaterials()[i].diffuse_k;
-        cbuffer_->GetData().mats[i].spec_ = mesh_->GetMaterials()[i].specular_k;
-        cbuffer_->GetData().mats[i].shiny_ = mesh_->GetMaterials()[i].shiny_k;
-        if (mesh_->GetMaterials()[i].hasHeightTexture) {
+void RenderingSystem::ParseModelToCBuffer(std::shared_ptr<Model> mesh) {
+    for (int i = 0; i < mesh->GetMaterials().size(); i++) {
+        cbuffer_->GetData().mats[i].ambient_ = mesh->GetMaterials()[i].ambient_k;
+        cbuffer_->GetData().mats[i].diffuse_ = mesh->GetMaterials()[i].diffuse_k;
+        cbuffer_->GetData().mats[i].spec_ = mesh->GetMaterials()[i].specular_k;
+        cbuffer_->GetData().mats[i].shiny_ = mesh->GetMaterials()[i].shiny_k;
+        if (mesh->GetMaterials()[i].hasHeightTexture) {
             cbuffer_->GetData().mats[i].NormalType = 2;
         }
-        else if (mesh_->GetMaterials()[i].hasNormTexture) {
+        else if (mesh->GetMaterials()[i].hasNormTexture) {
             cbuffer_->GetData().mats[i].NormalType = 1;
         }
         else {
@@ -119,7 +119,7 @@ void RenderingSystem::CompileShader(std::wstring path, ComPtr<ID3DBlob>& shader,
     }
 };
 
-void RenderingSystem::GeomPass(const float clearColor[4]) {
+void RenderingSystem::GeomPass(const float clearColor[4], std::shared_ptr<Model> mesh) {
     device_->cmd_->command_list_->SetPipelineState(geom_pso_->GetPSO().Get());
     device_->cmd_->command_list_->SetGraphicsRootSignature(geom_root_signature_->GetRootSign().Get());
 
@@ -138,46 +138,33 @@ void RenderingSystem::GeomPass(const float clearColor[4]) {
     //desc tables setup
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, cbuffer_->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, Sampler_handle_.gpu_);
-    XMFLOAT4 distance = XMFLOAT4(mesh_->GetPosition().x - cbuffer_->GetData().cam_pos.x, mesh_->GetPosition().y - cbuffer_->GetData().cam_pos.y, mesh_->GetPosition().z - cbuffer_->GetData().cam_pos.z, mesh_->GetPosition().w - cbuffer_->GetData().cam_pos.w);
-    float dist = XMVectorGetX(XMVector4Length(XMLoadFloat4(&distance)));
-    std::shared_ptr<Model> mesh;
-    if (mesh_->GetBillBoardable() and dist > 5000) {
-        mesh = bilboard_;
-    }
-    else {
-        mesh = mesh_;
-    }
+
+
     D3D12_INDEX_BUFFER_VIEW ibv = mesh->GetIBV();
     D3D12_VERTEX_BUFFER_VIEW vbv = mesh->GetVBV();
     device_->cmd_->command_list_->IASetVertexBuffers(0, 1, &vbv);
     device_->cmd_->command_list_->IASetIndexBuffer(&ibv);
     // culling bullshit
     std::vector<int> submeshes;
-    if (mesh_->GetBillBoardable() and dist>5000){
-        for (int i = 0; i < bilboard_->GetSubMeshes().size(); i++) {
-            submeshes.push_back(i);
-        }
-    }
-    else{
-        if (!culling_enabled_) {
-            OutputDebugStringA("CULLING DISABLED\n");
-                for (int i = 0; i < mesh_->GetSubMeshes().size(); i++) {
-                    submeshes.push_back(i);
-                }
-        }
-        else {
-            BoundingFrustum frust;
-            XMMATRIX invworld = XMLoadFloat4x4(&cbuffer_->GetData().inv_view);
-            frustum_.Transform(frust, invworld);
-            invworld = XMLoadFloat4x4(&cbuffer_->GetData().inv_model);
-            frust.Transform(frust, invworld);
-            octree_->GetIndeciesToDraw(submeshes, frust);
-            OutputDebugStringA("meshes drawn this frame: ");
-            for (int i = 0; i < submeshes.size(); i++) {
-                OutputDebugStringA((std::to_string(submeshes[i]) + " ").c_str());
+
+    if (!culling_enabled_) {
+        OutputDebugStringA("CULLING DISABLED\n");
+            for (int i = 0; i < mesh->GetSubMeshes().size(); i++) {
+                submeshes.push_back(i);
             }
-            OutputDebugStringA("others are culled\n");
+    }
+    else {
+        BoundingFrustum frust;
+        XMMATRIX invworld = XMLoadFloat4x4(&cbuffer_->GetData().inv_view);
+        frustum_.Transform(frust, invworld);
+        invworld = XMLoadFloat4x4(&cbuffer_->GetData().inv_model);
+        frust.Transform(frust, invworld);
+        mesh->GetOctree()->GetIndeciesToDraw(submeshes, frust);
+        OutputDebugStringA("meshes drawn this frame: ");
+        for (int i = 0; i < submeshes.size(); i++) {
+            OutputDebugStringA((std::to_string(submeshes[i]) + " ").c_str());
         }
+        OutputDebugStringA("others are culled\n");
     }
 
     // drawing cycle
@@ -195,7 +182,7 @@ void RenderingSystem::GeomPass(const float clearColor[4]) {
             device_->cmd_->command_list_->SetPipelineState(geom_pso_anim_->GetPSO().Get());
         }
         else {
-            if (mesh_->GetMaterials()[submesh.materialIndex].hasHeightTexture){
+            if (mesh->GetMaterials()[submesh.materialIndex].hasHeightTexture){
                 device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
                 device_->cmd_->command_list_->SetPipelineState(geom_pso_tes_->GetPSO().Get());
             }
@@ -228,18 +215,17 @@ void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_
     device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     device_->cmd_->command_list_->DrawInstanced(3, 1, 0, 0);
 }
-RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string mesh_path, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time) {
+RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<std::string> mesh_pathes, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time) {
     device_ = device;
-    mesh_ = std::make_shared<Model>(mesh_path, device_, true);
-    if (mesh_->GetBillBoardable()) {
-        bilboard_= std::make_shared<Model>("sponza_bilboard.obj", device_, true);
+    
+    for (int i = 0; i < meshes_.size(); i++){
+            meshes_[i] = std::make_shared<Model>(mesh_pathes[i], device_, true);
+        if (meshes_[i]->GetBillBoardable()) {
+            meshes_[i]->SetBilboard(std::make_shared<Model>("sponza_bilboard.obj", device_, false));
+        }
+
     }
     // making up "all submesh indices" array for octree to be based on.
-    std::vector<int> all_submesh_indices;
-    for (int i = 0; i < mesh_->GetSubMeshes().size(); i++) {
-        all_submesh_indices.push_back(i);
-    }
-    octree_ = std::make_shared<OctreeNode>(0, mesh_->GetBoundBox(),true, all_submesh_indices, mesh_);
     OutputDebugStringA("model loaded\n");
     //g buffer
     g_buffer_ = std::make_shared<GBuffer>(device_->width_, device_->height_, device_);
@@ -247,17 +233,17 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string me
     Sampler_handle_ = device_->heaps_->MakeSampler();
     OutputDebugStringA("sampler made\n");
     // make root signs
-    CreateGeomRootSign(mesh_->GetMaterials().size());
+    CreateGeomRootSign();
     OutputDebugStringA("geom root sign made\n");
     CreateLightRootSign();
     OutputDebugStringA("light root sign made\n");
     CreateInputLayout();
     cbuffer_ = std::make_shared<Cbuffer<PassConstants>>(device_);
     FillCbuffer(cam_pos, look_at, up, time);
-    ParseModelToCBuffer();
     // let there be light
     light_buffer_ = std::make_shared<Lights>(device_);
     light_buffer_->AddAmbientlight({0.3,0.3,0.3}, false);
+    
     OutputDebugStringA((std::to_string(light_buffer_->GetBuffer()->GetData()[0].type)+'\n').c_str());
 
     std::string type = "vs_5_0";
@@ -275,12 +261,9 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string me
     type = "hs_5_0";
     CompileShader(L"HullShader.hlsl", hull_shader_, type);
     type = "ds_5_0";
-    if (mesh_path == "water.obj") {
-        CompileShader(L"DomainShaderWater.hlsl", domain_shader_, type);
-    }
-    else {
-        CompileShader(L"DomainShader.hlsl", domain_shader_, type);
-    }
+    CompileShader(L"DomainShaderWater.hlsl", water_domain_shader_, type);
+    CompileShader(L"DomainShader.hlsl", domain_shader_, type);
+    
     OutputDebugStringA("hull and domain shaders compiled\n");
     // formats of bullshit ima use as rtv// ¬ инициализации устройства (один раз):
     
@@ -288,7 +271,8 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string me
     geom_pso_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, geom_pixel_shader_, device_, geom_root_signature_, 3, formats);
     geom_pso_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, geom_pixel_shader_, device_, geom_root_signature_, 3, formats);
     OutputDebugStringA("geom pso 1 made\n");
-    geom_pso_tes_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, hull_shader_, domain_shader_ , geom_pixel_shader_, device_, geom_root_signature_, 3, formats);;
+    geom_pso_tes_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, hull_shader_, domain_shader_, geom_pixel_shader_, device_, geom_root_signature_, 3, formats);
+    geom_pso_water_tes_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, hull_shader_, water_domain_shader_, geom_pixel_shader_, device_, geom_root_signature_, 3, formats);
     OutputDebugStringA("geom pso with tesselation made\n");
     geom_pso_anim_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_anim_, geom_pixel_shader_, device_, geom_root_signature_, 3, formats);
     OutputDebugStringA("geom pso 2 made\n");
@@ -300,6 +284,8 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::string me
 
 }
 void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up, D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle, bool shootlight, bool culling_enabled) {
+    const float clearColor[4] = { 0.2f, 0.4f, 0.6f, 1.0f };
+    {
     if (shootlight) {
         XMFLOAT4 camera_pos;
         XMStoreFloat4(&camera_pos, cam_pos);
@@ -309,43 +295,6 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
         light_buffer_->AddPointlight({ 0.0,0.8,0.8 }, camera_pos, 100, 300, true, 50, time, forw);
     }
     culling_enabled_ = culling_enabled;
-    //fill buffer
-    XMFLOAT4 distance = XMFLOAT4(mesh_->GetPosition().x - cbuffer_->GetData().cam_pos.x, mesh_->GetPosition().y - cbuffer_->GetData().cam_pos.y, mesh_->GetPosition().z - cbuffer_->GetData().cam_pos.z, mesh_->GetPosition().w - cbuffer_->GetData().cam_pos.w);
-    float dist = XMVectorGetX(XMVector4Length(XMLoadFloat4(&distance)));
-    if (mesh_->GetBillBoardable() and dist > 5000) {
-        XMFLOAT4 obj = mesh_->GetPosition();
-        XMVECTOR objpos = XMLoadFloat4(&obj); 
-        XMVECTOR forward = XMVector3Normalize(cam_pos - objpos);
-        XMVECTOR right = XMVector3Normalize(XMVector3Cross(up, forward)); 
-        XMVECTOR newUp = XMVector3Normalize(XMVector3Cross(forward, right));
-        XMMATRIX rotation = XMMATRIX(
-            right,
-            forward,
-            newUp,
-            XMVectorSet(0, 0, 0, 1)
-        );
-        XMMATRIX translation = XMMatrixTranslationFromVector(objpos);
-        XMMATRIX world = rotation * translation;
-        DirectX::XMFLOAT4X4 m;
-        DirectX::XMStoreFloat4x4(&m, world);
-        char buffer[512];
-        sprintf_s(buffer,
-            "Matrix:\n"
-            "[%.3f %.3f %.3f %.3f]\n"
-            "[%.3f %.3f %.3f %.3f]\n"
-            "[%.3f %.3f %.3f %.3f]\n"
-            "[%.3f %.3f %.3f %.3f]\n\n",
-            m._11, m._12, m._13, m._14,
-            m._21, m._22, m._23, m._24,
-            m._31, m._32, m._33, m._34,
-            m._41, m._42, m._43, m._44
-        );
-        OutputDebugStringA(buffer);
-        OutputDebugStringA("\n");
-        FillCbuffer(cam_pos, look_at, up, time, world);
-    }else{
-        FillCbuffer(cam_pos, look_at, up, time);
-    }
     // make frustum
     XMMATRIX proj = XMLoadFloat4x4(&(cbuffer_->GetData().projection));
     BoundingFrustum::CreateFromMatrix(frustum_, proj);
@@ -357,7 +306,6 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
     };
     device_->cmd_->command_list_->SetDescriptorHeaps(_countof(heaps), heaps);
 
-    const float clearColor[4] = { 0.2f, 0.4f, 0.6f, 1.0f };
     if (first_frame_) {
         D3D12_RESOURCE_BARRIER toRenderframe[] =
         {
@@ -370,7 +318,8 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
         };
         device_->cmd_->command_list_.Get()->ResourceBarrier(3, toRenderframe);
         first_frame_ = false;
-    }else{
+    }
+    else {
         D3D12_RESOURCE_BARRIER toGeom[] =
         {
             Transition(g_buffer_->albedo_->texture_->GetResourse()->GetResourse().Get(),
@@ -384,7 +333,41 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
         };
         device_->cmd_->command_list_.Get()->ResourceBarrier(4, toGeom);
     }
-    GeomPass(clearColor);
+    }
+
+
+    
+
+    for (int i = 0; i < meshes_.size(); i++) {
+        //fill buffer
+        std::shared_ptr<Model> mesh = meshes_[i];
+        XMFLOAT4 distance = XMFLOAT4(mesh->GetPosition().x - cbuffer_->GetData().cam_pos.x, mesh->GetPosition().y - cbuffer_->GetData().cam_pos.y, mesh->GetPosition().z - cbuffer_->GetData().cam_pos.z, mesh->GetPosition().w - cbuffer_->GetData().cam_pos.w);
+        float dist = XMVectorGetX(XMVector4Length(XMLoadFloat4(&distance)));
+        if (mesh->GetBillBoardable() and dist > 5000) {
+            XMFLOAT4 obj = mesh->GetPosition();
+            XMVECTOR objpos = XMLoadFloat4(&obj);
+            XMVECTOR forward = XMVector3Normalize(cam_pos - objpos);
+            XMVECTOR right = XMVector3Normalize(XMVector3Cross(up, forward));
+            XMVECTOR newUp = XMVector3Normalize(XMVector3Cross(forward, right));
+            XMMATRIX rotation = XMMATRIX(
+                right,
+                forward,
+                newUp,
+                XMVectorSet(0, 0, 0, 1)
+            );
+            XMMATRIX translation = XMMatrixTranslationFromVector(objpos);
+            XMMATRIX world = rotation * translation;
+            FillCbuffer(cam_pos, look_at, up, time, world);
+        }
+        else {
+            FillCbuffer(cam_pos, look_at, up, time);
+        }
+        ParseModelToCBuffer(mesh);
+        GeomPass(clearColor, mesh);
+    }
+
+
+
     D3D12_RESOURCE_BARRIER toLight[] =
     {
         Transition(g_buffer_->albedo_->texture_->GetResourse()->GetResourse().Get(),
@@ -397,6 +380,8 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
                        D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
     };
     device_->cmd_->command_list_.Get()->ResourceBarrier(4, toLight);
+
+
     LightPass(clearColor, rtvHandle);
 
 }

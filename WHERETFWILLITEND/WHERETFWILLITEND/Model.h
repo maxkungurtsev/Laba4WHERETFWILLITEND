@@ -1,12 +1,6 @@
 #pragma once
-#include <iostream>
-#include <vector>
-#include <string>
-#include <DirectXMath.h>
 #include "Graphics\GTexture.h"
-#include <DirectXTex.h>
-#include <DirectXCollision.h>
-using namespace DirectX;
+#include "OctreeNode.h"
 struct Vertex
 {
     XMFLOAT3 position;
@@ -51,6 +45,9 @@ public:
     bool GetBillBoardable() { return bill_boardable_; }
     D3D12_VERTEX_BUFFER_VIEW GetVBV() { return vertex_buffer_view_; }
     D3D12_INDEX_BUFFER_VIEW GetIBV() { return index_buffer_view_; }
+    void MakeOctree();
+    void SetBilboard(std::shared_ptr<Model> bilboard) { bilboard_= bilboard; }
+    std::shared_ptr<OctreeNode> GetOctree() {return octree_; };
 private:
     std::shared_ptr<Gdevice> device_;
     bool bill_boardable_ = false;
@@ -67,6 +64,8 @@ private:
     std::vector<uint32_t> indices;
     std::vector<SubMesh> submeshes_;
     BoundingBox mesh_box_;
+    std::shared_ptr<OctreeNode> octree_;
+    std::shared_ptr<Model> bilboard_;
     XMFLOAT3 summ(XMFLOAT3& a, XMFLOAT3& b);
     XMFLOAT3 diff(XMFLOAT3& a, XMFLOAT3& b);
     XMFLOAT2 summ(XMFLOAT2& a, XMFLOAT2& b);
