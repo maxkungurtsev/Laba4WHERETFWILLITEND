@@ -35,25 +35,30 @@ struct SubMesh
 class Model
 {
 public:
-    Model(const std::string& model_filename, std::shared_ptr<Gdevice> device, bool bill_boardable);
+    Model(const std::string& model_filename, std::shared_ptr<Gdevice> device, bool billboardable, bool is_billboard);
     const std::vector<uint32_t>& Getindices() const { return indices; }
     const std::vector<Vertex>& GetVertices() const {return vertices_;}
     std::vector<MaterialData>& GetMaterials() {return materials_;}
     const std::vector<SubMesh>& GetSubMeshes() const {return submeshes_;}
     BoundingBox& GetBoundBox() { return mesh_box_; }
     XMFLOAT4 GetPosition() { return position_; }
-    bool GetBillBoardable() { return bill_boardable_; }
+    bool GetBillBoardable() { return billboardable_; }
     D3D12_VERTEX_BUFFER_VIEW GetVBV() { return vertex_buffer_view_; }
     D3D12_INDEX_BUFFER_VIEW GetIBV() { return index_buffer_view_; }
     void MakeOctree();
-    void SetBilboard(std::shared_ptr<Model> bilboard) { bilboard_= bilboard; }
-    std::shared_ptr<OctreeNode> GetOctree() {return octree_; };
+    void SetBilboard(std::shared_ptr<Model> bilboard) { bilboard_ = bilboard; }
+    std::shared_ptr<Model> GetBilboard() { return bilboard_; }
+    std::shared_ptr<OctreeNode> GetOctree() { return octree_; }
+    bool IsBilboard() {return is_bilboard_; }
+    const std::string& GetName() { return name; }
 private:
     std::shared_ptr<Gdevice> device_;
-    bool bill_boardable_ = false;
+    bool billboardable_ = false;
+    bool is_bilboard_ = false;
     XMFLOAT4 position_ = {0,0,0,1};
     TGAImage dummy_;
     UINT vertex_count_;
+    std::string name;
     ComPtr<ID3D12Resource> vertex_buffer_;
     D3D12_VERTEX_BUFFER_VIEW vertex_buffer_view_;
     ComPtr<ID3D12Resource> index_buffer_;

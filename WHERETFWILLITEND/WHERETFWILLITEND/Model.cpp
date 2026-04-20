@@ -90,10 +90,12 @@ void Model::CreateIndexBuffer() {
     index_buffer_view_.Format = DXGI_FORMAT_R32_UINT;
 }
 
-Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool bill_boardable)
+Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool billboardable, bool is_billboard)
 {
+    name = filename;
     device_ = device;
-    bill_boardable_ = bill_boardable;
+    billboardable_ = billboardable;
+    is_bilboard_ = is_billboard;
     Assimp::Importer importer;
     dummy_.read_tga_file("dummy.tga");
     const aiScene* scene = importer.ReadFile(

@@ -119,7 +119,7 @@ void RenderingSystem::CompileShader(std::wstring path, ComPtr<ID3DBlob>& shader,
     }
 };
 
-void RenderingSystem::GeomPass(const float clearColor[4], std::shared_ptr<Model> mesh) {
+void RenderingSystem::GeomPass(std::shared_ptr<Model> mesh, const float clearColor[4]) {
     device_->cmd_->command_list_->SetPipelineState(geom_pso_->GetPSO().Get());
     device_->cmd_->command_list_->SetGraphicsRootSignature(geom_root_signature_->GetRootSign().Get());
 
@@ -147,7 +147,7 @@ void RenderingSystem::GeomPass(const float clearColor[4], std::shared_ptr<Model>
     // culling bullshit
     std::vector<int> submeshes;
 
-    if (!culling_enabled_) {
+    if (!culling_enabled_ or mesh->IsBilboard()) {
         OutputDebugStringA("CULLING DISABLED\n");
             for (int i = 0; i < mesh->GetSubMeshes().size(); i++) {
                 submeshes.push_back(i);
@@ -177,18 +177,24 @@ void RenderingSystem::GeomPass(const float clearColor[4], std::shared_ptr<Model>
         device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, mesh->GetMaterials()[submesh.materialIndex].diffuseTexture->GetResourse()->GetHandle().gpu_);
         //normal textures
         device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, mesh->GetMaterials()[submesh.materialIndex].HeightNormTexture->GetResourse()->GetHandle().gpu_);
-        if (mesh->GetMaterials()[submesh.materialIndex].diffuseTexPath == "textures/sponza_thorn_diff.tga" or mesh->GetMaterials()[submesh.materialIndex].diffuseTexPath == "textures/vase_plant.tga")
-        {
-            device_->cmd_->command_list_->SetPipelineState(geom_pso_anim_->GetPSO().Get());
+        if (mesh->GetName() == "water.obj") {
+            device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
+            device_->cmd_->command_list_->SetPipelineState(geom_pso_water_tes_->GetPSO().Get());
         }
-        else {
-            if (mesh->GetMaterials()[submesh.materialIndex].hasHeightTexture){
-                device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
-                device_->cmd_->command_list_->SetPipelineState(geom_pso_tes_->GetPSO().Get());
+        else{
+            if (mesh->GetMaterials()[submesh.materialIndex].diffuseTexPath == "textures/sponza_thorn_diff.tga" or mesh->GetMaterials()[submesh.materialIndex].diffuseTexPath == "textures/vase_plant.tga")
+            {
+                device_->cmd_->command_list_->SetPipelineState(geom_pso_anim_->GetPSO().Get());
             }
             else {
-                device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-                device_->cmd_->command_list_->SetPipelineState(geom_pso_->GetPSO().Get());
+                if (mesh->GetMaterials()[submesh.materialIndex].hasHeightTexture) {
+                    device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
+                    device_->cmd_->command_list_->SetPipelineState(geom_pso_tes_->GetPSO().Get());
+                }
+                else {
+                    device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+                    device_->cmd_->command_list_->SetPipelineState(geom_pso_->GetPSO().Get());
+                }
             }
         }
         device_->cmd_->command_list_->DrawIndexedInstanced(static_cast<UINT>(submesh.indexCount), 1, static_cast<UINT>(submesh.firstIndex), 0, 0);
@@ -218,15 +224,18 @@ void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_
 RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<std::string> mesh_pathes, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time) {
     device_ = device;
     
-    for (int i = 0; i < meshes_.size(); i++){
-            meshes_[i] = std::make_shared<Model>(mesh_pathes[i], device_, true);
-        if (meshes_[i]->GetBillBoardable()) {
-            meshes_[i]->SetBilboard(std::make_shared<Model>("sponza_bilboard.obj", device_, false));
+    for (int i = 0; i < mesh_pathes.size(); i++){
+        std::shared_ptr<Model> mesh = std::make_shared<Model>(mesh_pathes[i], device_, true, false);
+            meshes_.push_back(mesh);
+        if (mesh->GetBillBoardable()) {
+            OutputDebugStringA("model bilboardable\n");
+            mesh->SetBilboard(std::make_shared<Model>("sponza_bilboard.obj", device_, false, true));
         }
 
     }
     // making up "all submesh indices" array for octree to be based on.
     OutputDebugStringA("model loaded\n");
+    OutputDebugStringA((std::to_string(meshes_.size()) + "\n").c_str());
     //g buffer
     g_buffer_ = std::make_shared<GBuffer>(device_->width_, device_->height_, device_);
     OutputDebugStringA("g buffer created\n");
@@ -295,9 +304,6 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
         light_buffer_->AddPointlight({ 0.0,0.8,0.8 }, camera_pos, 100, 300, true, 50, time, forw);
     }
     culling_enabled_ = culling_enabled;
-    // make frustum
-    XMMATRIX proj = XMLoadFloat4x4(&(cbuffer_->GetData().projection));
-    BoundingFrustum::CreateFromMatrix(frustum_, proj);
 
     //heaps shi
     ID3D12DescriptorHeap* heaps[] = {
@@ -341,6 +347,7 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
     for (int i = 0; i < meshes_.size(); i++) {
         //fill buffer
         std::shared_ptr<Model> mesh = meshes_[i];
+        ParseModelToCBuffer(mesh);
         XMFLOAT4 distance = XMFLOAT4(mesh->GetPosition().x - cbuffer_->GetData().cam_pos.x, mesh->GetPosition().y - cbuffer_->GetData().cam_pos.y, mesh->GetPosition().z - cbuffer_->GetData().cam_pos.z, mesh->GetPosition().w - cbuffer_->GetData().cam_pos.w);
         float dist = XMVectorGetX(XMVector4Length(XMLoadFloat4(&distance)));
         if (mesh->GetBillBoardable() and dist > 5000) {
@@ -358,12 +365,16 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
             XMMATRIX translation = XMMatrixTranslationFromVector(objpos);
             XMMATRIX world = rotation * translation;
             FillCbuffer(cam_pos, look_at, up, time, world);
+            mesh = mesh->GetBilboard();
         }
         else {
             FillCbuffer(cam_pos, look_at, up, time);
         }
-        ParseModelToCBuffer(mesh);
-        GeomPass(clearColor, mesh);
+
+        // make frustum
+        XMMATRIX proj = XMLoadFloat4x4(&(cbuffer_->GetData().projection));
+        BoundingFrustum::CreateFromMatrix(frustum_, proj);
+        GeomPass(mesh, clearColor);
     }
 
 
