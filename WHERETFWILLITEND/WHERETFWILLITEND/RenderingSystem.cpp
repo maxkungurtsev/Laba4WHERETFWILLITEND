@@ -119,12 +119,11 @@ void RenderingSystem::CompileShader(std::wstring path, ComPtr<ID3DBlob>& shader,
     }
 };
 
-void RenderingSystem::GeomPass(std::shared_ptr<Model> mesh, const float clearColor[4]) {
+void RenderingSystem::SetupGeomPass(const float clearColor[4]) {
     device_->cmd_->command_list_->SetPipelineState(geom_pso_->GetPSO().Get());
     device_->cmd_->command_list_->SetGraphicsRootSignature(geom_root_signature_->GetRootSign().Get());
 
     D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = g_buffer_->depth_->handle_.cpu_;
-
     //clearing
     device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->albedo_->handle_.cpu_, clearColor, 0, nullptr);
     device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->normal_->handle_.cpu_, clearColor, 0, nullptr);
@@ -138,7 +137,8 @@ void RenderingSystem::GeomPass(std::shared_ptr<Model> mesh, const float clearCol
     //desc tables setup
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, cbuffer_->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, Sampler_handle_.gpu_);
-
+}
+void RenderingSystem::GeomPass(std::shared_ptr<Model> mesh) {
 
     D3D12_INDEX_BUFFER_VIEW ibv = mesh->GetIBV();
     D3D12_VERTEX_BUFFER_VIEW vbv = mesh->GetVBV();
@@ -343,7 +343,7 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
 
 
     
-
+    SetupGeomPass(clearColor);
     for (int i = 0; i < meshes_.size(); i++) {
         //fill buffer
         std::shared_ptr<Model> mesh = meshes_[i];
@@ -374,7 +374,7 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
         // make frustum
         XMMATRIX proj = XMLoadFloat4x4(&(cbuffer_->GetData().projection));
         BoundingFrustum::CreateFromMatrix(frustum_, proj);
-        GeomPass(mesh, clearColor);
+        GeomPass(mesh);
     }
 
 
