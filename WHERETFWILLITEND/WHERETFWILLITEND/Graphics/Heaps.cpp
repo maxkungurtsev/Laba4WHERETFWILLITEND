@@ -69,6 +69,20 @@ Handle GHeaps::CreateSRV_CPU(D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc, ComPtr<ID3
 	device_->CreateShaderResourceView(resourse.Get(), &srvDesc, cpu_handle);
 	return handle;
 };
+
+Handle GHeaps::CreateUAV_CPU(D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc, ComPtr<ID3D12Resource>& resourse) {
+	Handle handle;
+	D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle = cbv_srv_uav_heap_->GetCPUDescriptorHandleForHeapStart();
+	cpu_handle.ptr += (cbv_srv_uav_amount_ * cbv_srv_uav_descriptor_size_);
+	handle.cpu_ = cpu_handle;
+	D3D12_GPU_DESCRIPTOR_HANDLE gpu_handle = cbv_srv_uav_heap_->GetGPUDescriptorHandleForHeapStart();
+	gpu_handle.ptr += (cbv_srv_uav_amount_ * cbv_srv_uav_descriptor_size_);
+	handle.gpu_ = gpu_handle;
+	cbv_srv_uav_amount_++;
+	device_->CreateUnorderedAccessView(resourse.Get(), nullptr, &uavDesc, cpu_handle);
+	return handle;
+};
+
 Handle GHeaps::CreateCBV_CPU(ComPtr<ID3D12Resource>& resourse, UINT size_in_bytes) {
 	//CBV desc
 	D3D12_CONSTANT_BUFFER_VIEW_DESC cbv_desc{};

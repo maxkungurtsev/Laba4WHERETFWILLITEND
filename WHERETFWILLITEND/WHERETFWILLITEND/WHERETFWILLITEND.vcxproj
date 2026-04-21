@@ -170,6 +170,7 @@
     <ClInclude Include="NEWRenderer.h" />
     <ClInclude Include="OctreeNode.h" />
     <ClInclude Include="Particle.h" />
+    <ClInclude Include="ParticleEmiter.h" />
     <ClInclude Include="RenderingSystem.h" />
     <ClInclude Include="tgaimage.h" />
     <ClInclude Include="Window.h" />
