@@ -41,7 +41,7 @@ public:
     std::vector<MaterialData>& GetMaterials() {return materials_;}
     const std::vector<SubMesh>& GetSubMeshes() const {return submeshes_;}
     BoundingBox& GetBoundBox() { return mesh_box_; }
-    XMFLOAT4 GetPosition() { return position_; }
+    XMFLOAT4& GetPosition() { return position_; }
     bool GetBillBoardable() { return billboardable_; }
     D3D12_VERTEX_BUFFER_VIEW GetVBV() { return vertex_buffer_view_; }
     D3D12_INDEX_BUFFER_VIEW GetIBV() { return index_buffer_view_; }

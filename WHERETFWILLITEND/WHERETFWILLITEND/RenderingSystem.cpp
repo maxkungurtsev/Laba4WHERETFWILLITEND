@@ -341,8 +341,6 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
     }
     }
 
-
-    
     SetupGeomPass(clearColor);
     for (int i = 0; i < meshes_.size(); i++) {
         //fill buffer
@@ -350,7 +348,8 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
         ParseModelToCBuffer(mesh);
         XMFLOAT4 distance = XMFLOAT4(mesh->GetPosition().x - cbuffer_->GetData().cam_pos.x, mesh->GetPosition().y - cbuffer_->GetData().cam_pos.y, mesh->GetPosition().z - cbuffer_->GetData().cam_pos.z, mesh->GetPosition().w - cbuffer_->GetData().cam_pos.w);
         float dist = XMVectorGetX(XMVector4Length(XMLoadFloat4(&distance)));
-        if (mesh->GetBillBoardable() and dist > 5000) {
+        // if mesh needs to be bilboarded like an idiot
+        if ((mesh->GetBillBoardable() and dist > 5000) or mesh->IsBilboard()) {
             XMFLOAT4 obj = mesh->GetPosition();
             XMVECTOR objpos = XMLoadFloat4(&obj);
             XMVECTOR forward = XMVector3Normalize(cam_pos - objpos);
@@ -365,7 +364,9 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
             XMMATRIX translation = XMMatrixTranslationFromVector(objpos);
             XMMATRIX world = rotation * translation;
             FillCbuffer(cam_pos, look_at, up, time, world);
-            mesh = mesh->GetBilboard();
+            if (!(mesh->IsBilboard())){
+                mesh = mesh->GetBilboard();
+            }
         }
         else {
             FillCbuffer(cam_pos, look_at, up, time);
