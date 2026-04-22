@@ -88,7 +88,7 @@ void RenderingSystem::CreateParticlePSO() {
     CompileShader(L"ParticleGeomShader.hlsl", p_geom_shader_, type);
     type = "ps_5_0";
     CompileShader(L"ParticlePixelShader.hlsl", p_pixel_shader_, type);
-    particle_pso_ = std::make_shared<PSO>(input_layout, p_vertex_shader_, p_geom_shader_, p_pixel_shader_, device_, geom_root_signature_, 3, PSO_formats_);
+    particle_pso_ = std::make_shared<PSO>(input_layout, p_vertex_shader_, p_geom_shader_, p_pixel_shader_, device_, particle_root_signature_, 3, PSO_formats_);
 }
 ///  C BUFFER
 void RenderingSystem::FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time, XMMATRIX world) {
