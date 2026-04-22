@@ -15,19 +15,6 @@ static inline D3D12_RESOURCE_BARRIER Transition(
     return b;
 }
 
-void RenderingSystem::CreateParticlePSO() {
-    std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout ={};
-    std::string type = "cs_5_0";
-    CompileShader(L"ParticleComputeShader.hlsl", p_compute_shader_, type);
-    type = "vs_5_0";
-    CompileShader(L"ParticleVertexShader.hlsl", p_vertex_shader_, type);
-    type = "gs_5_0";
-    CompileShader(L"ParticleGeomShader.hlsl", p_geom_shader_, type);
-    OutputDebugStringA("sdfghtgafwrsheherhaerhearharhaerharharhsdfbzxbzxcbzxzxcvzxvarqrt\n");
-    type = "ps_5_0";
-    CompileShader(L"ParticlePixelShader.hlsl", p_pixel_shader_, type);
-    particle_pso_ = std::make_shared<PSO>(input_layout, p_vertex_shader_, p_geom_shader_, p_pixel_shader_, device_, geom_root_signature_, 3, PSO_formats_);
-}
 
 void RenderingSystem::CreateGeomRootSign() {
     if (geom_root_signature_ == nullptr) {
@@ -45,6 +32,28 @@ void RenderingSystem::CreateGeomRootSign() {
     //creating root sign with said params
     geom_root_signature_->CreateRootSignature(device_);
 };
+
+// RenderingSystem.cpp
+void RenderingSystem::CreateParticleRootSign() {
+    if (particle_root_signature_ == nullptr) {
+        particle_root_signature_ = std::make_shared<RootSignature>();
+    }
+
+    // b0 : ParticleRenderCB (used by GS)
+    particle_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_ALL);
+
+    // t0 : StructuredBuffer<Particle> Particles (used by GS)
+    particle_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_ALL);
+
+    // t1 : Texture2D ParticleTex (used by PS)
+    particle_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_ALL);
+
+    // s0 : sampler (used by PS)
+    particle_root_signature_->AddParameter(Type::sampler, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+
+    particle_root_signature_->CreateRootSignature(device_);
+}
+
 
 void RenderingSystem::CreateLightRootSign() {
     if (light_root_signature_ == nullptr) {
@@ -69,6 +78,18 @@ void RenderingSystem::CreateLightRootSign() {
 };
 
 
+void RenderingSystem::CreateParticlePSO() {
+    std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout ={};
+    std::string type = "cs_5_0";
+    CompileShader(L"ParticleComputeShader.hlsl", p_compute_shader_, type);
+    type = "vs_5_0";
+    CompileShader(L"ParticleVertexShader.hlsl", p_vertex_shader_, type);
+    type = "gs_5_0";
+    CompileShader(L"ParticleGeomShader.hlsl", p_geom_shader_, type);
+    type = "ps_5_0";
+    CompileShader(L"ParticlePixelShader.hlsl", p_pixel_shader_, type);
+    particle_pso_ = std::make_shared<PSO>(input_layout, p_vertex_shader_, p_geom_shader_, p_pixel_shader_, device_, geom_root_signature_, 3, PSO_formats_);
+}
 ///  C BUFFER
 void RenderingSystem::FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time, XMMATRIX world) {
     //identity
@@ -285,7 +306,7 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<st
     type = "ds_5_0";
     CompileShader(L"DomainShaderWater.hlsl", water_domain_shader_, type);
     CompileShader(L"DomainShader.hlsl", domain_shader_, type);
-    
+    CreateParticleRootSign();
     CreateParticlePSO();
     OutputDebugStringA("hull and domain shaders compiled\n");
     // formats of bullshit ima use as rtv// ¬ инициализации устройства (один раз):

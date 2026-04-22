@@ -15,6 +15,7 @@ class RenderingSystem {
 	std::vector<DXGI_FORMAT> PSO_formats_ = { DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_B8G8R8A8_UNORM ,DXGI_FORMAT_R32_SINT };
 	std::shared_ptr<Gdevice> device_;
 	std::shared_ptr<RootSignature> geom_root_signature_;
+	std::shared_ptr<RootSignature> particle_root_signature_;
 	std::shared_ptr<RootSignature> light_root_signature_;
 	std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout_;
 	std::shared_ptr<GBuffer> g_buffer_;
@@ -50,6 +51,7 @@ class RenderingSystem {
 	bool first_frame_ = true;
 public:
 	void CreateGeomRootSign();
+	void CreateParticleRootSign();
 	void CreateLightRootSign(); 
 	void CreateParticlePSO();
 	void CreateInputLayout();
