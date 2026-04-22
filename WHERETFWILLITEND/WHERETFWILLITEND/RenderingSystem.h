@@ -12,27 +12,37 @@
 #include <d3dcompiler.h>
 
 class RenderingSystem {
+	std::vector<DXGI_FORMAT> PSO_formats_ = { DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_B8G8R8A8_UNORM ,DXGI_FORMAT_R32_SINT };
 	std::shared_ptr<Gdevice> device_;
-	std::shared_ptr<PSO> geom_pso_;
-	std::shared_ptr<PSO> geom_pso_tes_;
-	std::shared_ptr<PSO> geom_pso_anim_;
-	std::shared_ptr<PSO> geom_pso_water_tes_;
-	std::shared_ptr<PSO> light_pso_;
 	std::shared_ptr<RootSignature> geom_root_signature_;
 	std::shared_ptr<RootSignature> light_root_signature_;
 	std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout_;
 	std::shared_ptr<GBuffer> g_buffer_;
 	std::shared_ptr <Cbuffer<PassConstants>> cbuffer_;
 	std::shared_ptr <Lights> light_buffer_;
-	ComPtr<ID3DBlob> geom_vertex_shader_;
+	//particles
+	ComPtr<ID3DBlob> p_compute_shader_;
+	ComPtr<ID3DBlob> p_vertex_shader_;
+	ComPtr<ID3DBlob> p_geom_shader_;
+	ComPtr<ID3DBlob> p_pixel_shader_;
+	std::shared_ptr<PSO> particle_pso_;
+	//tesselation
 	ComPtr<ID3DBlob> hull_shader_;
 	ComPtr<ID3DBlob> domain_shader_;
 	ComPtr<ID3DBlob> water_domain_shader_;
+	std::shared_ptr<PSO> geom_pso_tes_;
+	std::shared_ptr<PSO> geom_pso_water_tes_;
+	//animated
 	ComPtr<ID3DBlob> geom_vertex_shader_anim_;
+	std::shared_ptr<PSO> geom_pso_anim_;
+	// normal ones
+	ComPtr<ID3DBlob> geom_vertex_shader_;
 	ComPtr<ID3DBlob> geom_pixel_shader_;
+	std::shared_ptr<PSO> geom_pso_;
+	// light pass
 	ComPtr<ID3DBlob> light_vertex_shader_;
 	ComPtr<ID3DBlob> light_pixel_shader_;
-	ComPtr<ID3DBlob> light_pixel_shader_wire_;
+	std::shared_ptr<PSO> light_pso_;
 	BoundingFrustum frustum_;
 	std::vector<std::shared_ptr<Model>> meshes_;
 	bool culling_enabled_=true;
@@ -40,7 +50,8 @@ class RenderingSystem {
 	bool first_frame_ = true;
 public:
 	void CreateGeomRootSign();
-	void CreateLightRootSign();
+	void CreateLightRootSign(); 
+	void CreateParticlePSO();
 	void CreateInputLayout();
 	void SetupGeomPass(const float clearColor[4]);
 	void FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time, XMMATRIX world = XMMatrixIdentity());

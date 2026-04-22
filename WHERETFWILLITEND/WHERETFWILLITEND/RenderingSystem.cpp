@@ -15,6 +15,19 @@ static inline D3D12_RESOURCE_BARRIER Transition(
     return b;
 }
 
+void RenderingSystem::CreateParticlePSO() {
+    std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout ={};
+    std::string type = "cs_5_0";
+    CompileShader(L"ParticleComputeShader.hlsl", p_compute_shader_, type);
+    type = "vs_5_0";
+    CompileShader(L"ParticleVertexShader.hlsl", p_vertex_shader_, type);
+    type = "gs_5_0";
+    CompileShader(L"ParticleGeomShader.hlsl", p_geom_shader_, type);
+    OutputDebugStringA("sdfghtgafwrsheherhaerhearharhaerharharhsdfbzxbzxcbzxzxcvzxvarqrt\n");
+    type = "ps_5_0";
+    CompileShader(L"ParticlePixelShader.hlsl", p_pixel_shader_, type);
+    particle_pso_ = std::make_shared<PSO>(input_layout, p_vertex_shader_, p_geom_shader_, p_pixel_shader_, device_, geom_root_signature_, 3, PSO_formats_);
+}
 
 void RenderingSystem::CreateGeomRootSign() {
     if (geom_root_signature_ == nullptr) {
@@ -273,21 +286,28 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<st
     CompileShader(L"DomainShaderWater.hlsl", water_domain_shader_, type);
     CompileShader(L"DomainShader.hlsl", domain_shader_, type);
     
+    CreateParticlePSO();
     OutputDebugStringA("hull and domain shaders compiled\n");
     // formats of bullshit ima use as rtv// ¬ инициализации устройства (один раз):
     
-    std::vector<DXGI_FORMAT> formats = {DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_B8G8R8A8_UNORM ,DXGI_FORMAT_R32_SINT };
-    geom_pso_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, geom_pixel_shader_, device_, geom_root_signature_, 3, formats);
-    geom_pso_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, geom_pixel_shader_, device_, geom_root_signature_, 3, formats);
+    geom_pso_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, geom_pixel_shader_, device_, geom_root_signature_, 3, PSO_formats_);
     OutputDebugStringA("geom pso 1 made\n");
-    geom_pso_tes_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, hull_shader_, domain_shader_, geom_pixel_shader_, device_, geom_root_signature_, 3, formats);
-    geom_pso_water_tes_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, hull_shader_, water_domain_shader_, geom_pixel_shader_, device_, geom_root_signature_, 3, formats);
+
+
+    geom_pso_tes_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, hull_shader_, domain_shader_, geom_pixel_shader_, device_, geom_root_signature_, 3, PSO_formats_);
+    geom_pso_water_tes_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, hull_shader_, water_domain_shader_, geom_pixel_shader_, device_, geom_root_signature_, 3, PSO_formats_);
     OutputDebugStringA("geom pso with tesselation made\n");
-    geom_pso_anim_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_anim_, geom_pixel_shader_, device_, geom_root_signature_, 3, formats);
+
+
+    geom_pso_anim_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_anim_, geom_pixel_shader_, device_, geom_root_signature_, 3, PSO_formats_);
     OutputDebugStringA("geom pso 2 made\n");
-    formats = { DXGI_FORMAT_R8G8B8A8_UNORM };
+    
+
+
+    /// light pass
+    std::vector<DXGI_FORMAT> format = { DXGI_FORMAT_R8G8B8A8_UNORM };
     std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout;
-    light_pso_ = std::make_shared<PSO>(input_layout, light_vertex_shader_, light_pixel_shader_, device_, light_root_signature_, 1, formats);
+    light_pso_ = std::make_shared<PSO>(input_layout, light_vertex_shader_, light_pixel_shader_, device_, light_root_signature_, 1, format);
     OutputDebugStringA("light pso made\n");
 
 
