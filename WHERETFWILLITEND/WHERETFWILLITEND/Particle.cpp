@@ -1,12 +1,10 @@
 #include "Particle.h"
 
-Particle::Particle(std::shared_ptr<Gdevice> device, XMFLOAT3 initial_pos) {
+Particle::Particle() {
 	remaining_life_ = rand() * 10;
-	position_ = initial_pos;
+	position_ = XMFLOAT4(0,0,0,1);
 	velocity_ = XMFLOAT3(rand() * 10, rand() * 10, rand() * 10);
 }
-Particle::Particle(Particle& particle) {
-	remaining_life_ = particle->GetLife();
-	position_ = particle->GetPos();
-	velocity_ = particle->GetVelocity();
-}
+void Particle::SetPos(XMFLOAT4 pos) {
+	position_ = pos;
+};

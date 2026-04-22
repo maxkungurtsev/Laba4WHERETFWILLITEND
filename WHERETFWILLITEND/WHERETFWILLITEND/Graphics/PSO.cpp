@@ -424,7 +424,7 @@ PSO::PSO(std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout, ComPtr<ID3DBlob> ve
     psoDesc.pRootSignature = root_sign->GetRootSign().Get();
     psoDesc.VS = { vertex_shader_->GetBufferPointer(), vertex_shader_->GetBufferSize() };
     psoDesc.PS = { pixel_shader_->GetBufferPointer(), pixel_shader_->GetBufferSize() };
-    psoDesc.GS = { pixel_shader_->GetBufferPointer(), geom_shader_->GetBufferSize() };
+    psoDesc.GS = { geom_shader_->GetBufferPointer(), geom_shader_->GetBufferSize() };
     psoDesc.BlendState = CD3DX12_BLEND_DESC();
     psoDesc.DepthStencilState = CD3DX12_DEPTH_STENCIL_DESC();
     psoDesc.RasterizerState = CD3DX12_RASTERIZER_DESC();

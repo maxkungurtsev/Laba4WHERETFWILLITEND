@@ -257,7 +257,9 @@ void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_
 }
 RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<std::string> mesh_pathes, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time) {
     device_ = device;
-    
+    XMFLOAT4 emiterpos = XMFLOAT4(0, 0, 0, 1);
+    std::string texname = "jagertree.png";
+    emiter_ = std::make_shared<ParticleEmiter>(texname, device_, emiterpos, 0.1f,0.0f, 1000);
     for (int i = 0; i < mesh_pathes.size(); i++){
         std::shared_ptr<Model> mesh = std::make_shared<Model>(mesh_pathes[i], device_, true, false);
             meshes_.push_back(mesh);

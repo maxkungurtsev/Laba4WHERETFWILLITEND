@@ -11,6 +11,6 @@ public:
 	XMFLOAT3& GetVelocity() { return velocity_; }
 	float GetLife() { return remaining_life_; }
 	XMFLOAT4& GetPos() { return position_; }
-	Particle(std::shared_ptr<Gdevice> device, XMFLOAT3 initial_pos);
-	Particle(Particle& particle);
+	Particle();
+	void SetPos(XMFLOAT4 pos);
 };

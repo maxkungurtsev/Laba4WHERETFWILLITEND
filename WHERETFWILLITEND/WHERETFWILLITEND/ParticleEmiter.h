@@ -1,6 +1,8 @@
 #pragma once
 #include "Graphics\StructBuffer.h"
 #include "Graphics\CBuffer.h"
+#include "Graphics\GTexture.h"
+#include <DirectXTex.h>
 #include "Particle.h"
 struct ParticleSimCB
 {
@@ -9,9 +11,8 @@ struct ParticleSimCB
 	int aliveInCount_;
 	int deadInCount_;
 	int emitCount_;
-	XMFLOAT4 emitterPos_;
-	int maxParticles_;
-	float pad_[3];
+	XMFLOAT4 emiter_pos_;
+	float pad_[2];
 };
 
 struct ParticleRenderCB{
@@ -23,15 +24,19 @@ struct ParticleRenderCB{
 };
 class ParticleEmiter {
 private:
+	std::shared_ptr<GTexture> texture;
 	// x - contains append amount, y - contains consume amount 
 	std::shared_ptr<Cbuffer<ParticleSimCB>> emiter_cb_;
+	std::shared_ptr<Cbuffer<ParticleRenderCB>> emiter_render_cb_;
 	std::shared_ptr<StructBuffer<Particle>> append; // here existing particles
 	std::shared_ptr<StructBuffer<Particle>> consume;// here dead ones
 	XMFLOAT4 position;
 
 public:
-	ParticleEmiter(std::shared_ptr<Gdevice> device, XMFLOAT4 pos=XMFLOAT4(0,0,0,1));
+	ParticleEmiter(std::string& texture_name, std::shared_ptr<Gdevice> device, XMFLOAT4 pos, float dt, float time, int max_particles);
 	std::shared_ptr<StructBuffer<Particle>> GetAppend() { return append; }
 	std::shared_ptr<StructBuffer<Particle>> GetConsume() { return consume; }
 	void UpdateCbuffer(float dt, float time, int emitCount);
+	std::shared_ptr<Cbuffer<ParticleSimCB>> GetParticleSimCB() { return emiter_cb_; };
+	std::shared_ptr<Cbuffer<ParticleRenderCB>> GetParticleRenderCB() { return emiter_render_cb_; };
 };

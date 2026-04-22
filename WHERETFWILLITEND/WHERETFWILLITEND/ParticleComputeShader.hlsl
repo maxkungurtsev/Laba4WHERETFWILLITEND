@@ -13,8 +13,7 @@ cbuffer ParticleSimCB : register(b0)
     uint deadInCount; 
     uint emitCount;
     float4 emitterPos;
-    uint maxParticles;
-    float pad[3];
+    float pad[2];
 };
 
 // NOTE:

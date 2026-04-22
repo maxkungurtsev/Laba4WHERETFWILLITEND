@@ -5,6 +5,7 @@
 #include "Graphics/Constants.h"
 #include "Graphics/GBuffer.h"
 #include "Graphics/CBuffer.h"
+#include "ParticleEmiter.h"
 #include "Graphics/PSO.h"
 #include "Window.h"
 #include "Lights.h"
@@ -12,6 +13,7 @@
 #include <d3dcompiler.h>
 
 class RenderingSystem {
+	std::shared_ptr<ParticleEmiter> emiter_;
 	std::vector<DXGI_FORMAT> PSO_formats_ = { DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_B8G8R8A8_UNORM ,DXGI_FORMAT_R32_SINT };
 	std::shared_ptr<Gdevice> device_;
 	std::shared_ptr<RootSignature> geom_root_signature_;
