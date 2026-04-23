@@ -457,8 +457,8 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
         GeomPass(mesh);
     }
     if (emiter_ != nullptr) {
-        FillCbuffers(cam_pos, look_at, up, time);
-        ParticlePass();
+        //FillCbuffers(cam_pos, look_at, up, time);
+        //ParticlePass();
     }
 
 

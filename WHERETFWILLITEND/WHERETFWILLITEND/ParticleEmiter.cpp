@@ -21,11 +21,12 @@ ParticleEmiter::ParticleEmiter(std::string& texture_name, std::shared_ptr<Gdevic
 	position = pos;
 	append = std::make_shared<StructBuffer<Particle>>(device, max_particles/2);
 	consume = std::make_shared<StructBuffer<Particle>>(device, max_particles/2);
-	for (int i = 0; i < max_particles; i++) {
+	for (int i = 0; i < max_particles/2; i++) {
 		append->GetData()[i].SetPos(position);
 		consume->GetData()[i].SetPos(position);
 	}
 	emiter_cb_ = std::make_shared<Cbuffer<ParticleSimCB>>(device);
+	emiter_render_cb_ = std::make_shared<Cbuffer<ParticleRenderCB>>(device);
 	UpdateCbuffer(time);
 	emiter_cb_->GetData().dt_ = dt;
 	emiter_cb_->GetData().emiter_pos_ = pos;
