@@ -88,6 +88,7 @@ void RenderingSystem::CreateParticlePSO() {
     CompileShader(L"ParticleGeomShader.hlsl", p_geom_shader_, type);
     type = "ps_5_0";
     CompileShader(L"ParticlePixelShader.hlsl", p_pixel_shader_, type); 
+
     particle_pso_ = std::make_shared<PSO>(input_layout, p_vertex_shader_, p_geom_shader_, p_pixel_shader_, device_, particle_root_signature_, 3, PSO_formats_);
 }
 
@@ -251,19 +252,7 @@ void RenderingSystem::GeomPass(std::shared_ptr<Model> mesh) {
 }
 
 void RenderingSystem::ParticlePass() {
-    device_->cmd_->command_list_->SetPipelineState(particle_pso_->GetPSO().Get());
-    device_->cmd_->command_list_->SetGraphicsRootSignature(particle_root_signature_->GetRootSign().Get());
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, emiter_->GetParticleRenderCB()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, emiter_->GetAppend()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, emiter_->GetTexture()->GetResourse()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, Sampler_handle_.gpu_);
-
-    device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
-
-    const UINT drawCount = static_cast<UINT>(emiter_->GetParticleRenderCB()->GetData().aliveCount);
-    if (drawCount > 0) {
-        device_->cmd_->command_list_->DrawInstanced(drawCount, 1, 0, 0);
-    }
+    return;
 }
 
 void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle) {
@@ -448,7 +437,6 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
         }
         else {
             FillCbuffers(cam_pos, look_at, up, time);
-            ParticlePass();
         }
 
         // make frustum
@@ -457,8 +445,8 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
         GeomPass(mesh);
     }
     if (emiter_ != nullptr) {
-        //FillCbuffers(cam_pos, look_at, up, time);
-        //ParticlePass();
+        FillCbuffers(cam_pos, look_at, up, time);
+        ParticlePass();
     }
 
 
