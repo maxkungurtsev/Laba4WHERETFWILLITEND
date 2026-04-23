@@ -19,22 +19,51 @@ ParticleEmiter::ParticleEmiter(std::string& texture_name, std::shared_ptr<Gdevic
 		texture = std::make_shared<GTexture>(image_png, texture_name, device, TextureUsage::Albedo);
 	}
 	position = pos;
-	append = std::make_shared<StructBuffer<Particle>>(device, max_particles/2);
-	consume = std::make_shared<StructBuffer<Particle>>(device, max_particles/2);
-	for (int i = 0; i < max_particles/2; i++) {
-		append->GetData()[i].SetPos(position);
-		consume->GetData()[i].SetPos(position);
+	const int poolSize = max_particles / 2;
+	alive_in_ = std::make_shared<StructBuffer<Particle>>(device, poolSize);
+	alive_out_ = std::make_shared<StructBuffer<Particle>>(device, poolSize);
+	dead_in_ = std::make_shared<StructBuffer<Particle>>(device, poolSize);
+	dead_out_ = std::make_shared<StructBuffer<Particle>>(device, poolSize);
+
+	for (int i = 0; i < poolSize; i++) {
+		alive_in_->GetData()[i].SetPos(position);
+		alive_in_->GetData()[i].SetVelocity(XMFLOAT3(0, 0, 0));
+		alive_in_->GetData()[i].SetLife(0.0f);
+		alive_out_->GetData()[i] = alive_in_->GetData()[i];
+		dead_in_->GetData()[i] = alive_in_->GetData()[i];
+		dead_out_->GetData()[i] = alive_in_->GetData()[i];
 	}
 	emiter_cb_ = std::make_shared<Cbuffer<ParticleSimCB>>(device);
 	emiter_render_cb_ = std::make_shared<Cbuffer<ParticleRenderCB>>(device);
-	UpdateCbuffer(time);
-	emiter_cb_->GetData().dt_ = dt;
+
+	emiter_cb_->GetData().dt_ = dt; 
+	emiter_cb_->GetData().time_ = time;
+	emiter_cb_->GetData().aliveInCount_ = 0;
+	emiter_cb_->GetData().deadInCount_ = poolSize;
 	emiter_cb_->GetData().emiter_pos_ = pos;
 	emiter_cb_->GetData().emitCount_ = emit_count;
 	emiter_cb_->Save_changes();
+	alive_in_->SaveChanges(false);
+	alive_out_->SaveChanges(false);
+	dead_in_->SaveChanges(false);
+	dead_out_->SaveChanges(false);
+	UpdateCbuffer(time);
 }
+
+void ParticleEmiter::SwapSimulationBuffers() {
+	std::swap(alive_in_, alive_out_);
+	std::swap(dead_in_, dead_out_);
+}
+
 void ParticleEmiter::UpdateCbuffer(float time) {
-	emiter_cb_->GetData().dt_ = time- emiter_cb_->GetData().time_;
-	emiter_cb_->GetData().time_ = time;
+	ParticleSimCB& sim = emiter_cb_->GetData();
+	sim.dt_ = max(0.0f, time - sim.time_);
+	sim.time_ = time;
+	sim.emiter_pos_ = position;
+
+	const int maxParticles = static_cast<int>(alive_in_->GetData().size());
+	const int spawnCount = min(sim.emitCount_, sim.deadInCount_);
+	sim.aliveInCount_ = min(maxParticles, sim.aliveInCount_ + spawnCount);
+	sim.deadInCount_ = maxParticles - sim.aliveInCount_;
 	emiter_cb_->Save_changes();
 };

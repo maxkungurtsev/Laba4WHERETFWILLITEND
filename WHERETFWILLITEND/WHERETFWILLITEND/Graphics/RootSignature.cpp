@@ -21,7 +21,15 @@ void RootSignature::AddParameter(Type type, int descriptor_amount, D3D12_SHADER_
 		range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
 		base_shader_register_srv_ = max(base_register, base_shader_register_srv_) + descriptor_amount;
 		break;
-
+	case Type::uav:
+		range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_UAV;
+		range.NumDescriptors = descriptor_amount;
+		range.BaseShaderRegister = max(base_register, base_shader_register_uav_);
+		range.RegisterSpace = 0;
+		range.Flags = D3D12_DESCRIPTOR_RANGE_FLAG_DESCRIPTORS_VOLATILE;
+		range.OffsetInDescriptorsFromTableStart = D3D12_DESCRIPTOR_RANGE_OFFSET_APPEND;
+		base_shader_register_uav_ = max(base_register, base_shader_register_uav_) + descriptor_amount;
+		break;
 	case Type::sampler:
 		range.RangeType = D3D12_DESCRIPTOR_RANGE_TYPE_SAMPLER;
 		range.NumDescriptors = descriptor_amount;

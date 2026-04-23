@@ -13,4 +13,6 @@ public:
 	XMFLOAT4& GetPos() { return position_; }
 	Particle();
 	void SetPos(XMFLOAT4 pos);
+	void SetVelocity(XMFLOAT3 vel);
+	void SetLife(float life);
 };

@@ -146,6 +146,9 @@ public:
 		return structb_data_;
 	};
 
+    std::shared_ptr<GResourse> GetResourse() {
+        return structb_;
+    }
 
 	Handle GetHandle() {
 		return structb_->GetHandle();

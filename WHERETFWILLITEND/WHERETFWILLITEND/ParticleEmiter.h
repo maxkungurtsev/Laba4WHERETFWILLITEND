@@ -4,6 +4,8 @@
 #include "Graphics\GTexture.h"
 #include <DirectXTex.h>
 #include "Particle.h"
+#include <algorithm>
+#include <random>
 struct ParticleSimCB
 {
 	float dt_;
@@ -28,15 +30,22 @@ private:
 	// x - contains append amount, y - contains consume amount 
 	std::shared_ptr<Cbuffer<ParticleSimCB>> emiter_cb_;
 	std::shared_ptr<Cbuffer<ParticleRenderCB>> emiter_render_cb_;
-	std::shared_ptr<StructBuffer<Particle>> append; // here existing particles
-	std::shared_ptr<StructBuffer<Particle>> consume;// here dead ones
+	std::shared_ptr<StructBuffer<Particle>> alive_in_; // here existing particles
+	std::shared_ptr<StructBuffer<Particle>> alive_out_;// here dead ones
+	std::shared_ptr<StructBuffer<Particle>> dead_in_; // here existing particles
+	std::shared_ptr<StructBuffer<Particle>> dead_out_;// here dead ones
 	XMFLOAT4 position;
 
 public:
 	ParticleEmiter(std::string& texture_name, std::shared_ptr<Gdevice> device, XMFLOAT4 pos, float dt, float time, int max_particles, int emit_count);
-	std::shared_ptr<StructBuffer<Particle>> GetAppend() { return append; }
-	std::shared_ptr<StructBuffer<Particle>> GetConsume() { return consume; }
+	void SwapSimulationBuffers();
 	void UpdateCbuffer(float time);
+	std::shared_ptr<StructBuffer<Particle>> GetAppend() { return alive_in_; }
+	std::shared_ptr<StructBuffer<Particle>> GetConsume() { return dead_in_; }
+	std::shared_ptr<StructBuffer<Particle>> GetAliveIn() { return alive_in_; }
+	std::shared_ptr<StructBuffer<Particle>> GetAliveOut() { return alive_out_; }
+	std::shared_ptr<StructBuffer<Particle>> GetDeadIn() { return dead_in_; }
+	std::shared_ptr<StructBuffer<Particle>> GetDeadOut() { return dead_out_; }
 	std::shared_ptr<Cbuffer<ParticleSimCB>> GetParticleSimCB() { return emiter_cb_; };
 	std::shared_ptr<Cbuffer<ParticleRenderCB>> GetParticleRenderCB() { return emiter_render_cb_; };
 	std::shared_ptr<GTexture> GetTexture() { return texture; }

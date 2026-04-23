@@ -33,16 +33,30 @@ void RenderingSystem::CreateGeomRootSign() {
     geom_root_signature_->CreateRootSignature(device_);
 };
 
-// RenderingSystem.cpp
+
+void RenderingSystem::CreateComputeRootSign() {
+    if (compute_root_signature_ == nullptr) {
+        compute_root_signature_ = std::make_shared<RootSignature>();
+    }
+
+    compute_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_ALL);
+    compute_root_signature_->AddParameter(Type::uav, 1, D3D12_SHADER_VISIBILITY_ALL); // u0 AliveIn
+    compute_root_signature_->AddParameter(Type::uav, 1, D3D12_SHADER_VISIBILITY_ALL); // u1 AliveOut
+    compute_root_signature_->AddParameter(Type::uav, 1, D3D12_SHADER_VISIBILITY_ALL); // u2 DeadIn
+    compute_root_signature_->AddParameter(Type::uav, 1, D3D12_SHADER_VISIBILITY_ALL); // u3 DeadOut
+
+    compute_root_signature_->CreateRootSignature(device_);
+}
+
 void RenderingSystem::CreateParticleRootSign() {
     if (particle_root_signature_ == nullptr) {
         particle_root_signature_ = std::make_shared<RootSignature>();
     }
 
-    // b0 : ParticleRenderCB (used by GS)
+    // b0 : ParticleRenderCB (used by VS)
     particle_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_ALL);
 
-    // t0 : StructuredBuffer<Particle> Particles (used by GS)
+    // t0 : StructuredBuffer<Particle> Particles (used by VS)
     particle_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_ALL);
 
     // t1 : Texture2D ParticleTex (used by PS)
@@ -77,19 +91,18 @@ void RenderingSystem::CreateLightRootSign() {
     light_root_signature_->CreateRootSignature(device_);
 };
 
+void RenderingSystem::CreateComputePSO() {
+    compute_pso_ = std::make_shared<PSO>(device_, compute_root_signature_);
+}
 
 void RenderingSystem::CreateParticlePSO() {
     std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout ={};
-    std::string type = "cs_5_0";
-    CompileShader(L"ParticleComputeShader.hlsl", p_compute_shader_, type);
-    type = "vs_5_0";
+    std::string type = "vs_5_0";
     CompileShader(L"ParticleVertexShader.hlsl", p_vertex_shader_, type);
-    type = "gs_5_0";
-    CompileShader(L"ParticleGeomShader.hlsl", p_geom_shader_, type);
     type = "ps_5_0";
     CompileShader(L"ParticlePixelShader.hlsl", p_pixel_shader_, type); 
 
-    particle_pso_ = std::make_shared<PSO>(input_layout, p_vertex_shader_, p_geom_shader_, p_pixel_shader_, device_, particle_root_signature_, 3, PSO_formats_);
+    particle_pso_ = std::make_shared<PSO>(input_layout, p_vertex_shader_, p_pixel_shader_, device_, particle_root_signature_, 3, PSO_formats_);
 }
 
 
@@ -251,8 +264,83 @@ void RenderingSystem::GeomPass(std::shared_ptr<Model> mesh) {
     }
 }
 
+
+void RenderingSystem::ComputePass() {
+    emiter_->UpdateCbuffer(cbuffer_->GetData().time);
+
+    auto aliveIn = emiter_->GetAliveIn();
+    auto aliveOut = emiter_->GetAliveOut();
+    auto deadIn = emiter_->GetDeadIn();
+    auto deadOut = emiter_->GetDeadOut();
+    D3D12_RESOURCE_BARRIER toUav[] = {
+        Transition(aliveIn->GetResourse()->GetResourse().Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
+        Transition(aliveOut->GetResourse()->GetResourse().Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
+        Transition(deadIn->GetResourse()->GetResourse().Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
+        Transition(deadOut->GetResourse()->GetResourse().Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
+    };
+    device_->cmd_->command_list_->ResourceBarrier(4, toUav);
+
+    device_->cmd_->command_list_->SetPipelineState(compute_pso_->GetPSO().Get());
+    device_->cmd_->command_list_->SetComputeRootSignature(compute_root_signature_->GetRootSign().Get());
+
+    device_->cmd_->command_list_->SetComputeRootDescriptorTable(0, emiter_->GetParticleSimCB()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetComputeRootDescriptorTable(1, aliveIn->GetUAVHandle().gpu_);
+    device_->cmd_->command_list_->SetComputeRootDescriptorTable(2, aliveOut->GetUAVHandle().gpu_);
+    device_->cmd_->command_list_->SetComputeRootDescriptorTable(3, deadIn->GetUAVHandle().gpu_);
+    device_->cmd_->command_list_->SetComputeRootDescriptorTable(4, deadOut->GetUAVHandle().gpu_);
+
+    int workItems = max(emiter_->GetParticleSimCB()->GetData().aliveInCount_, emiter_->GetParticleSimCB()->GetData().emitCount_);
+    UINT groupCount = static_cast<UINT>((workItems + 127) / 128);
+    if (groupCount > 0) {
+        device_->cmd_->command_list_->Dispatch(groupCount, 1, 1);
+    }
+
+    D3D12_RESOURCE_BARRIER uavBarrier[] = {
+        CD3DX12_RESOURCE_BARRIER::UAV(aliveIn->GetResourse()->GetResourse().Get()),
+        CD3DX12_RESOURCE_BARRIER::UAV(aliveOut->GetResourse()->GetResourse().Get()),
+        CD3DX12_RESOURCE_BARRIER::UAV(deadIn->GetResourse()->GetResourse().Get()),
+        CD3DX12_RESOURCE_BARRIER::UAV(deadOut->GetResourse()->GetResourse().Get())
+    };
+    device_->cmd_->command_list_->ResourceBarrier(4, uavBarrier);
+
+    D3D12_RESOURCE_BARRIER toSrv[] = {
+        Transition(aliveIn->GetResourse()->GetResourse().Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
+        Transition(aliveOut->GetResourse()->GetResourse().Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
+        Transition(deadIn->GetResourse()->GetResourse().Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
+        Transition(deadOut->GetResourse()->GetResourse().Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+    };
+    device_->cmd_->command_list_->ResourceBarrier(4, toSrv);
+
+    emiter_->SwapSimulationBuffers();
+}
 void RenderingSystem::ParticlePass() {
-    return;
+    if (emiter_ == nullptr) {
+        return;
+    }
+
+    const UINT aliveCount = static_cast<UINT>(emiter_->GetParticleRenderCB()->GetData().aliveCount);
+    if (aliveCount == 0) {
+        return;
+    }
+    /*
+    D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = g_buffer_->depth_->handle_.cpu_;
+    D3D12_CPU_DESCRIPTOR_HANDLE handles[3] = {
+        g_buffer_->albedo_->handle_.cpu_,
+        g_buffer_->normal_->handle_.cpu_,
+        g_buffer_->material_index_->handle_.cpu_
+    };
+    */
+    device_->cmd_->command_list_->SetPipelineState(particle_pso_->GetPSO().Get());
+    device_->cmd_->command_list_->SetGraphicsRootSignature(particle_root_signature_->GetRootSign().Get());
+    //device_->cmd_->command_list_->OMSetRenderTargets(3, handles, TRUE, &dsvHandle);
+
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, emiter_->GetParticleRenderCB()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, emiter_->GetAppend()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, emiter_->GetTexture()->GetResourse()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, Sampler_handle_.gpu_);
+
+    device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+    device_->cmd_->command_list_->DrawInstanced(aliveCount * 6, 1, 0, 0);
 }
 
 void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle) {
@@ -446,6 +534,7 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
     }
     if (emiter_ != nullptr) {
         FillCbuffers(cam_pos, look_at, up, time);
+        ComputePass();
         ParticlePass();
     }
 

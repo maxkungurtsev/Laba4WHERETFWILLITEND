@@ -5,6 +5,7 @@ using Microsoft::WRL::ComPtr;
 enum class Type {
 	cbv,
 	srv,
+	uav,
 	sampler
 };
 
@@ -13,7 +14,8 @@ private:
     ComPtr<ID3D12RootSignature> root_signature_;
 	std::vector<D3D12_ROOT_PARAMETER1> root_params_;
 	int base_shader_register_cbv_=0;
-	int base_shader_register_srv_=0;
+	int base_shader_register_srv_ = 0;
+	int base_shader_register_uav_=0;
 	int base_shader_register_sampler_=0;
 	std::vector<D3D12_DESCRIPTOR_RANGE1> ranges_;
 public:
