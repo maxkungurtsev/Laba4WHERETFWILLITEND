@@ -33,10 +33,11 @@ private:
 	XMFLOAT4 position;
 
 public:
-	ParticleEmiter(std::string& texture_name, std::shared_ptr<Gdevice> device, XMFLOAT4 pos, float dt, float time, int max_particles);
+	ParticleEmiter(std::string& texture_name, std::shared_ptr<Gdevice> device, XMFLOAT4 pos, float dt, float time, int max_particles, int emit_count);
 	std::shared_ptr<StructBuffer<Particle>> GetAppend() { return append; }
 	std::shared_ptr<StructBuffer<Particle>> GetConsume() { return consume; }
-	void UpdateCbuffer(float dt, float time, int emitCount);
+	void UpdateCbuffer(float time);
 	std::shared_ptr<Cbuffer<ParticleSimCB>> GetParticleSimCB() { return emiter_cb_; };
 	std::shared_ptr<Cbuffer<ParticleRenderCB>> GetParticleRenderCB() { return emiter_render_cb_; };
+	std::shared_ptr<GTexture> GetTexture() { return texture; }
 };

@@ -1,6 +1,6 @@
 #pragma once
 #include "ParticleEmiter.h"
-ParticleEmiter::ParticleEmiter(std::string& texture_name, std::shared_ptr<Gdevice> device, XMFLOAT4 pos, float dt, float time, int max_particles) {
+ParticleEmiter::ParticleEmiter(std::string& texture_name, std::shared_ptr<Gdevice> device, XMFLOAT4 pos, float dt, float time, int max_particles, int emit_count) {
 	TGAImage image_tga;
 	const Image* image_png;
 	//choose between parsers
@@ -26,13 +26,14 @@ ParticleEmiter::ParticleEmiter(std::string& texture_name, std::shared_ptr<Gdevic
 		consume->GetData()[i].SetPos(position);
 	}
 	emiter_cb_ = std::make_shared<Cbuffer<ParticleSimCB>>(device);
-	UpdateCbuffer(dt, time, 0);
+	UpdateCbuffer(time);
 	emiter_cb_->GetData().dt_ = dt;
 	emiter_cb_->GetData().emiter_pos_ = pos;
+	emiter_cb_->GetData().emitCount_ = emit_count;
+	emiter_cb_->Save_changes();
 }
-void ParticleEmiter::UpdateCbuffer(float dt, float time, int emitCount) {
-	emiter_cb_->GetData().dt_ = dt;
+void ParticleEmiter::UpdateCbuffer(float time) {
+	emiter_cb_->GetData().dt_ = time- emiter_cb_->GetData().time_;
 	emiter_cb_->GetData().time_ = time;
-	emiter_cb_->GetData().emitCount_ = emitCount;
-	emiter_cb_->GetData().aliveInCount_ = dt;
+	emiter_cb_->Save_changes();
 };

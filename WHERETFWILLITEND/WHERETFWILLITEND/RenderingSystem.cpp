@@ -87,11 +87,13 @@ void RenderingSystem::CreateParticlePSO() {
     type = "gs_5_0";
     CompileShader(L"ParticleGeomShader.hlsl", p_geom_shader_, type);
     type = "ps_5_0";
-    CompileShader(L"ParticlePixelShader.hlsl", p_pixel_shader_, type);
+    CompileShader(L"ParticlePixelShader.hlsl", p_pixel_shader_, type); 
     particle_pso_ = std::make_shared<PSO>(input_layout, p_vertex_shader_, p_geom_shader_, p_pixel_shader_, device_, particle_root_signature_, 3, PSO_formats_);
 }
+
+
 ///  C BUFFER
-void RenderingSystem::FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time, XMMATRIX world) {
+void RenderingSystem::FillCbuffers(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time, XMMATRIX world) {
     //identity
     XMStoreFloat4x4(&cbuffer_->GetData().model, world);
     //view
@@ -108,6 +110,14 @@ void RenderingSystem::FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR u
     XMStoreFloat4(&cbuffer_->GetData().cam_pos, cam_pos);
     XMStoreFloat4(&cbuffer_->GetData().cam_forward, XMVector3Normalize(look_at - cam_pos));
     cbuffer_->Save_changes();
+    if (emiter_ != nullptr) {
+        XMStoreFloat4x4(&emiter_->GetParticleRenderCB()->GetData().view, XMMatrixLookAtLH(cam_pos, look_at, up));
+        XMStoreFloat4x4(&emiter_->GetParticleRenderCB()->GetData().projection, XMMatrixPerspectiveFovLH(XM_PIDIV4, float(device_->width_) / float(device_->height_), 0.1f, 10000.0f));
+        emiter_->GetParticleRenderCB()->GetData().particleSize = 25.0f;
+        emiter_->GetParticleRenderCB()->GetData().aliveCount = emiter_->GetParticleSimCB()->GetData().aliveInCount_;
+        emiter_->GetParticleRenderCB()->Save_changes();
+        emiter_->UpdateCbuffer(time);
+    }
 };
 void RenderingSystem::ParseModelToCBuffer(std::shared_ptr<Model> mesh) {
     for (int i = 0; i < mesh->GetMaterials().size(); i++) {
@@ -153,6 +163,9 @@ void RenderingSystem::CompileShader(std::wstring path, ComPtr<ID3DBlob>& shader,
     }
 };
 
+
+// PASSES 
+
 void RenderingSystem::SetupGeomPass(const float clearColor[4]) {
     device_->cmd_->command_list_->SetPipelineState(geom_pso_->GetPSO().Get());
     device_->cmd_->command_list_->SetGraphicsRootSignature(geom_root_signature_->GetRootSign().Get());
@@ -172,6 +185,8 @@ void RenderingSystem::SetupGeomPass(const float clearColor[4]) {
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, cbuffer_->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, Sampler_handle_.gpu_);
 }
+
+
 void RenderingSystem::GeomPass(std::shared_ptr<Model> mesh) {
 
     D3D12_INDEX_BUFFER_VIEW ibv = mesh->GetIBV();
@@ -234,6 +249,23 @@ void RenderingSystem::GeomPass(std::shared_ptr<Model> mesh) {
         device_->cmd_->command_list_->DrawIndexedInstanced(static_cast<UINT>(submesh.indexCount), 1, static_cast<UINT>(submesh.firstIndex), 0, 0);
     }
 }
+
+void RenderingSystem::ParticlePass() {
+    device_->cmd_->command_list_->SetPipelineState(particle_pso_->GetPSO().Get());
+    device_->cmd_->command_list_->SetGraphicsRootSignature(particle_root_signature_->GetRootSign().Get());
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, emiter_->GetParticleRenderCB()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, emiter_->GetAppend()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, emiter_->GetTexture()->GetResourse()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, Sampler_handle_.gpu_);
+
+    device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_POINTLIST);
+
+    const UINT drawCount = static_cast<UINT>(emiter_->GetParticleRenderCB()->GetData().aliveCount);
+    if (drawCount > 0) {
+        device_->cmd_->command_list_->DrawInstanced(drawCount, 1, 0, 0);
+    }
+}
+
 void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle) {
     // set pso
     device_->cmd_->command_list_->SetPipelineState(light_pso_->GetPSO().Get());
@@ -255,11 +287,14 @@ void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_
     device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     device_->cmd_->command_list_->DrawInstanced(3, 1, 0, 0);
 }
+
+
+//INIT
 RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<std::string> mesh_pathes, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time) {
     device_ = device;
-    XMFLOAT4 emiterpos = XMFLOAT4(0, 0, 0, 1);
+    XMFLOAT4 emiterpos = XMFLOAT4(0, 0, 10, 1);
     std::string texname = "jagertree.png";
-    emiter_ = std::make_shared<ParticleEmiter>(texname, device_, emiterpos, 0.1f,0.0f, 1000);
+    emiter_ = std::make_shared<ParticleEmiter>(texname, device_, emiterpos, 0.1f,0.0f, 1000, 10);
     for (int i = 0; i < mesh_pathes.size(); i++){
         std::shared_ptr<Model> mesh = std::make_shared<Model>(mesh_pathes[i], device_, true, false);
             meshes_.push_back(mesh);
@@ -284,7 +319,7 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<st
     OutputDebugStringA("light root sign made\n");
     CreateInputLayout();
     cbuffer_ = std::make_shared<Cbuffer<PassConstants>>(device_);
-    FillCbuffer(cam_pos, look_at, up, time);
+    FillCbuffers(cam_pos, look_at, up, time);
     // let there be light
     light_buffer_ = std::make_shared<Lights>(device_);
     light_buffer_->AddAmbientlight({0.3,0.3,0.3}, false);
@@ -406,13 +441,14 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
             );
             XMMATRIX translation = XMMatrixTranslationFromVector(objpos);
             XMMATRIX world = rotation * translation;
-            FillCbuffer(cam_pos, look_at, up, time, world);
+            FillCbuffers(cam_pos, look_at, up, time, world);
             if (!(mesh->IsBilboard())){
                 mesh = mesh->GetBilboard();
             }
         }
         else {
-            FillCbuffer(cam_pos, look_at, up, time);
+            FillCbuffers(cam_pos, look_at, up, time);
+            ParticlePass();
         }
 
         // make frustum
@@ -420,7 +456,10 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
         BoundingFrustum::CreateFromMatrix(frustum_, proj);
         GeomPass(mesh);
     }
-
+    if (emiter_ != nullptr) {
+        FillCbuffers(cam_pos, look_at, up, time);
+        ParticlePass();
+    }
 
 
     D3D12_RESOURCE_BARRIER toLight[] =

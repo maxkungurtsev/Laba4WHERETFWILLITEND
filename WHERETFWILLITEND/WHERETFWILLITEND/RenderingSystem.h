@@ -58,10 +58,11 @@ public:
 	void CreateParticlePSO();
 	void CreateInputLayout();
 	void SetupGeomPass(const float clearColor[4]);
-	void FillCbuffer(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time, XMMATRIX world = XMMatrixIdentity());
+	void FillCbuffers(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time, XMMATRIX world = XMMatrixIdentity());
 	RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<std::string> mesh_pathes, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time);
 	void CompileShader(std::wstring path, ComPtr<ID3DBlob>& shader, std::string& type);
-	void GeomPass(std::shared_ptr<Model> mesh);
+	void GeomPass(std::shared_ptr<Model> mesh); 
+	void ParticlePass();
 	void ParseModelToCBuffer(std::shared_ptr<Model> mesh);
 	void LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle);
 	void RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up, D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle, bool shootlight, bool culling_enabled);
