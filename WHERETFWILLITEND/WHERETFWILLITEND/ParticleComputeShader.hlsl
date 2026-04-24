@@ -13,6 +13,8 @@ cbuffer ParticleSimCB : register(b0)
     uint aliveInCount;
     uint deadInCount;
     uint emitCount;
+    float3 direction;
+    float angle;
     float pad[3];
 };
 
@@ -32,7 +34,7 @@ float Hash11(float n)
     return frac(sin(n) * 43758.5453123);
 }
 
-float3 RandomDirInCone(uint seed, float3 axis, float coneAngle)
+float3 RandomDirInCone(uint seed)
 {
     float s = (float) seed;
 
@@ -41,7 +43,7 @@ float3 RandomDirInCone(uint seed, float3 axis, float coneAngle)
     float u2 = Hash11(s * 17.11);
 
     // –авномерное распределение внутри конуса
-    float cosTheta = lerp(cos(coneAngle), 1.0, u1);
+    float cosTheta = lerp(cos(angle), 1.0, u1);
     float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
     float phi = u2 * 6.28318530718;
 
@@ -53,7 +55,7 @@ float3 RandomDirInCone(uint seed, float3 axis, float coneAngle)
     );
 
     // ѕостроение ортонормированного базиса вокруг axis
-    axis = normalize(axis);
+    float3 axis = normalize(direction);
 
     float3 up = (abs(axis.z) < 0.999f)
         ? float3(0.0f, 0.0f, 1.0f)
@@ -106,14 +108,14 @@ void main(uint3 tid : SV_DispatchThreadID)
             float spdRnd = Hash11(s * 7.7);
 
             p.position = emitterPos;
-            int lifeMin = 1;
-            int lifeMax = 3;
+            int lifeMin = 5;
+            int lifeMax = 15;
             p.remaining_life = lerp(lifeMin, lifeMax, lifeRnd);
-            int speedMin = 100;
-            int speedMax = 200;
+            int speedMin = 10;
+            int speedMax = 5000;
             float speed = lerp(speedMin, speedMax, spdRnd);
             float3 emiterdir = float3(0, 1, 0);
-            float3 dir = RandomDirInCone(i + asuint(time * 1000.0), emiterdir, 5.0f);
+            float3 dir = RandomDirInCone(i + asuint(time * 1000.0));
             p.velocity = dir * speed;
             AliveOut.Append(p);
         }

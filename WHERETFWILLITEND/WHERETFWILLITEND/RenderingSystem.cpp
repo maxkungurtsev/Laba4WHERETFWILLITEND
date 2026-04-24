@@ -415,13 +415,14 @@ void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_
 //INIT
 RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<std::string> mesh_pathes, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time) {
     device_ = device;
-    XMFLOAT4 emiterpos = XMFLOAT4(0, 0, 0, 1);
+    XMFLOAT4 emiterpos = XMFLOAT4(100, 0, 0, 1);
     std::string texname = "jagertree.png";
-    emiter_ = std::make_shared<ParticleEmiter>(texname, device_, emiterpos, 0.1f,0.0f, 10000, 10, 1);
+    XMFLOAT3 emiterdir = XMFLOAT3(0, 1, 0);
+    emiter_ = std::make_shared<ParticleEmiter>(texname, device_, emiterpos, 0.1f,0.0f, 1000000, 100, 10, emiterdir, 0.2618f);
     for (int i = 0; i < mesh_pathes.size(); i++){
         XMFLOAT3 pos = XMFLOAT3(0, 0, 0);
         XMFLOAT3 rot = XMFLOAT3(0, 0, 0);
-        XMFLOAT3 scale = XMFLOAT3(1, 10, 1);
+        XMFLOAT3 scale = XMFLOAT3(1, 1, 1);
         std::shared_ptr<Model> mesh = std::make_shared<Model>(mesh_pathes[i], device_, true, false,pos,rot,scale);
             meshes_.push_back(mesh);
         if (mesh->GetBillBoardable()) {
@@ -448,8 +449,7 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<st
     FillCbuffers(cam_pos, look_at, up, time);
     // let there be light
     light_buffer_ = std::make_shared<Lights>(device_);
-    light_buffer_->AddAmbientlight({0.3,0.3,0.3}, false);
-    
+    light_buffer_->AddAmbientlight({ 0.6,0.6,0.6 }, false);
     OutputDebugStringA((std::to_string(light_buffer_->GetBuffer()->GetData()[0].type)+'\n').c_str());
 
     std::string type = "vs_5_0";
@@ -595,7 +595,7 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
                 pos.y,
                 pos.z);
 
-            XMMATRIX world = S * R * T;
+            XMMATRIX world = T * R * S;
             FillCbuffers(cam_pos, look_at, up, time, world);
         }
 

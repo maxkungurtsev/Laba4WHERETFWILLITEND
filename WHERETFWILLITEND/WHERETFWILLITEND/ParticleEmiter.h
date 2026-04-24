@@ -14,6 +14,8 @@ struct ParticleSimCB
 	int aliveInCount_;
 	int deadInCount_;
 	int emitCount_;
+	XMFLOAT3 direction_;
+	float angle;
 	float pad_[3];
 };
 
@@ -38,7 +40,7 @@ private:
 	int emit_count_;
 
 public:
-	ParticleEmiter(std::string& texture_name, std::shared_ptr<Gdevice> device, XMFLOAT4 pos, float dt, float time, int max_particles, int emit_count, float part_size);
+	ParticleEmiter(std::string& texture_name, std::shared_ptr<Gdevice> device, XMFLOAT4 pos, float dt, float time, int max_particles, int emit_count, float part_size, XMFLOAT3 dir, float ang);
 	void SwapSimulationBuffers();
 	void UpdateCbuffer(float time);
 	std::shared_ptr<StructBuffer<Particle>> GetAliveIn() { return alive_in_; }

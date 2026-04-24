@@ -1,7 +1,7 @@
 ﻿  RenderingSystem.cpp
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(451,45): warning C4305: аргумент: усечение из "double" в "float"
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(451,41): warning C4305: аргумент: усечение из "double" в "float"
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(451,37): warning C4305: аргумент: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(452,46): warning C4305: аргумент: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(452,42): warning C4305: аргумент: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(452,38): warning C4305: аргумент: усечение из "double" в "float"
 C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(512,48): warning C4305: аргумент: усечение из "double" в "float"
 C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(512,44): warning C4305: аргумент: усечение из "double" в "float"
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(476,82): warning C4244: аргумент: преобразование "_Ty" в "float", возможна потеря данных
@@ -12,20 +12,20 @@ C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.3520
   (компиляция исходного файла "RenderingSystem.cpp")
       C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(476,82):
       контекст создания экземпляра шаблона (сначала самый старый)
-          C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(420,20):
-          выполняется компиляция ссылки на экземпляр шаблон функции "std::shared_ptr<ParticleEmiter> std::make_shared<ParticleEmiter,std::string&,std::shared_ptr<_Ty>&,DirectX::XMFLOAT4&,float,float,int,int,int>(std::string &,std::shared_ptr<_Ty> &,DirectX::XMFLOAT4 &,float &&,float &&,int &&,int &&,int &&)"
+          C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(421,20):
+          выполняется компиляция ссылки на экземпляр шаблон функции "std::shared_ptr<ParticleEmiter> std::make_shared<ParticleEmiter,std::string&,std::shared_ptr<_Ty>&,DirectX::XMFLOAT4&,float,float,int,int,int,DirectX::XMFLOAT3&,float>(std::string &,std::shared_ptr<_Ty> &,DirectX::XMFLOAT4 &,float &&,float &&,int &&,int &&,int &&,DirectX::XMFLOAT3 &,float &&)"
           with
           [
               _Ty=Gdevice
           ]
           C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\memory(2913,46):
-          выполняется компиляция ссылки на экземпляр шаблон функции "std::_Ref_count_obj2<ParticleEmiter>::_Ref_count_obj2<std::string&,std::shared_ptr<_Ty>&,DirectX::XMFLOAT4&,float,float,int,int,int>(std::string &,std::shared_ptr<_Ty> &,DirectX::XMFLOAT4 &,float &&,float &&,int &&,int &&,int &&)"
+          выполняется компиляция ссылки на экземпляр шаблон функции "std::_Ref_count_obj2<ParticleEmiter>::_Ref_count_obj2<std::string&,std::shared_ptr<_Ty>&,DirectX::XMFLOAT4&,float,float,int,int,int,DirectX::XMFLOAT3&,float>(std::string &,std::shared_ptr<_Ty> &,DirectX::XMFLOAT4 &,float &&,float &&,int &&,int &&,int &&,DirectX::XMFLOAT3 &,float &&)"
           with
           [
               _Ty=Gdevice
           ]
           C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\memory(2100,18):
-          выполняется компиляция ссылки на экземпляр шаблон функции "void std::_Construct_in_place<_Ty,std::string&,std::shared_ptr<Gdevice>&,DirectX::XMFLOAT4&,float,float,int,int,int>(_Ty &,std::string &,std::shared_ptr<Gdevice> &,DirectX::XMFLOAT4 &,float &&,float &&,int &&,int &&,int &&) noexcept(false)"
+          выполняется компиляция ссылки на экземпляр шаблон функции "void std::_Construct_in_place<_Ty,std::string&,std::shared_ptr<Gdevice>&,DirectX::XMFLOAT4&,float,float,int,int,int,DirectX::XMFLOAT3&,float>(_Ty &,std::string &,std::shared_ptr<Gdevice> &,DirectX::XMFLOAT4 &,float &&,float &&,int &&,int &&,int &&,DirectX::XMFLOAT3 &,float &&) noexcept(false)"
           with
           [
               _Ty=ParticleEmiter
