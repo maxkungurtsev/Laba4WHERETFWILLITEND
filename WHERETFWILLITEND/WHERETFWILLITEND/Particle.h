@@ -5,8 +5,8 @@ using namespace DirectX;
 class Particle {
 private:
 	XMFLOAT4 position_;
-	float remaining_life_;
 	XMFLOAT3 velocity_;
+	float remaining_life_;
 public:
 	XMFLOAT3& GetVelocity() { return velocity_; }
 	float GetLife() { return remaining_life_; }

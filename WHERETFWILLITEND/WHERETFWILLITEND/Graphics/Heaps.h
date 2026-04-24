@@ -36,7 +36,7 @@ public:
 	int GetCBV_SRV_UAV_HeapDescriptorSize();
 	int GetSamplerHeapDescriptorSize();
 	Handle CreateSRV_CPU(D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc, ComPtr<ID3D12Resource>& resourse);
-	Handle CreateUAV_CPU(D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc, ComPtr<ID3D12Resource>& resourse);
+	Handle CreateUAV_CPU(D3D12_UNORDERED_ACCESS_VIEW_DESC uavDesc, ComPtr<ID3D12Resource>& resourse, ComPtr<ID3D12Resource>& counter_resource);
 	Handle CreateDSV_CPU(ComPtr<ID3D12Resource>& resourse);
 	Handle CreateRTV_CPU(ComPtr<ID3D12Resource>& resourse);
 	Handle CreateCBV_CPU(ComPtr<ID3D12Resource>& resourse, UINT size_in_bytes);

@@ -7,15 +7,27 @@
 template<typename T>
 class StructBuffer {
 private:
+    static constexpr UINT64 kCounterBufferSize = 4096; // D3D12 UAV counter alignment
     std::shared_ptr<GResourse>  structb_;
 	std::vector<T> structb_data_;
 	UINT max_element_count_;
 	UINT element_stride_;
     ComPtr<ID3D12Resource> upload_;
+    ComPtr<ID3D12Resource> counter_resource_;
+    ComPtr<ID3D12Resource> counter_upload_;
+    ComPtr<ID3D12Resource> counter_readback_;
+    UINT cached_counter_value_ = 0;
     D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc_ = {};
     D3D12_UNORDERED_ACCESS_VIEW_DESC  uav_desc_ = {};
     D3D12_RESOURCE_STATES base_state_;
     Handle UAV_handle;
+    void WriteCounterUpload(UINT value) {
+        void* mapped = nullptr;
+        D3D12_RANGE range = { 0, 0 };
+        counter_upload_->Map(0, &range, &mapped);
+        *reinterpret_cast<UINT*>(mapped) = value;
+        counter_upload_->Unmap(0, nullptr);
+    }
 public:	
     void SaveChanges(bool InRenderFrame) {
         if (!InRenderFrame){
@@ -51,7 +63,73 @@ public:
             structb_->GetDevice()->WaitForGpu();
         }
 	};
+    void SetCounterValue(UINT value, bool InRenderFrame) {
+        if (!InRenderFrame) {
+            structb_->GetDevice()->cmd_->ResetAllocator();
+        }
 
+        cached_counter_value_ = value;
+        WriteCounterUpload(value);
+
+        auto cmdList = structb_->GetDevice()->cmd_->command_list_;
+
+        D3D12_RESOURCE_BARRIER toCopy = {};
+        toCopy.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        toCopy.Transition.pResource = counter_resource_.Get();
+        toCopy.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+        toCopy.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
+        toCopy.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        cmdList->ResourceBarrier(1, &toCopy);
+
+        cmdList->CopyBufferRegion(counter_resource_.Get(), 0, counter_upload_.Get(), 0, sizeof(UINT));
+
+        D3D12_RESOURCE_BARRIER toUav = {};
+        toUav.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        toUav.Transition.pResource = counter_resource_.Get();
+        toUav.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
+        toUav.Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+        toUav.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        cmdList->ResourceBarrier(1, &toUav);
+
+        if (!InRenderFrame) {
+            structb_->GetDevice()->cmd_->Execute();
+            structb_->GetDevice()->WaitForGpu();
+        }
+    }
+
+    void QueueCounterReadback() {
+        auto cmdList = structb_->GetDevice()->cmd_->command_list_;
+
+        D3D12_RESOURCE_BARRIER toCopy = {};
+        toCopy.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        toCopy.Transition.pResource = counter_resource_.Get();
+        toCopy.Transition.StateBefore = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+        toCopy.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_SOURCE;
+        toCopy.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        cmdList->ResourceBarrier(1, &toCopy);
+
+        cmdList->CopyBufferRegion(counter_readback_.Get(), 0, counter_resource_.Get(), 0, sizeof(UINT));
+
+        D3D12_RESOURCE_BARRIER toUav = {};
+        toUav.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
+        toUav.Transition.pResource = counter_resource_.Get();
+        toUav.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_SOURCE;
+        toUav.Transition.StateAfter = D3D12_RESOURCE_STATE_UNORDERED_ACCESS;
+        toUav.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
+        cmdList->ResourceBarrier(1, &toUav);
+    }
+
+    void UpdateCachedCounterFromReadback() {
+        void* mapped = nullptr;
+        D3D12_RANGE range = { 0, sizeof(UINT) };
+        counter_readback_->Map(0, &range, &mapped);
+        cached_counter_value_ = *reinterpret_cast<UINT*>(mapped);
+        counter_readback_->Unmap(0, nullptr);
+    }
+
+    UINT GetCachedCounterValue() const {
+        return cached_counter_value_;
+    }
     StructBuffer(std::shared_ptr<Gdevice> device, UINT max_element_count, D3D12_RESOURCE_STATES base_state)
         : element_stride_(sizeof(T)), max_element_count_(max_element_count), base_state_(base_state)
     {
@@ -99,21 +177,39 @@ public:
             base_state_
         );
 
-        // =========================
-        // 2. UAV desc + UAV creation
-        // =========================
-        D3D12_UNORDERED_ACCESS_VIEW_DESC uav_desc = {};
-        uav_desc.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
-        uav_desc.Format = DXGI_FORMAT_UNKNOWN;
-        uav_desc.Buffer.FirstElement = 0;
-        uav_desc.Buffer.NumElements = max_element_count_;
-        uav_desc.Buffer.StructureByteStride = element_stride_;
-        uav_desc.Buffer.CounterOffsetInBytes = 0;
-        uav_desc.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+        // create counter resourse
+        D3D12_RESOURCE_DESC counter_desc = {};
+        counter_desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+        counter_desc.Width = kCounterBufferSize;
+        counter_desc.Height = 1;
+        counter_desc.DepthOrArraySize = 1;
+        counter_desc.MipLevels = 1;
+        counter_desc.SampleDesc.Count = 1;
+        counter_desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+        counter_desc.Format = DXGI_FORMAT_UNKNOWN;
+        counter_desc.Flags = D3D12_RESOURCE_FLAG_ALLOW_UNORDERED_ACCESS;
 
-        // В GResourse должен быть выделен descriptor heap slot под UAV
-        ComPtr<ID3D12Resource> res = structb_->GetResourse();
-        UAV_handle=device->heaps_->CreateUAV_CPU(uav_desc, res);
+        HRESULT hr = device->GetDXDevice()->CreateCommittedResource(
+            &defaultHeap,
+            D3D12_HEAP_FLAG_NONE,
+            &counter_desc,
+            D3D12_RESOURCE_STATE_UNORDERED_ACCESS,
+            nullptr,
+            IID_PPV_ARGS(&counter_resource_)
+        );
+        if (FAILED(hr)) {
+            throw std::runtime_error("Failed to create counter resource");
+        }
+        //create UAV HANDLE
+        uav_desc_.ViewDimension = D3D12_UAV_DIMENSION_BUFFER;
+        uav_desc_.Format = DXGI_FORMAT_UNKNOWN;
+        uav_desc_.Buffer.FirstElement = 0;
+        uav_desc_.Buffer.NumElements = max_element_count_;
+        uav_desc_.Buffer.StructureByteStride = element_stride_;
+        uav_desc_.Buffer.CounterOffsetInBytes = 0;
+        uav_desc_.Buffer.Flags = D3D12_BUFFER_UAV_FLAG_NONE;
+        ComPtr<ID3D12Resource> structbuffer = structb_->GetResourse();
+        UAV_handle = device->heaps_->CreateUAV_CPU(uav_desc_, structbuffer, counter_resource_);
          
         // =========================
         // 3. Upload buffer (UPLOAD heap)
@@ -125,10 +221,17 @@ public:
         uploadHeap.CreationNodeMask = 1;
         uploadHeap.VisibleNodeMask = 1;
 
+        D3D12_HEAP_PROPERTIES readbackHeap = {};
+        readbackHeap.Type = D3D12_HEAP_TYPE_READBACK;
+        readbackHeap.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+        readbackHeap.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+        readbackHeap.CreationNodeMask = 1;
+        readbackHeap.VisibleNodeMask = 1;
+
         D3D12_RESOURCE_DESC upload_desc = gpu_desc;
         upload_desc.Flags = D3D12_RESOURCE_FLAG_NONE; // важно: без UAV
 
-        HRESULT hr = device->GetDXDevice()->CreateCommittedResource(
+        hr = device->GetDXDevice()->CreateCommittedResource(
             &uploadHeap,
             D3D12_HEAP_FLAG_NONE,
             &upload_desc,
@@ -139,6 +242,41 @@ public:
 
         if (FAILED(hr)) {
             throw std::runtime_error("Failed to create upload buffer");
+        }
+
+        D3D12_RESOURCE_DESC counter_upload_desc = {};
+        counter_upload_desc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+        counter_upload_desc.Width = kCounterBufferSize;
+        counter_upload_desc.Height = 1;
+        counter_upload_desc.DepthOrArraySize = 1;
+        counter_upload_desc.MipLevels = 1;
+        counter_upload_desc.SampleDesc.Count = 1;
+        counter_upload_desc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+        counter_upload_desc.Format = DXGI_FORMAT_UNKNOWN;
+        counter_upload_desc.Flags = D3D12_RESOURCE_FLAG_NONE;
+
+        hr = device->GetDXDevice()->CreateCommittedResource(
+            &uploadHeap,
+            D3D12_HEAP_FLAG_NONE,
+            &counter_upload_desc,
+            D3D12_RESOURCE_STATE_GENERIC_READ,
+            nullptr,
+            IID_PPV_ARGS(&counter_upload_)
+        );
+        if (FAILED(hr)) {
+            throw std::runtime_error("Failed to create counter upload buffer");
+        }
+
+        hr = device->GetDXDevice()->CreateCommittedResource(
+            &readbackHeap,
+            D3D12_HEAP_FLAG_NONE,
+            &counter_upload_desc,
+            D3D12_RESOURCE_STATE_COPY_DEST,
+            nullptr,
+            IID_PPV_ARGS(&counter_readback_)
+        );
+        if (FAILED(hr)) {
+            throw std::runtime_error("Failed to create counter readback buffer");
         }
     }
 

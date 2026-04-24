@@ -48,6 +48,23 @@ ParticleEmiter::ParticleEmiter(std::string& texture_name, std::shared_ptr<Gdevic
 	alive_out_->SaveChanges(false);
 	dead_in_->SaveChanges(false);
 	dead_out_->SaveChanges(false);
+	// Initialize append/consume counters.
+	alive_in_->SetCounterValue(0, false);
+	alive_out_->SetCounterValue(0, false);
+	dead_in_->SetCounterValue(poolSize, false);
+	dead_out_->SetCounterValue(0, false);
+
+	// Prime first readback snapshot so first compute frame has valid cached values.
+	alive_in_->QueueCounterReadback();
+	dead_in_->QueueCounterReadback();
+	alive_out_->QueueCounterReadback();
+	dead_out_->QueueCounterReadback();
+	device->cmd_->Execute();
+	device->WaitForGpu();
+	alive_in_->UpdateCachedCounterFromReadback();
+	dead_in_->UpdateCachedCounterFromReadback();
+	alive_out_->UpdateCachedCounterFromReadback();
+	dead_out_->UpdateCachedCounterFromReadback();
 	UpdateCbuffer(time);
 }
 

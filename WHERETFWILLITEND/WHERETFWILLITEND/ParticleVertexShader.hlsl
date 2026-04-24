@@ -60,8 +60,8 @@ VS_OUT main(uint vertexID : SV_VertexID)
 
     float3 worldPos = p.position.xyz;
 
-    float3 right = float3(view[0][0], view[1][0], view[2][0]);
-    float3 upv = float3(view[0][1], view[1][1], view[2][1]);
+    float3 right = float3(view[0][0], view[0][1], view[0][2]);
+    float3 upv = float3(view[1][0], view[1][1], view[1][2]);
 
     float halfSize = particleSize * 0.5;
     float2 offset = kOffsets[cornerId] * halfSize;
