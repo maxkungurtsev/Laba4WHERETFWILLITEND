@@ -68,14 +68,12 @@ VS_OUT main(uint vertexID : SV_VertexID)
 
     // Camera-facing billboard axes in world space come from VIEW matrix columns
     // (for our mul(view, position) convention). Using rows makes quads skew/vanish.
-    float3 right = normalize(float3(view[0][0], view[1][0], view[2][0]));
-    float3 upv = normalize(float3(view[0][1], view[1][1], view[2][1]));
 
     float halfSize = particleSize * 0.5;
     float2 offset = kOffsets[cornerId] * halfSize;
 
-    float3 worldCorner = worldPos + right * offset.x + upv * offset.y;
-    float4 viewCorner = mul(view, float4(worldCorner, 1.0));
+    float4 viewCenter = mul(view, float4(worldPos, 1.0));
+    float4 viewCorner = viewCenter + float4(offset.x, offset.y, 0.0, 0.0);
 
     o.posH = mul(projection, viewCorner);
     o.uv = kUV[cornerId];

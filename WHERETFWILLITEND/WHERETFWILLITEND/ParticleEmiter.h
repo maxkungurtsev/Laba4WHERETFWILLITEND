@@ -8,13 +8,13 @@
 #include <random>
 struct ParticleSimCB
 {
+	XMFLOAT4 emiter_pos_;
 	float dt_;
 	float time_;
 	int aliveInCount_;
 	int deadInCount_;
 	int emitCount_;
-	XMFLOAT4 emiter_pos_;
-	float pad_[2];
+	float pad_[3];
 };
 
 struct ParticleRenderCB{
@@ -38,7 +38,7 @@ private:
 	int emit_count_;
 
 public:
-	ParticleEmiter(std::string& texture_name, std::shared_ptr<Gdevice> device, XMFLOAT4 pos, float dt, float time, int max_particles, int emit_count);
+	ParticleEmiter(std::string& texture_name, std::shared_ptr<Gdevice> device, XMFLOAT4 pos, float dt, float time, int max_particles, int emit_count, float part_size);
 	void SwapSimulationBuffers();
 	void UpdateCbuffer(float time);
 	std::shared_ptr<StructBuffer<Particle>> GetAliveIn() { return alive_in_; }

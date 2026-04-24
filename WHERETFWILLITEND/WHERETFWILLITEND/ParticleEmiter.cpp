@@ -1,6 +1,6 @@
 #pragma once
 #include "ParticleEmiter.h"
-ParticleEmiter::ParticleEmiter(std::string& texture_name, std::shared_ptr<Gdevice> device, XMFLOAT4 pos, float dt, float time, int max_particles, int emit_count) {
+ParticleEmiter::ParticleEmiter(std::string& texture_name, std::shared_ptr<Gdevice> device, XMFLOAT4 pos, float dt, float time, int max_particles, int emit_count, float part_size) {
 	TGAImage image_tga;
 	const Image* image_png;
 	//choose between parsers
@@ -36,7 +36,7 @@ ParticleEmiter::ParticleEmiter(std::string& texture_name, std::shared_ptr<Gdevic
 	}
 	emiter_cb_ = std::make_shared<Cbuffer<ParticleSimCB>>(device);
 	emiter_render_cb_ = std::make_shared<Cbuffer<ParticleRenderCB>>(device);
-
+	emiter_render_cb_->GetData().particleSize = part_size;
 	emiter_cb_->GetData().dt_ = dt; 
 	emiter_cb_->GetData().time_ = time;
 	emiter_cb_->GetData().aliveInCount_ = 0;

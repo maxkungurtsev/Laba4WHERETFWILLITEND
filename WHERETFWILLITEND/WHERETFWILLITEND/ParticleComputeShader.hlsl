@@ -7,13 +7,13 @@ struct Particle
 
 cbuffer ParticleSimCB : register(b0)
 {
+    float4 emitterPos;
     float dt;
     float time;
     uint aliveInCount;
-    uint deadInCount; 
+    uint deadInCount;
     uint emitCount;
-    float4 emitterPos;
-    float pad[2];
+    float pad[3];
 };
 
 // NOTE:
@@ -32,14 +32,42 @@ float Hash11(float n)
     return frac(sin(n) * 43758.5453123);
 }
 
-float3 RandomDir(uint seed)
+float3 RandomDirInCone(uint seed, float3 axis, float coneAngle)
 {
     float s = (float) seed;
-    float a = Hash11(s * 13.37) * 6.2831853;
-    float z = Hash11(s * 17.11) * 2.0 - 1.0;
-    float r = sqrt(saturate(1.0 - z * z));
-    float3 rnd = float3(r * cos(a), z, r * sin(a));
-    return rnd;
+
+    // ƒве случайные величины [0,1]
+    float u1 = Hash11(s * 13.37);
+    float u2 = Hash11(s * 17.11);
+
+    // –авномерное распределение внутри конуса
+    float cosTheta = lerp(cos(coneAngle), 1.0, u1);
+    float sinTheta = sqrt(1.0 - cosTheta * cosTheta);
+    float phi = u2 * 6.28318530718;
+
+    // Ћокальное направление (ось конуса = +Z)
+    float3 localDir = float3(
+        cos(phi) * sinTheta,
+        sin(phi) * sinTheta,
+        cosTheta
+    );
+
+    // ѕостроение ортонормированного базиса вокруг axis
+    axis = normalize(axis);
+
+    float3 up = (abs(axis.z) < 0.999f)
+        ? float3(0.0f, 0.0f, 1.0f)
+        : float3(1.0f, 0.0f, 0.0f);
+
+    float3 right = normalize(cross(up, axis));
+    float3 forward = cross(axis, right);
+
+    // ѕоворот из локального пространства в мировое
+    return normalize(
+        localDir.x * right +
+        localDir.y * forward +
+        localDir.z * axis
+    );
 }
 
 [numthreads(128, 1, 1)]
@@ -78,13 +106,14 @@ void main(uint3 tid : SV_DispatchThreadID)
             float spdRnd = Hash11(s * 7.7);
 
             p.position = emitterPos;
-            int lifeMin = 5;
-            int lifeMax = 15;
+            int lifeMin = 1;
+            int lifeMax = 3;
             p.remaining_life = lerp(lifeMin, lifeMax, lifeRnd);
-            int speedMin = 10;
-            int speedMax = 100;
+            int speedMin = 100;
+            int speedMax = 200;
             float speed = lerp(speedMin, speedMax, spdRnd);
-            float3 dir = RandomDir(i + asuint(time * 1000.0));
+            float3 emiterdir = float3(0, 1, 0);
+            float3 dir = RandomDirInCone(i + asuint(time * 1000.0), emiterdir, 5.0f);
             p.velocity = dir * speed;
             AliveOut.Append(p);
         }
