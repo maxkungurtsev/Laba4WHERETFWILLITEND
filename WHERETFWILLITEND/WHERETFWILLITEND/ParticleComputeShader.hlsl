@@ -67,24 +67,30 @@ void main(uint3 tid : SV_DispatchThreadID)
     }
 
     // 2) Spawn new particles from dead pool
-    if (i < emitCount && i < deadInCount)
+    if (i < deadInCount)
     {
         Particle p = DeadIn.Consume();
 
-        float s = (float) (i + aliveInCount + asuint(time));
-        float lifeRnd = Hash11(s * 3.1);
-        float spdRnd = Hash11(s * 7.7);
+        if (i < emitCount)
+        {
+            float s = (float) (i + aliveInCount + asuint(time));
+            float lifeRnd = Hash11(s * 3.1);
+            float spdRnd = Hash11(s * 7.7);
 
-        p.position = emitterPos;
-        int lifeMin = 5;
-        int lifeMax = 15;
-        p.remaining_life = lerp(lifeMin, lifeMax, lifeRnd);
-        
-        int speedMin = 10;
-        int speedMax = 100;
-        float speed = lerp(speedMin, speedMax, spdRnd);
-        float3 dir = RandomDir(i + asuint(time * 1000.0));
-        p.velocity = dir * speed;
-        AliveOut.Append(p);
+            p.position = emitterPos;
+            int lifeMin = 5;
+            int lifeMax = 15;
+            p.remaining_life = lerp(lifeMin, lifeMax, lifeRnd);
+            int speedMin = 10;
+            int speedMax = 100;
+            float speed = lerp(speedMin, speedMax, spdRnd);
+            float3 dir = RandomDir(i + asuint(time * 1000.0));
+            p.velocity = dir * speed;
+            AliveOut.Append(p);
+        }
+        else
+        {
+            DeadOut.Append(p);
+        }
     }
 }

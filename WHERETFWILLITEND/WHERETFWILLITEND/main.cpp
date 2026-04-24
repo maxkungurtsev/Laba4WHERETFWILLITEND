@@ -77,16 +77,16 @@ int Run() {
             culling_enabled = true;
         }
         if (g_Input.IsKeyDown('W')) {
-            cam_coords += forward * 10;
+            cam_coords += forward * 1;
         }
         if (g_Input.IsKeyDown('S')) {
-            cam_coords -= forward * 10;
+            cam_coords -= forward * 1;
         }
         if (g_Input.IsKeyDown('A')) {
-            cam_coords += right * 10;
+            cam_coords += right * 1;
         }
         if (g_Input.IsKeyDown('D')) {
-            cam_coords -= right * 10;
+            cam_coords -= right * 1;
         }
        auto currentTime = clock::now();
        float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();

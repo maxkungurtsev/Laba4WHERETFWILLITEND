@@ -37,7 +37,13 @@ VS_OUT main(uint vertexID : SV_VertexID)
     }
 
     Particle p = Particles[particleId];
-
+    if (p.remaining_life <= 0.0)
+    {
+        o.posH = float4(2.0, 2.0, 1.0, 1.0);
+        o.uv = float2(0.0, 0.0);
+        o.life = 0.0;
+        return o;
+    }
     static const float2 kUV[6] =
     {
         float2(0.0, 1.0),
@@ -60,8 +66,10 @@ VS_OUT main(uint vertexID : SV_VertexID)
 
     float3 worldPos = p.position.xyz;
 
-    float3 right = float3(view[0][0], view[0][1], view[0][2]);
-    float3 upv = float3(view[1][0], view[1][1], view[1][2]);
+    // Camera-facing billboard axes in world space come from VIEW matrix columns
+    // (for our mul(view, position) convention). Using rows makes quads skew/vanish.
+    float3 right = normalize(float3(view[0][0], view[1][0], view[2][0]));
+    float3 upv = normalize(float3(view[0][1], view[1][1], view[2][1]));
 
     float halfSize = particleSize * 0.5;
     float2 offset = kOffsets[cornerId] * halfSize;

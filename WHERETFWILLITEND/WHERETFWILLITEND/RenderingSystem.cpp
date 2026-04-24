@@ -129,7 +129,7 @@ void RenderingSystem::FillCbuffers(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR 
     if (emiter_ != nullptr) {
         XMStoreFloat4x4(&emiter_->GetParticleRenderCB()->GetData().view, XMMatrixLookAtLH(cam_pos, look_at, up));
         XMStoreFloat4x4(&emiter_->GetParticleRenderCB()->GetData().projection, XMMatrixPerspectiveFovLH(XM_PIDIV4, float(device_->width_) / float(device_->height_), 0.1f, 10000.0f));
-        emiter_->GetParticleRenderCB()->GetData().particleSize = 10.0f;
+        emiter_->GetParticleRenderCB()->GetData().particleSize = 50.0f;
         emiter_->GetParticleRenderCB()->Save_changes();
     }
 };
@@ -308,7 +308,7 @@ void RenderingSystem::ComputePass() {
     deadIn->SetCounterValue(static_cast<UINT>(simCB.deadInCount_), true);
     aliveOut->SetCounterValue(0, true);
     deadOut->SetCounterValue(0, true);
-    int workItems = max(simCB.aliveInCount_, simCB.emitCount_);
+    int workItems = max(max(simCB.aliveInCount_, simCB.deadInCount_), simCB.emitCount_);
     UINT groupCount = static_cast<UINT>((workItems + 127) / 128);
     if (groupCount > 0) {
         device_->cmd_->command_list_->Dispatch(groupCount, 1, 1);
@@ -338,7 +338,13 @@ void RenderingSystem::ParticlePass() {
     if (emiter_ == nullptr) {
         return;
     }
-    emiter_->GetParticleRenderCB()->GetData().aliveCount = static_cast<int>(emiter_->GetAliveIn()->GetCachedCounterValue());
+    // ComputePass swaps ping-pong buffers before we render.
+    // After that swap, AliveOut points to the previous frame's stable alive buffer
+    // (the one whose counter we read back at the beginning of ComputePass).
+    auto renderBuffer = emiter_->GetAliveOut();
+    const int renderAliveCount = emiter_->GetParticleSimCB()->GetData().aliveInCount_;
+
+    emiter_->GetParticleRenderCB()->GetData().aliveCount = max(0, renderAliveCount);
     emiter_->GetParticleRenderCB()->Save_changes();
     const UINT aliveCount = static_cast<UINT>(emiter_->GetParticleRenderCB()->GetData().aliveCount);
     if (aliveCount == 0) {
@@ -357,7 +363,7 @@ void RenderingSystem::ParticlePass() {
     //device_->cmd_->command_list_->OMSetRenderTargets(3, handles, TRUE, &dsvHandle);
 
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, emiter_->GetParticleRenderCB()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, emiter_->GetAliveIn()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, renderBuffer->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, emiter_->GetTexture()->GetResourse()->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, Sampler_handle_.gpu_);
 
