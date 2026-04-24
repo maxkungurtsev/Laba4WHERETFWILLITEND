@@ -8,12 +8,7 @@ InputDevice g_Input;
 std::shared_ptr<NewRenderer> g_Renderer;
 const int width = 800;
 const int height = 800;
-const int depth = 1000;
-int texture_width = 800;
-int texture_height = 800;
 //light stuff
-const float intensity = 0.1;
-XMFLOAT3 light_coords = {0.0, 10.0, 10.0};
 //camera stuff
 XMVECTOR cam_coords = {0.0, 10.0, 0.0, 1.0};
 XMVECTOR look_at = {0.0, 0.0, 0.0, 1.0};

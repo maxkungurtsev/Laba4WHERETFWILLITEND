@@ -35,6 +35,7 @@ private:
 	std::shared_ptr<StructBuffer<Particle>> dead_in_; // here existing particles
 	std::shared_ptr<StructBuffer<Particle>> dead_out_;// here dead ones
 	XMFLOAT4 position;
+	int emit_count_;
 
 public:
 	ParticleEmiter(std::string& texture_name, std::shared_ptr<Gdevice> device, XMFLOAT4 pos, float dt, float time, int max_particles, int emit_count);

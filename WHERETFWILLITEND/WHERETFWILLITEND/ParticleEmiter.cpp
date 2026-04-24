@@ -43,6 +43,7 @@ ParticleEmiter::ParticleEmiter(std::string& texture_name, std::shared_ptr<Gdevic
 	emiter_cb_->GetData().deadInCount_ = poolSize;
 	emiter_cb_->GetData().emiter_pos_ = pos;
 	emiter_cb_->GetData().emitCount_ = emit_count;
+	emit_count_ = emit_count;
 	emiter_cb_->Save_changes();
 	alive_in_->SaveChanges(false);
 	alive_out_->SaveChanges(false);
@@ -77,11 +78,6 @@ void ParticleEmiter::UpdateCbuffer(float time) {
 	ParticleSimCB& sim = emiter_cb_->GetData();
 	sim.dt_ = max(0.0f, time - sim.time_);
 	sim.time_ = time;
-	sim.emiter_pos_ = position;
-
-	const int maxParticles = static_cast<int>(alive_in_->GetData().size());
-	const int spawnCount = min(sim.emitCount_, sim.deadInCount_);
-	sim.aliveInCount_ = min(maxParticles, sim.aliveInCount_ + spawnCount);
-	sim.deadInCount_ = maxParticles - sim.aliveInCount_;
+	sim.emitCount_ = emit_count_;
 	emiter_cb_->Save_changes();
 };
