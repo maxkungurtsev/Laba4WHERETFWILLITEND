@@ -129,10 +129,8 @@ void RenderingSystem::FillCbuffers(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR 
     if (emiter_ != nullptr) {
         XMStoreFloat4x4(&emiter_->GetParticleRenderCB()->GetData().view, XMMatrixLookAtLH(cam_pos, look_at, up));
         XMStoreFloat4x4(&emiter_->GetParticleRenderCB()->GetData().projection, XMMatrixPerspectiveFovLH(XM_PIDIV4, float(device_->width_) / float(device_->height_), 0.1f, 10000.0f));
-        emiter_->GetParticleRenderCB()->GetData().particleSize = 25.0f;
-        emiter_->GetParticleRenderCB()->GetData().aliveCount = emiter_->GetParticleSimCB()->GetData().aliveInCount_;
+        emiter_->GetParticleRenderCB()->GetData().particleSize = 50.0f;
         emiter_->GetParticleRenderCB()->Save_changes();
-        emiter_->UpdateCbuffer(time);
     }
 };
 void RenderingSystem::ParseModelToCBuffer(std::shared_ptr<Model> mesh) {
@@ -319,7 +317,8 @@ void RenderingSystem::ParticlePass() {
     if (emiter_ == nullptr) {
         return;
     }
-
+    emiter_->GetParticleRenderCB()->GetData().aliveCount = emiter_->GetParticleSimCB()->GetData().aliveInCount_;
+    emiter_->GetParticleRenderCB()->Save_changes();
     const UINT aliveCount = static_cast<UINT>(emiter_->GetParticleRenderCB()->GetData().aliveCount);
     if (aliveCount == 0) {
         return;
@@ -337,7 +336,7 @@ void RenderingSystem::ParticlePass() {
     //device_->cmd_->command_list_->OMSetRenderTargets(3, handles, TRUE, &dsvHandle);
 
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, emiter_->GetParticleRenderCB()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, emiter_->GetAppend()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, emiter_->GetAliveIn()->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, emiter_->GetTexture()->GetResourse()->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, Sampler_handle_.gpu_);
 
@@ -540,7 +539,12 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
     }
     if (emiter_ != nullptr) {
         FillCbuffers(cam_pos, look_at, up, time);
+        //emiter_->UpdateCbuffer(time);
         ComputePass();
+        OutputDebugStringA((std::to_string(emiter_->GetAliveIn()->GetData().size()) + '\n').c_str());
+        OutputDebugStringA((std::to_string(emiter_->GetAliveOut()->GetData().size()) + '\n').c_str());
+        OutputDebugStringA((std::to_string(emiter_->GetDeadIn()->GetData().size()) + '\n').c_str());
+        OutputDebugStringA((std::to_string(emiter_->GetDeadOut()->GetData().size())+'\n').c_str());
         ParticlePass();
     }
 

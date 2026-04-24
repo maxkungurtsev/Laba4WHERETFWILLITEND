@@ -40,8 +40,6 @@ public:
 	ParticleEmiter(std::string& texture_name, std::shared_ptr<Gdevice> device, XMFLOAT4 pos, float dt, float time, int max_particles, int emit_count);
 	void SwapSimulationBuffers();
 	void UpdateCbuffer(float time);
-	std::shared_ptr<StructBuffer<Particle>> GetAppend() { return alive_in_; }
-	std::shared_ptr<StructBuffer<Particle>> GetConsume() { return dead_in_; }
 	std::shared_ptr<StructBuffer<Particle>> GetAliveIn() { return alive_in_; }
 	std::shared_ptr<StructBuffer<Particle>> GetAliveOut() { return alive_out_; }
 	std::shared_ptr<StructBuffer<Particle>> GetDeadIn() { return dead_in_; }
