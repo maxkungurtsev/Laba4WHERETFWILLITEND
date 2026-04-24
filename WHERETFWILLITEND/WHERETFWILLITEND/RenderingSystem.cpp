@@ -92,7 +92,9 @@ void RenderingSystem::CreateLightRootSign() {
 };
 
 void RenderingSystem::CreateComputePSO() {
-    compute_pso_ = std::make_shared<PSO>(device_, compute_root_signature_);
+    std::string type = "cs_5_0";
+    CompileShader(L"ParticleComputeShader.hlsl", p_compute_shader_, type);
+    compute_pso_ = std::make_shared<PSO>(device_, compute_root_signature_, p_compute_shader_);
 }
 
 void RenderingSystem::CreateParticlePSO() {
@@ -420,8 +422,12 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<st
     type = "ds_5_0";
     CompileShader(L"DomainShaderWater.hlsl", water_domain_shader_, type);
     CompileShader(L"DomainShader.hlsl", domain_shader_, type);
+    // particle pso, root
     CreateParticleRootSign();
     CreateParticlePSO();
+    //compute pso, root
+    CreateComputeRootSign();
+    CreateComputePSO();
     OutputDebugStringA("hull and domain shaders compiled\n");
     // formats of bullshit ima use as rtv// ¬ инициализации устройства (один раз):
     

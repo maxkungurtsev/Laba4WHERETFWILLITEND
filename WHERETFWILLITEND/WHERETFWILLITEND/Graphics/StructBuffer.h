@@ -57,7 +57,6 @@ public:
     {
         UINT64 bufferSize = static_cast<UINT64>(max_element_count_) * element_stride_;
         structb_data_.resize(max_element_count_);
-
         // =========================
         // 1. GPU buffer (DEFAULT heap)
         // =========================

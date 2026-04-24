@@ -1,46 +1,27 @@
 #include "PSO.h"
 #include <sstream>
-PSO::PSO(std::shared_ptr<Gdevice> device, std::shared_ptr<RootSignature> root_sign) {
+PSO::PSO(std::shared_ptr<Gdevice> device, std::shared_ptr<RootSignature> root_sign, ComPtr<ID3DBlob> compute_shader)
+{
     device_ = device;
-    D3D12_GRAPHICS_PIPELINE_STATE_DESC psoDesc = {};
-    ComPtr<ID3DBlob> errorBlob;
-    psoDesc.pRootSignature = root_sign->GetRootSign().Get();
-    // D E B U G  T I M E
-    OutputDebugStringA("Compute PSO:\n");
-    if (!root_sign->GetRootSign()) OutputDebugStringA("root_signature_ == null\n");
-    if (!vertex_shader_) OutputDebugStringA("vertex_shader_ == null\n");
-    if (!pixel_shader_) OutputDebugStringA("pixel_shader_ == null\n");
+
+    D3D12_COMPUTE_PIPELINE_STATE_DESC desc = {};
+    desc.pRootSignature = root_sign->GetRootSign().Get();
+    desc.CS.pShaderBytecode = compute_shader->GetBufferPointer();
+    desc.CS.BytecodeLength = compute_shader->GetBufferSize();
+
+    HRESULT hr = device_->GetDXDevice()->CreateComputePipelineState(
+        &desc,
+        IID_PPV_ARGS(&pipeline_state_));
+
+    if (FAILED(hr))
     {
-        std::ostringstream ss;
-        ss << "VS size: " << (vertex_shader_ ? vertex_shader_->GetBufferSize() : 0)
-            << ", PS size: " << (pixel_shader_ ? pixel_shader_->GetBufferSize() : 0) << "\n";
-        OutputDebugStringA(ss.str().c_str());
+        std::ostringstream oss;
+        oss << "CreateComputePipelineState failed. HRESULT = 0x"
+            << std::hex << hr << "\n";
+        OutputDebugStringA(oss.str().c_str());
+        throw std::runtime_error(oss.str());
     }
-    if (input_layout_.empty()) OutputDebugStringA("input_layout_ empty\n");
-    {
-        std::ostringstream s2;
-        s2 << "RTVFormat: " << psoDesc.RTVFormats[0] << " DSVFormat: " << psoDesc.DSVFormat << " SampleCount: " << psoDesc.SampleDesc.Count << "\n";
-        OutputDebugStringA(s2.str().c_str());
-    }
-    std::ostringstream oss;
-    oss << "Creating PSO with parameters:\n";
-    oss << "NumRenderTargets: " << psoDesc.NumRenderTargets << "\n";
-    oss << "RTVFormats[0]: " << psoDesc.RTVFormats[0] << "\n";
-    oss << "DSVFormat: " << psoDesc.DSVFormat << "\n";
-    oss << "SampleCount: " << psoDesc.SampleDesc.Count << "\n";
-    oss << "InputLayout.Elements: " << psoDesc.InputLayout.NumElements << "\n";
-    oss << "RootSignature: " << (psoDesc.pRootSignature ? "valid" : "nullptr") << "\n";
-    oss << "VS Size: " << psoDesc.VS.BytecodeLength << "\n";
-    oss << "PS Size: " << psoDesc.PS.BytecodeLength << "\n";
-    OutputDebugStringA(oss.str().c_str());
-    HRESULT hr = device_->GetDXDevice()->CreateGraphicsPipelineState(&psoDesc, IID_PPV_ARGS(&pipeline_state_));
-    if (FAILED(hr)) {
-        std::ostringstream oss2;
-        oss2 << "CreateGraphicsPipelineState failed. HRESULT = 0x" << std::hex << hr << "\n";
-        OutputDebugStringA(oss2.str().c_str());
-        throw std::runtime_error(oss2.str());
-    }
-};
+}
 
 
 PSO::PSO(std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout, ComPtr<ID3DBlob> vertex_shader, ComPtr<ID3DBlob> pixel_shader, std::shared_ptr<Gdevice> device, std::shared_ptr<RootSignature> root_sign, int rtv_amount, std::vector<DXGI_FORMAT> formats) {
