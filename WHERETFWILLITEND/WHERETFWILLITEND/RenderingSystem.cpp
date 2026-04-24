@@ -419,11 +419,14 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<st
     std::string texname = "jagertree.png";
     emiter_ = std::make_shared<ParticleEmiter>(texname, device_, emiterpos, 0.1f,0.0f, 10000, 10, 1);
     for (int i = 0; i < mesh_pathes.size(); i++){
-        std::shared_ptr<Model> mesh = std::make_shared<Model>(mesh_pathes[i], device_, true, false);
+        XMFLOAT3 pos = XMFLOAT3(0, 0, 0);
+        XMFLOAT3 rot = XMFLOAT3(0, 0, 0);
+        XMFLOAT3 scale = XMFLOAT3(1, 10, 1);
+        std::shared_ptr<Model> mesh = std::make_shared<Model>(mesh_pathes[i], device_, true, false,pos,rot,scale);
             meshes_.push_back(mesh);
         if (mesh->GetBillBoardable()) {
             OutputDebugStringA("model bilboardable\n");
-            mesh->SetBilboard(std::make_shared<Model>("sponza_bilboard.obj", device_, false, true));
+            mesh->SetBilboard(std::make_shared<Model>("sponza_bilboard.obj", device_, false, true, pos, rot, scale));
         }
 
     }
@@ -574,7 +577,26 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
             }
         }
         else {
-            FillCbuffers(cam_pos, look_at, up, time);
+            XMFLOAT3 pos = XMFLOAT3(mesh->GetPosition().x, mesh->GetPosition().y, mesh->GetPosition().z);
+            XMFLOAT3 rot = mesh->GetRotation();
+            XMFLOAT3 sca = mesh->GetScale();
+            XMMATRIX S = XMMatrixScaling(
+                sca.x,
+                sca.y,
+                sca.z);
+
+            XMMATRIX R = XMMatrixRotationRollPitchYaw(
+                rot.x,
+                rot.y,
+                rot.z);
+
+            XMMATRIX T = XMMatrixTranslation(
+                pos.x,
+                pos.y,
+                pos.z);
+
+            XMMATRIX world = S * R * T;
+            FillCbuffers(cam_pos, look_at, up, time, world);
         }
 
         // make frustum

@@ -90,9 +90,12 @@ void Model::CreateIndexBuffer() {
     index_buffer_view_.Format = DXGI_FORMAT_R32_UINT;
 }
 
-Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool billboardable, bool is_billboard)
+Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool billboardable, bool is_billboard, XMFLOAT3 pos, XMFLOAT3 rot, XMFLOAT3 scale)
 {
     name = filename;
+    position_ = XMFLOAT4(pos.x, pos.y, pos.z, 1);
+    rotation_ = rot;
+    scale_ = scale;
     device_ = device;
     billboardable_ = billboardable;
     is_bilboard_ = is_billboard;

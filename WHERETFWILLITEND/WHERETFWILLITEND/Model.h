@@ -35,13 +35,15 @@ struct SubMesh
 class Model
 {
 public:
-    Model(const std::string& model_filename, std::shared_ptr<Gdevice> device, bool billboardable, bool is_billboard);
+    Model(const std::string& model_filename, std::shared_ptr<Gdevice> device, bool billboardable, bool is_billboard, XMFLOAT3 pos, XMFLOAT3 rot, XMFLOAT3 scale);
     const std::vector<uint32_t>& Getindices() const { return indices; }
     const std::vector<Vertex>& GetVertices() const {return vertices_;}
     std::vector<MaterialData>& GetMaterials() {return materials_;}
     const std::vector<SubMesh>& GetSubMeshes() const {return submeshes_;}
     BoundingBox& GetBoundBox() { return mesh_box_; }
     XMFLOAT4& GetPosition() { return position_; }
+    XMFLOAT3& GetRotation() { return rotation_; }
+    XMFLOAT3& GetScale() { return scale_; }
     bool GetBillBoardable() { return billboardable_; }
     D3D12_VERTEX_BUFFER_VIEW GetVBV() { return vertex_buffer_view_; }
     D3D12_INDEX_BUFFER_VIEW GetIBV() { return index_buffer_view_; }
@@ -55,7 +57,9 @@ private:
     std::shared_ptr<Gdevice> device_;
     bool billboardable_ = false;
     bool is_bilboard_ = false;
-    XMFLOAT4 position_ = {0,0,0,1};
+    XMFLOAT4 position_ = { 0,0,0,1 };
+    XMFLOAT3 rotation_ = { 0,0,0 };
+    XMFLOAT3 scale_ = {1,1,1};
     TGAImage dummy_;
     UINT vertex_count_;
     std::string name;
