@@ -1,6 +1,6 @@
 #include "Lights.h"
 Lights::Lights(std::shared_ptr<Gdevice> device) {
-	lights_ =std::make_shared<StructBuffer<LightData>>(device, 200);
+	lights_ =std::make_shared<StructBuffer<LightData>>(device, 200, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
 	max_lights_ = std::make_shared<Cbuffer<XMFLOAT4>>(device);
 	max_lights_->GetData() = XMFLOAT4{0,0,0,0};
 }

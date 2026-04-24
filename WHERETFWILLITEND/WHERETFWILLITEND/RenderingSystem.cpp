@@ -273,16 +273,17 @@ void RenderingSystem::ComputePass() {
     auto deadIn = emiter_->GetDeadIn();
     auto deadOut = emiter_->GetDeadOut();
     D3D12_RESOURCE_BARRIER toUav[] = {
-        Transition(aliveIn->GetResourse()->GetResourse().Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
-        Transition(aliveOut->GetResourse()->GetResourse().Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
-        Transition(deadIn->GetResourse()->GetResourse().Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
-        Transition(deadOut->GetResourse()->GetResourse().Get(), D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
+        Transition(aliveIn->GetResourse()->GetResourse().Get(), aliveIn->GetBaseState(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
+        Transition(aliveOut->GetResourse()->GetResourse().Get(), aliveOut->GetBaseState(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
+        Transition(deadIn->GetResourse()->GetResourse().Get(), deadIn->GetBaseState(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS),
+        Transition(deadOut->GetResourse()->GetResourse().Get(), deadOut->GetBaseState(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS)
     };
     device_->cmd_->command_list_->ResourceBarrier(4, toUav);
 
     device_->cmd_->command_list_->SetPipelineState(compute_pso_->GetPSO().Get());
     device_->cmd_->command_list_->SetComputeRootSignature(compute_root_signature_->GetRootSign().Get());
 
+    OutputDebugStringA("first barrier passed!\n");
     device_->cmd_->command_list_->SetComputeRootDescriptorTable(0, emiter_->GetParticleSimCB()->GetHandle().gpu_);
     device_->cmd_->command_list_->SetComputeRootDescriptorTable(1, aliveIn->GetUAVHandle().gpu_);
     device_->cmd_->command_list_->SetComputeRootDescriptorTable(2, aliveOut->GetUAVHandle().gpu_);
@@ -304,10 +305,10 @@ void RenderingSystem::ComputePass() {
     device_->cmd_->command_list_->ResourceBarrier(4, uavBarrier);
 
     D3D12_RESOURCE_BARRIER toSrv[] = {
-        Transition(aliveIn->GetResourse()->GetResourse().Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
-        Transition(aliveOut->GetResourse()->GetResourse().Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
-        Transition(deadIn->GetResourse()->GetResourse().Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
-        Transition(deadOut->GetResourse()->GetResourse().Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+        Transition(aliveIn->GetResourse()->GetResourse().Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, aliveIn->GetBaseState()),
+        Transition(aliveOut->GetResourse()->GetResourse().Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, aliveOut->GetBaseState()),
+        Transition(deadIn->GetResourse()->GetResourse().Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, deadIn->GetBaseState()),
+        Transition(deadOut->GetResourse()->GetResourse().Get(), D3D12_RESOURCE_STATE_UNORDERED_ACCESS, deadOut->GetBaseState())
     };
     device_->cmd_->command_list_->ResourceBarrier(4, toSrv);
 

@@ -20,10 +20,11 @@ ParticleEmiter::ParticleEmiter(std::string& texture_name, std::shared_ptr<Gdevic
 	}
 	position = pos;
 	const int poolSize = max_particles / 2;
-	alive_in_ = std::make_shared<StructBuffer<Particle>>(device, poolSize);
-	alive_out_ = std::make_shared<StructBuffer<Particle>>(device, poolSize);
-	dead_in_ = std::make_shared<StructBuffer<Particle>>(device, poolSize);
-	dead_out_ = std::make_shared<StructBuffer<Particle>>(device, poolSize);
+	D3D12_RESOURCE_STATES state = static_cast<D3D12_RESOURCE_STATES>(D3D12_RESOURCE_STATE_NON_PIXEL_SHADER_RESOURCE | D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE);
+	alive_in_ = std::make_shared<StructBuffer<Particle>>(device, poolSize, state);
+	alive_out_ = std::make_shared<StructBuffer<Particle>>(device, poolSize, state);
+	dead_in_ = std::make_shared<StructBuffer<Particle>>(device, poolSize, state);
+	dead_out_ = std::make_shared<StructBuffer<Particle>>(device, poolSize, state);
 
 	for (int i = 0; i < poolSize; i++) {
 		alive_in_->GetData()[i].SetPos(position);

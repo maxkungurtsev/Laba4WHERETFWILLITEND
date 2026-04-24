@@ -14,6 +14,7 @@ private:
     ComPtr<ID3D12Resource> upload_;
     D3D12_SHADER_RESOURCE_VIEW_DESC srv_desc_ = {};
     D3D12_UNORDERED_ACCESS_VIEW_DESC  uav_desc_ = {};
+    D3D12_RESOURCE_STATES base_state_;
     Handle UAV_handle;
 public:	
     void SaveChanges(bool InRenderFrame) {
@@ -23,7 +24,7 @@ public:
         D3D12_RESOURCE_BARRIER barrier = {};
         barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
         barrier.Transition.pResource = structb_->GetResourse().Get();
-        barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+        barrier.Transition.StateBefore = base_state_;
         barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_COPY_DEST;
         barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
 
@@ -42,7 +43,7 @@ public:
         barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
         barrier.Transition.pResource = structb_->GetResourse().Get();
         barrier.Transition.StateBefore = D3D12_RESOURCE_STATE_COPY_DEST;
-        barrier.Transition.StateAfter = D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE;
+        barrier.Transition.StateAfter = base_state_;
         barrier.Transition.Subresource = D3D12_RESOURCE_BARRIER_ALL_SUBRESOURCES;
         if (!InRenderFrame) {
             structb_->GetDevice()->cmd_->command_list_->ResourceBarrier(1, &barrier);
@@ -51,8 +52,8 @@ public:
         }
 	};
 
-    StructBuffer(std::shared_ptr<Gdevice> device, UINT max_element_count)
-        : element_stride_(sizeof(T)), max_element_count_(max_element_count)
+    StructBuffer(std::shared_ptr<Gdevice> device, UINT max_element_count, D3D12_RESOURCE_STATES base_state)
+        : element_stride_(sizeof(T)), max_element_count_(max_element_count), base_state_(base_state)
     {
         UINT64 bufferSize = static_cast<UINT64>(max_element_count_) * element_stride_;
         structb_data_.resize(max_element_count_);
@@ -96,7 +97,7 @@ public:
             defaultHeap,
             name,
             device,
-            D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE
+            base_state_
         );
 
         // =========================
@@ -154,6 +155,7 @@ public:
 		return structb_->GetHandle();
 	};
 
+    D3D12_RESOURCE_STATES GetBaseState() { return base_state_; }
     Handle GetUAVHandle() {
         return UAV_handle;
     }
