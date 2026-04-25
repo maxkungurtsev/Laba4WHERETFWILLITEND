@@ -13,7 +13,7 @@
 #include <d3dcompiler.h>
 
 class RenderingSystem {
-	std::shared_ptr<ParticleEmiter> emiter_;
+	std::vector<std::shared_ptr<ParticleEmiter>> emiters_;
 	std::vector<DXGI_FORMAT> PSO_formats_ = { DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_B8G8R8A8_UNORM ,DXGI_FORMAT_R32_SINT };
 	std::shared_ptr<Gdevice> device_;
 	std::shared_ptr<RootSignature> geom_root_signature_;
@@ -65,8 +65,8 @@ public:
 	RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<std::string> mesh_pathes, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time);
 	void CompileShader(std::wstring path, ComPtr<ID3DBlob>& shader, std::string& type);
 	void GeomPass(std::shared_ptr<Model> mesh);
-	void ComputePass();
-	void ParticlePass();
+	void ComputePass(std::shared_ptr<ParticleEmiter> emiter);
+	void ParticlePass(std::shared_ptr<ParticleEmiter> emiter);
 	void ParseModelToCBuffer(std::shared_ptr<Model> mesh);
 	void LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle);
 	void RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up, D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle, bool shootlight, bool culling_enabled);
