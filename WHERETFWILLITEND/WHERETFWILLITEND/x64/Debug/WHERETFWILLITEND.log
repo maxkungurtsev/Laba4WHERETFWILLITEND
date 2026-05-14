@@ -1,28 +1,4 @@
-﻿  Cascade.cpp
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\Cascade.h(9,16): error C3646: view_mat: неизвестный спецификатор переопределения
-  (компиляция исходного файла "Graphics/Cascade.cpp")
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\Cascade.h(9,5): error C4430: отсутствует спецификатор типа - предполагается int. Примечание. C++ не поддерживает int по умолчанию
-  (компиляция исходного файла "Graphics/Cascade.cpp")
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\Cascade.h(10,16): error C3646: proj_mat: неизвестный спецификатор переопределения
-  (компиляция исходного файла "Graphics/Cascade.cpp")
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\Cascade.h(10,5): error C4430: отсутствует спецификатор типа - предполагается int. Примечание. C++ не поддерживает int по умолчанию
-  (компиляция исходного файла "Graphics/Cascade.cpp")
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\Cascade.h(11,16): error C3646: viewProj_mat: неизвестный спецификатор переопределения
-  (компиляция исходного файла "Graphics/Cascade.cpp")
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\Cascade.h(11,5): error C4430: отсутствует спецификатор типа - предполагается int. Примечание. C++ не поддерживает int по умолчанию
-  (компиляция исходного файла "Graphics/Cascade.cpp")
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\Cascade.h(18,16): error C3646: GetViewProj: неизвестный спецификатор переопределения
-  (компиляция исходного файла "Graphics/Cascade.cpp")
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\Cascade.h(18,27): error C2059: синтаксическая ошибка: (
-  (компиляция исходного файла "Graphics/Cascade.cpp")
-  
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\Cascade.h(18,30): error C2334: непредвиденные лексемы перед "{"; пропуск вероятного тела функции
-  (компиляция исходного файла "Graphics/Cascade.cpp")
-  
+﻿  ShadowMap.cpp
+  WHERETFWILLITEND.vcxproj -> C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\x64\Debug\WHERETFWILLITEND.exe
+  "pwsh.exe" не является внутренней или внешней
+  командой, исполняемой программой или пакетным файлом.

@@ -148,6 +148,7 @@
     <ClCompile Include="Particle.cpp" />
     <ClCompile Include="ParticleEmiter.cpp" />
     <ClCompile Include="RenderingSystem.cpp" />
+    <ClCompile Include="ShadowMap.cpp" />
     <ClCompile Include="tgaimage.cpp" />
     <ClCompile Include="Window.cpp" />
   </ItemGroup>
@@ -176,6 +177,7 @@
     <ClInclude Include="Particle.h" />
     <ClInclude Include="ParticleEmiter.h" />
     <ClInclude Include="RenderingSystem.h" />
+    <ClInclude Include="ShadowMap.h" />
     <ClInclude Include="tgaimage.h" />
     <ClInclude Include="Window.h" />
   </ItemGroup>

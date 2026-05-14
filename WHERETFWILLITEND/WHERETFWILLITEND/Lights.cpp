@@ -19,7 +19,7 @@ void Lights::AddSpotlight(XMFLOAT3 strength, float falloff_start, XMFLOAT4 direc
 	newlight.velocity = velocity;
 	newlight.spawn_time=spawn_time;
 	newlight.movement_direction = movement_direction;
-	//newlight.shad_map_index = shad_maps_.size();
+	newlight.shad_map_index = shad_maps_.size();
 	lights_->AddElement(newlight, max_lights_->GetData().x, in_render_frame);
 	max_lights_->GetData().x += 1;
 	max_lights_->Save_changes();
@@ -53,7 +53,7 @@ void Lights::AddDirlight(XMFLOAT3 strength, XMFLOAT4 direction, bool in_render_f
 	newlight.spot_power = 0;
 	newlight.type = 0;
 	newlight.velocity = 0;
-	//newlight.shad_map_index = shad_maps_.size();
+	newlight.shad_map_index = shad_maps_.size();
 	lights_->AddElement(newlight, max_lights_->GetData().x, in_render_frame);
 	max_lights_->GetData().x += 1;
 	max_lights_->Save_changes();
@@ -74,7 +74,7 @@ void Lights::AddPointlight(XMFLOAT3 strength, XMFLOAT4 position, float falloff_s
 	newlight.velocity = velocity;
 	newlight.spawn_time = spawn_time;
 	newlight.movement_direction = movement_direction;
-	//newlight.shad_map_index = shad_maps_.size();
+	newlight.shad_map_index = shad_maps_.size();
 	lights_->AddElement(newlight, max_lights_->GetData().x, in_render_frame);
 	max_lights_->GetData().x += 1;
 	max_lights_->Save_changes();
@@ -98,4 +98,19 @@ std::shared_ptr<StructBuffer<LightData>> Lights::GetBuffer() {
 }
 std::shared_ptr <Cbuffer<XMFLOAT4>> Lights::GetMaxLights() {
 	return max_lights_;
+}
+
+
+void Lights::UpdateShadowMatricies() {
+	for (int i = 0; i < lights_->GetData().size(); i++) {
+		// if point light update all 6
+		if (lights_->GetData()[i].type== 1){
+			for (int j = 0; j < 6; j++) {
+				shad_maps_[lights_->GetData()[i].shad_map_index][j]->UpdateMatricies();
+			}
+		}
+		else {
+			shad_maps_[lights_->GetData()[i].shad_map_index][0]->UpdateMatricies();
+		}
+	}
 }
