@@ -111,11 +111,18 @@ Handle GHeaps::CreateRTV_CPU(ComPtr<ID3D12Resource>& resourse) {
 	device_->CreateRenderTargetView(resourse.Get(), nullptr, cpu_rtv_handle);
 	return handle;
 }
+
+
+
 Handle GHeaps::CreateDSV_CPU(ComPtr<ID3D12Resource>& resourse) {
 	D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc{};
 	dsvDesc.Format = DXGI_FORMAT_D32_FLOAT;
 	dsvDesc.ViewDimension = D3D12_DSV_DIMENSION_TEXTURE2D;
 	dsvDesc.Flags = D3D12_DSV_FLAG_NONE;
+	return CreateDSV_CPU(dsvDesc, resourse);
+};
+
+Handle GHeaps::CreateDSV_CPU(D3D12_DEPTH_STENCIL_VIEW_DESC dsvDesc, ComPtr<ID3D12Resource>& resourse) {
 	Handle handle;
 	D3D12_CPU_DESCRIPTOR_HANDLE cpu_handle = dsv_heap_->GetCPUDescriptorHandleForHeapStart();
 	cpu_handle.ptr += (dsv_amount_ * dsv_descriptor_size_);

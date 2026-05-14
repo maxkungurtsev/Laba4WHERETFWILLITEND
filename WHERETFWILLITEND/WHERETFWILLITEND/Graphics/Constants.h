@@ -11,7 +11,8 @@ struct LightData {
 	int type; //0-dir, 1-point, 2-spot
 	float velocity= 0;
 	float spawn_time;
-	float pad[3];
+	float shad_map_index;
+	float pad[2];
 	XMFLOAT4 movement_direction;
 };
 struct shaderMaterialData {

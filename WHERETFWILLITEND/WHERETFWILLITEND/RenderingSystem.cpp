@@ -640,8 +640,8 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
                    D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
         Transition(g_buffer_->material_index_->texture_->GetResourse()->GetResourse().Get(),
                    D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
-            Transition(g_buffer_->depth_->z_buffer_->GetResourse()->GetResourse().Get(),
-                       D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+        Transition(g_buffer_->depth_->z_buffer_->GetResourse()->GetResourse().Get(),
+                   D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
     };
     device_->cmd_->command_list_.Get()->ResourceBarrier(4, toLight);
 

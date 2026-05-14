@@ -2,9 +2,13 @@
 #include "Graphics\StructBuffer.h"
 #include "Graphics\Constants.h"
 #include "Graphics\CBuffer.h"
+//#include "ShadowMap.h"
 class Lights {
 	std::shared_ptr<StructBuffer<LightData>> lights_;
 	std::shared_ptr <Cbuffer<XMFLOAT4>> max_lights_;
+	//std::vector<std::shared_ptr<ShadowMap>[6]> shad_maps_;
+	std::shared_ptr<Gdevice> device_;
+	
 public:
 	Lights(std::shared_ptr<Gdevice> device);
 	void AddSpotlight(XMFLOAT3 strength,float falloff_start, XMFLOAT4 direction, XMFLOAT4 position, float falloff_end, float spot_power, bool in_render_frame, float velocity, float spawn_time, XMFLOAT4 movement_direction);

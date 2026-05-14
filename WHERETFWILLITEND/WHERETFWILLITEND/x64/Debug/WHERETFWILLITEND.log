@@ -1,39 +1,28 @@
-﻿  main.cpp
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\main.cpp(17,25): warning C4305: инициализация: усечение из "double" в "float"
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\main.cpp(19,26): warning C4305: инициализация: усечение из "double" в "float"
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\main.cpp(49,61): warning C4305: аргумент: усечение из "double" в "float"
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\main.cpp(54,61): warning C4305: аргумент: усечение из "double" в "float"
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\main.cpp(59,56): warning C4305: аргумент: усечение из "double" в "float"
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\main.cpp(64,56): warning C4305: аргумент: усечение из "double" в "float"
-C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(476,82): warning C4244: аргумент: преобразование "_Ty" в "float", возможна потеря данных
-C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(476,82): warning C4244:         with
-C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(476,82): warning C4244:         [
-C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(476,82): warning C4244:             _Ty=int
-C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(476,82): warning C4244:         ]
-  (компиляция исходного файла "main.cpp")
-      C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(476,82):
-      контекст создания экземпляра шаблона (сначала самый старый)
-          C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\main.cpp(105,23):
-          выполняется компиляция ссылки на экземпляр шаблон функции "std::shared_ptr<NewRenderer> std::make_shared<NewRenderer,const int&,const int&,int,Window*,std::vector<std::string,std::allocator<StdStr>>&,DirectX::XMVECTOR&,DirectX::XMVECTOR&,DirectX::XMVECTOR&,int>(const int &,const int &,int &&,Window *&&,std::vector<std::string,std::allocator<StdStr>> &,DirectX::XMVECTOR &,DirectX::XMVECTOR &,DirectX::XMVECTOR &,int &&)"
-          with
-          [
-              StdStr=std::string
-          ]
-          C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\memory(2913,46):
-          выполняется компиляция ссылки на экземпляр шаблон функции "std::_Ref_count_obj2<NewRenderer>::_Ref_count_obj2<const int&,const int&,_Ty,Window*,std::vector<std::string,std::allocator<StdStr>>&,DirectX::XMVECTOR&,DirectX::XMVECTOR&,DirectX::XMVECTOR&,_Ty>(const int &,const int &,_Ty &&,Window *&&,std::vector<std::string,std::allocator<StdStr>> &,DirectX::XMVECTOR &,DirectX::XMVECTOR &,DirectX::XMVECTOR &,_Ty &&)"
-          with
-          [
-              _Ty=int,
-              StdStr=std::string
-          ]
-          C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\memory(2100,18):
-          выполняется компиляция ссылки на экземпляр шаблон функции "void std::_Construct_in_place<_Ty,const int&,const int&,int,Window*,std::vector<std::string,std::allocator<StdStr>>&,DirectX::XMVECTOR&,DirectX::XMVECTOR&,DirectX::XMVECTOR&,int>(_Ty &,const int &,const int &,int &&,Window *&&,std::vector<std::string,std::allocator<StdStr>> &,DirectX::XMVECTOR &,DirectX::XMVECTOR &,DirectX::XMVECTOR &,int &&) noexcept(false)"
-          with
-          [
-              _Ty=NewRenderer,
-              StdStr=std::string
-          ]
+﻿  Cascade.cpp
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\Cascade.h(9,16): error C3646: view_mat: неизвестный спецификатор переопределения
+  (компиляция исходного файла "Graphics/Cascade.cpp")
   
-  WHERETFWILLITEND.vcxproj -> C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\x64\Debug\WHERETFWILLITEND.exe
-  "pwsh.exe" не является внутренней или внешней
-  командой, исполняемой программой или пакетным файлом.
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\Cascade.h(9,5): error C4430: отсутствует спецификатор типа - предполагается int. Примечание. C++ не поддерживает int по умолчанию
+  (компиляция исходного файла "Graphics/Cascade.cpp")
+  
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\Cascade.h(10,16): error C3646: proj_mat: неизвестный спецификатор переопределения
+  (компиляция исходного файла "Graphics/Cascade.cpp")
+  
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\Cascade.h(10,5): error C4430: отсутствует спецификатор типа - предполагается int. Примечание. C++ не поддерживает int по умолчанию
+  (компиляция исходного файла "Graphics/Cascade.cpp")
+  
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\Cascade.h(11,16): error C3646: viewProj_mat: неизвестный спецификатор переопределения
+  (компиляция исходного файла "Graphics/Cascade.cpp")
+  
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\Cascade.h(11,5): error C4430: отсутствует спецификатор типа - предполагается int. Примечание. C++ не поддерживает int по умолчанию
+  (компиляция исходного файла "Graphics/Cascade.cpp")
+  
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\Cascade.h(18,16): error C3646: GetViewProj: неизвестный спецификатор переопределения
+  (компиляция исходного файла "Graphics/Cascade.cpp")
+  
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\Cascade.h(18,27): error C2059: синтаксическая ошибка: (
+  (компиляция исходного файла "Graphics/Cascade.cpp")
+  
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\Cascade.h(18,30): error C2334: непредвиденные лексемы перед "{"; пропуск вероятного тела функции
+  (компиляция исходного файла "Graphics/Cascade.cpp")
+  

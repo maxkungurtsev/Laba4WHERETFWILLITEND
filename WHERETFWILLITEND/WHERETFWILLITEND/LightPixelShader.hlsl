@@ -15,7 +15,8 @@ struct LightData
     int type;
     float velocity;
     float spawn_time;
-    float pad[3];
+    float shad_map_index;
+    float pad[2];
     float4 movement_direction;
 };
 
