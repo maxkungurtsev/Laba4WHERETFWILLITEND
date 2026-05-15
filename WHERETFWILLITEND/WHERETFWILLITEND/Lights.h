@@ -3,11 +3,12 @@
 #include "Graphics\Constants.h"
 #include "Graphics\CBuffer.h"
 #include "ShadowMap.h"
+#include <array>
 //#include "ShadowMap.h"
 class Lights {
 	std::shared_ptr<StructBuffer<LightData>> lights_;
 	std::shared_ptr <Cbuffer<XMFLOAT4>> max_lights_;
-	std::vector<std::shared_ptr<ShadowMap>[6]> shad_maps_;
+	std::vector<std::array<std::shared_ptr<ShadowMap>, 6>> shad_maps_;
 	std::shared_ptr<Gdevice> device_;
 	
 public:
@@ -17,7 +18,8 @@ public:
 	void AddAmbientlight(XMFLOAT3 strength, bool in_render_frame);
 	void AddDirlight(XMFLOAT3 strength, XMFLOAT4 direction, bool in_render_frame);
 	void AddPointlight(XMFLOAT3 strength, XMFLOAT4 position, float falloff_start, float falloff_end, bool in_render_frame, float velocity, float spawn_time, XMFLOAT4 movement_direction);
+	std::array<std::shared_ptr<ShadowMap>, 6>& GetShadowMap(int ind);
 	std::shared_ptr<StructBuffer<LightData>> GetBuffer();
 	std::shared_ptr <Cbuffer<XMFLOAT4>> GetMaxLights();
-	void UpdateShadowMatricies();
+	void UpdateShadowMatricies(XMVECTOR camera_target, XMVECTOR camera_pos, XMVECTOR camera_up_, float fov_y);
 };

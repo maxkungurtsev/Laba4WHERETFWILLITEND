@@ -9,13 +9,24 @@ private:
     XMFLOAT4X4 view_mat;
     XMFLOAT4X4 proj_mat;
     XMFLOAT4X4 viewProj_mat;
-    float splitDepth;
+    float split_depth_ = 0.0f;
+    float prev_split_depth_=0.0f;
     UINT width_ = 0;
     UINT height_ = 0;
-    std::shared_ptr<Zbuffer> buffer_;  
+    float split_lambda_ = 0.75f;
+    std::shared_ptr<Zbuffer> buffer_;
+    XMVECTOR light_pos_;
+    XMVECTOR light_target_;
+    UINT cascade_index_;
+    UINT cascade_count_;
+    float camera_near_ = 0.1f;
+    float camera_far_ = 10000.0f;
+    float aspect_ratio_;
 public:
-    Cascade(UINT width, UINT height, std::shared_ptr<Gdevice> device, XMVECTOR light_pos, XMVECTOR target);
+    Cascade(UINT width, UINT height, std::shared_ptr<Gdevice> device, XMVECTOR light_pos,XMVECTOR target,UINT cascade_index,UINT cascade_count,
+        float aspect_ratio, float split_lambda);
     XMFLOAT4X4& GetViewProj() { return viewProj_mat; }
     std::shared_ptr<Zbuffer> GetZbuffer() { return buffer_; }
-    void UpdateMatrix();
+    void UpdateMatrix(XMVECTOR camera_target, XMVECTOR camera_pos, XMVECTOR camera_up_, float fov_y);
+    float CalculateSplitDepth(UINT split_index);
 };

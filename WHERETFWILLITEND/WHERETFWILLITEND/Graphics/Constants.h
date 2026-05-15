@@ -38,3 +38,8 @@ struct PassConstants {
 	int current_mat;
 	float pad2[2];
 };
+
+struct ShadowConstants {
+	XMFLOAT4X4 viewProj_mat;
+
+};

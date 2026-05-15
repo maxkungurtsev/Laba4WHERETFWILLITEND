@@ -7,10 +7,11 @@ private:
 	UINT cascade_count_ = 4;
 	void CheckCascadeIndex(UINT cascade_index) const;
 public:
-	ShadowMap(UINT width, UINT height, UINT cascade_count, std::shared_ptr<Gdevice> device, XMVECTOR light_pos, XMVECTOR target);
+	ShadowMap(UINT width, UINT height, UINT cascade_count, std::shared_ptr<Gdevice> device, XMVECTOR light_pos, 
+		XMVECTOR target, float aspect_ratio, float split_lambda);
 	std::shared_ptr<Cascade> GetCascade(UINT cascade_index) const;
 	Handle GetSRVHandle(UINT cascade_index) const;
 	Handle GetDSVHandle(UINT cascade_index) const;
 	UINT GetCascadeCount() const;
-	void UpdateMatricies();
+	void UpdateMatricies(XMVECTOR camera_target, XMVECTOR camera_pos, XMVECTOR camera_up_, float fov_y);
 };

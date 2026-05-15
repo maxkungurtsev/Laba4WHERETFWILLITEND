@@ -108,6 +108,62 @@ void RenderingSystem::CreateParticlePSO() {
 }
 
 
+void RenderingSystem::CreateShadowRootSign() {
+    if (shadow_root_signature_ == nullptr) {
+        shadow_root_signature_ = std::make_shared<RootSignature>();
+    }
+    //add params through
+    //shadow_root_signature_->AddParameter(Type::cbv/srv/uav/sampler, 1, D3D12_SHADER_VISIBILITY_ALL);
+    geom_root_signature_->CreateRootSignature(device_);
+};
+void RenderingSystem::CreateShadowPSO() {
+    std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout = {};
+    std::string type = "vs_5_0";
+    //CompileShader(L"ShadowVertexShader.hlsl", shadow_vertex_shader_, type);
+    type = "ps_5_0";
+    //CompileShader(L"ShadowPixelShader.hlsl", shadow_pixel_shader_, type);
+    //shadow_pso_ = std::make_shared<PSO>(input_layout, shadow_vertex_shader_, shadow_pixel_shader_, device_, shadow_root_signature_, 3, PSO_formats_);
+}
+void RenderingSystem::InitGeomPass() {
+    CreateGeomRootSign();
+    OutputDebugStringA("geom root sign made\n");
+    CreateInputLayout();
+    std::string type = "vs_5_0";
+    CompileShader(L"GeomVertexShader.hlsl", geom_vertex_shader_, type);
+    CompileShader(L"GeomVertexShader_anim_.hlsl", geom_vertex_shader_anim_, type);
+    type = "ps_5_0";
+    CompileShader(L"GeomPixelShader.hlsl", geom_pixel_shader_, type);
+    OutputDebugStringA("geom shaders compiled\n");
+    geom_pso_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, geom_pixel_shader_, device_, geom_root_signature_, 3, PSO_formats_);
+    OutputDebugStringA("geom pso 1 made\n");
+    geom_pso_anim_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_anim_, geom_pixel_shader_, device_, geom_root_signature_, 3, PSO_formats_);
+    OutputDebugStringA("geom pso 2 made\n");
+
+
+    //tesselation
+    type = "hs_5_0";
+    CompileShader(L"HullShader.hlsl", hull_shader_, type);
+    type = "ds_5_0";
+    CompileShader(L"DomainShaderWater.hlsl", water_domain_shader_, type);
+    CompileShader(L"DomainShader.hlsl", domain_shader_, type);
+    geom_pso_tes_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, hull_shader_, domain_shader_, geom_pixel_shader_, device_, geom_root_signature_, 3, PSO_formats_);
+    geom_pso_water_tes_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, hull_shader_, water_domain_shader_, geom_pixel_shader_, device_, geom_root_signature_, 3, PSO_formats_);
+    OutputDebugStringA("geom pso with tesselation made\n");
+}
+
+
+void RenderingSystem::InitLightPass() {
+    CreateLightRootSign();
+    OutputDebugStringA("light root sign made\n");
+    std::string type = "vs_5_0";
+    CompileShader(L"LightVertexShader.hlsl", light_vertex_shader_, type);
+    type = "ps_5_0";
+    CompileShader(L"LightPixelShader.hlsl", light_pixel_shader_, type);
+    std::vector<DXGI_FORMAT> format = { DXGI_FORMAT_R8G8B8A8_UNORM };
+    std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout;
+    light_pso_ = std::make_shared<PSO>(input_layout, light_vertex_shader_, light_pixel_shader_, device_, light_root_signature_, 1, format);
+
+}
 ///  C BUFFER
 void RenderingSystem::FillCbuffers(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time, XMMATRIX world) {
     //identity
@@ -266,6 +322,10 @@ void RenderingSystem::GeomPass(std::shared_ptr<Model> mesh) {
     }
 }
 
+void RenderingSystem::ShadowPass(XMVECTOR camera_pos, XMVECTOR camera_target, XMVECTOR camera_up_, float fov_y) {
+
+    light_buffer_->UpdateShadowMatricies(camera_target, camera_pos, camera_up_, fov_y);
+}
 
 void RenderingSystem::ComputePass(std::shared_ptr<ParticleEmiter> emiter) {
     emiter->UpdateCbuffer(cbuffer_->GetData().time);
@@ -392,6 +452,7 @@ void RenderingSystem::ParticlePass(std::shared_ptr<ParticleEmiter> emiter) {
     device_->cmd_->command_list_->DrawInstanced(aliveCount * 6, 1, 0, 0);
 }
 
+
 void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle) {
     // set pso
     device_->cmd_->command_list_->SetPipelineState(light_pso_->GetPSO().Get());
@@ -445,65 +506,28 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<st
     OutputDebugStringA("g buffer created\n");
     Sampler_handle_ = device_->heaps_->MakeSampler();
     OutputDebugStringA("sampler made\n");
-    // make root signs
-    CreateGeomRootSign();
-    OutputDebugStringA("geom root sign made\n");
-    CreateLightRootSign();
-    OutputDebugStringA("light root sign made\n");
-    CreateInputLayout();
-    cbuffer_ = std::make_shared<Cbuffer<PassConstants>>(device_);
-    FillCbuffers(cam_pos, look_at, up, time);
-    // let there be light
-    light_buffer_ = std::make_shared<Lights>(device_);
-    light_buffer_->AddAmbientlight({ 0.6,0.6,0.6 }, false);
-    OutputDebugStringA((std::to_string(light_buffer_->GetBuffer()->GetData()[0].type)+'\n').c_str());
-
-    std::string type = "vs_5_0";
-    CompileShader(L"GeomVertexShader.hlsl", geom_vertex_shader_, type);
-    CompileShader(L"GeomVertexShader_anim_.hlsl", geom_vertex_shader_anim_, type);
-    type = "ps_5_0";
-    CompileShader(L"GeomPixelShader.hlsl", geom_pixel_shader_, type);
-    OutputDebugStringA("geom shaders compiled\n");
-
-    type = "vs_5_0";
-    CompileShader(L"LightVertexShader.hlsl", light_vertex_shader_, type);
-    type = "ps_5_0";
-    CompileShader(L"LightPixelShader.hlsl", light_pixel_shader_, type);
-    OutputDebugStringA("light shaders compiled\n");
-    type = "hs_5_0";
-    CompileShader(L"HullShader.hlsl", hull_shader_, type);
-    type = "ds_5_0";
-    CompileShader(L"DomainShaderWater.hlsl", water_domain_shader_, type);
-    CompileShader(L"DomainShader.hlsl", domain_shader_, type);
+    // make psos
+    InitGeomPass();
+    InitLightPass();
     // particle pso, root
     CreateParticleRootSign();
     CreateParticlePSO();
     //compute pso, root
     CreateComputeRootSign();
     CreateComputePSO();
-    OutputDebugStringA("hull and domain shaders compiled\n");
-    // formats of bullshit ima use as rtv// ¬ инициализации устройства (один раз):
+    //shadow 
+    CreateShadowRootSign();
+    CreateShadowPSO();
+    // c buffer
+    cbuffer_ = std::make_shared<Cbuffer<PassConstants>>(device_);
+    FillCbuffers(cam_pos, look_at, up, time);
+    // let there be light
+    light_buffer_ = std::make_shared<Lights>(device_);
+    light_buffer_->AddAmbientlight({ 0.6,0.6,0.6 }, false);
+    light_buffer_->AddDirlight({ 0.6,0.6,0.6 }, { 0.6,-1.0,0.0, 0.0 }, false);
+    OutputDebugStringA((std::to_string(light_buffer_->GetBuffer()->GetData()[0].type)+'\n').c_str());
+
     
-    geom_pso_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, geom_pixel_shader_, device_, geom_root_signature_, 3, PSO_formats_);
-    OutputDebugStringA("geom pso 1 made\n");
-
-
-    geom_pso_tes_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, hull_shader_, domain_shader_, geom_pixel_shader_, device_, geom_root_signature_, 3, PSO_formats_);
-    geom_pso_water_tes_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, hull_shader_, water_domain_shader_, geom_pixel_shader_, device_, geom_root_signature_, 3, PSO_formats_);
-    OutputDebugStringA("geom pso with tesselation made\n");
-
-
-    geom_pso_anim_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_anim_, geom_pixel_shader_, device_, geom_root_signature_, 3, PSO_formats_);
-    OutputDebugStringA("geom pso 2 made\n");
-    
-
-
-    /// light pass
-    std::vector<DXGI_FORMAT> format = { DXGI_FORMAT_R8G8B8A8_UNORM };
-    std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout;
-    light_pso_ = std::make_shared<PSO>(input_layout, light_vertex_shader_, light_pixel_shader_, device_, light_root_signature_, 1, format);
-    OutputDebugStringA("light pso made\n");
-
 
 }
 void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up, D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle, bool shootlight, bool culling_enabled) {
@@ -527,7 +551,7 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
     device_->cmd_->command_list_->SetDescriptorHeaps(_countof(heaps), heaps);
 
     if (first_frame_) {
-        D3D12_RESOURCE_BARRIER toRenderframe[] =
+        std::vector<D3D12_RESOURCE_BARRIER> toRenderframe =
         {
             Transition(g_buffer_->albedo_->texture_->GetResourse()->GetResourse().Get(),
                        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET),
@@ -536,11 +560,12 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
             Transition(g_buffer_->material_index_->texture_->GetResourse()->GetResourse().Get(),
                        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET)
         };
-        device_->cmd_->command_list_.Get()->ResourceBarrier(3, toRenderframe);
+
+        device_->cmd_->command_list_.Get()->ResourceBarrier(toRenderframe.size(), toRenderframe.data());
         first_frame_ = false;
     }
     else {
-        D3D12_RESOURCE_BARRIER toGeom[] =
+        std::vector <D3D12_RESOURCE_BARRIER> toGeom=
         {
             Transition(g_buffer_->albedo_->texture_->GetResourse()->GetResourse().Get(),
                        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET),
@@ -551,7 +576,28 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
             Transition(g_buffer_->depth_->z_buffer_->GetResourse()->GetResourse().Get(),
                        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE)
         };
-        device_->cmd_->command_list_.Get()->ResourceBarrier(4, toGeom);
+        // adding all shad maps into transition
+        
+        for (int i = 0; i < light_buffer_->GetMaxLights()->GetData().x; i++) {
+            int ind=light_buffer_->GetBuffer()->GetData()[i].shad_map_index;
+            if (light_buffer_->GetBuffer()->GetData()[i].type != 3) {
+                for (int j=0; j<4;j++){
+                    OutputDebugStringA((std::to_string(ind) + " " + std::to_string(j) + " " + std::to_string(j)).c_str());
+                    toGeom.push_back(Transition(light_buffer_->GetShadowMap(ind)[0]->GetCascade(j)->GetZbuffer()->z_buffer_->GetResourse()->GetResourse().Get(),
+                    D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE));
+                }
+                if (light_buffer_->GetBuffer()->GetData()[i].type == 1) {
+                    for (int k = 1; k < 6; k++) {
+                        for (int j = 0; j < 4; j++) {
+                            OutputDebugStringA((std::to_string(ind) + " " + std::to_string(j) + " " + std::to_string(k)).c_str());
+                            toGeom.push_back(Transition(light_buffer_->GetShadowMap(ind)[k]->GetCascade(j)->GetZbuffer()->z_buffer_->GetResourse()->GetResourse().Get(),
+                                D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE));
+                        }
+                    }
+                }
+            }
+        }
+        device_->cmd_->command_list_.Get()->ResourceBarrier(toGeom.size(), toGeom.data());
     }
     }
 
@@ -631,19 +677,42 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
         }
     }
 
-
-    D3D12_RESOURCE_BARRIER toLight[] =
     {
-        Transition(g_buffer_->albedo_->texture_->GetResourse()->GetResourse().Get(),
-                   D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
-        Transition(g_buffer_->normal_->texture_->GetResourse()->GetResourse().Get(),
-                   D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
-        Transition(g_buffer_->material_index_->texture_->GetResourse()->GetResourse().Get(),
-                   D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
-        Transition(g_buffer_->depth_->z_buffer_->GetResourse()->GetResourse().Get(),
-                   D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
-    };
-    device_->cmd_->command_list_.Get()->ResourceBarrier(4, toLight);
+        std::vector<D3D12_RESOURCE_BARRIER> toLight =
+        {
+            Transition(g_buffer_->albedo_->texture_->GetResourse()->GetResourse().Get(),
+                       D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
+            Transition(g_buffer_->normal_->texture_->GetResourse()->GetResourse().Get(),
+                       D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
+            Transition(g_buffer_->material_index_->texture_->GetResourse()->GetResourse().Get(),
+                       D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
+            Transition(g_buffer_->depth_->z_buffer_->GetResourse()->GetResourse().Get(),
+                       D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+        };
+        /*
+        for (int i = 0; i < light_buffer_->GetMaxLights()->GetData().x; i++) {
+
+            if (light_buffer_->GetBuffer()->GetData()[i].type != 3) {
+                for (int j = 0; j < 4; j++) {
+                    toLight.push_back(Transition(light_buffer_->GetShadowMap(i)[0]->GetCascade(j)->GetZbuffer()->z_buffer_->GetResourse()->GetResourse().Get(),
+                        D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+                }
+                if (light_buffer_->GetBuffer()->GetData()[i].type == 1) {
+                    for (int k = 1; k < 6; k++) {
+                        for (int j = 0; j < 4; j++) {
+                            toLight.push_back(Transition(light_buffer_->GetShadowMap(i)[k]->GetCascade(j)->GetZbuffer()->z_buffer_->GetResourse()->GetResourse().Get(),
+                                D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+                        }
+                    }
+                }
+            }
+        }*/
+        device_->cmd_->command_list_.Get()->ResourceBarrier(toLight.size(), toLight.data());
+    }
+
+    float fov_y;
+    fov_y = 2.0f * atan(1/(cbuffer_->GetData().projection._22));
+    //ShadowPass(cam_pos, look_at, up, fov_y);
 
     LightPass(clearColor, rtvHandle);
 
