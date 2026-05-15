@@ -8,9 +8,10 @@
 class Lights {
 	std::shared_ptr<StructBuffer<LightData>> lights_;
 	std::shared_ptr <Cbuffer<XMFLOAT4>> max_lights_;
-	std::vector<std::array<std::shared_ptr<ShadowMap>, 6>> shad_maps_;
+	std::shared_ptr <Cbuffer<XMFLOAT4X4>> current_viewProj;
+	std::shared_ptr<ShadowMap> casc_shad_map_;
 	std::shared_ptr<Gdevice> device_;
-	
+	std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> casc_shad_map_handles;
 public:
 	Lights(std::shared_ptr<Gdevice> device);
 	void AddSpotlight(XMFLOAT3 strength,float falloff_start, XMFLOAT4 direction, XMFLOAT4 position, float falloff_end, float spot_power, bool in_render_frame, float velocity, float spawn_time, XMFLOAT4 movement_direction);
@@ -18,8 +19,12 @@ public:
 	void AddAmbientlight(XMFLOAT3 strength, bool in_render_frame);
 	void AddDirlight(XMFLOAT3 strength, XMFLOAT4 direction, bool in_render_frame);
 	void AddPointlight(XMFLOAT3 strength, XMFLOAT4 position, float falloff_start, float falloff_end, bool in_render_frame, float velocity, float spawn_time, XMFLOAT4 movement_direction);
-	std::array<std::shared_ptr<ShadowMap>, 6>& GetShadowMap(int ind);
+	std::shared_ptr<ShadowMap> GetShadowMap() { return casc_shad_map_; }
+	std::vector<D3D12_GPU_DESCRIPTOR_HANDLE>& GetShadowMapHandles() { return casc_shad_map_handles; }
 	std::shared_ptr<StructBuffer<LightData>> GetBuffer();
 	std::shared_ptr <Cbuffer<XMFLOAT4>> GetMaxLights();
+	std::shared_ptr <Cbuffer<XMFLOAT4X4>> GetViewProj() { return current_viewProj; }
+
+	void SetViewProj(XMFLOAT4X4 new_view_proj);
 	void UpdateShadowMatricies(XMVECTOR camera_target, XMVECTOR camera_pos, XMVECTOR camera_up_, float fov_y);
 };

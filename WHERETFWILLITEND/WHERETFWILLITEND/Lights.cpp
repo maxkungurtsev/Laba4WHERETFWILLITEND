@@ -19,17 +19,9 @@ void Lights::AddSpotlight(XMFLOAT3 strength, float falloff_start, XMFLOAT4 direc
 	newlight.velocity = velocity;
 	newlight.spawn_time=spawn_time;
 	newlight.movement_direction = movement_direction;
-	newlight.shad_map_index = shad_maps_.size();
 	lights_->AddElement(newlight, max_lights_->GetData().x, in_render_frame);
 	max_lights_->GetData().x += 1;
 	max_lights_->Save_changes();
-	// shad map init
-	std::array<std::shared_ptr<ShadowMap>, 6> sm;
-	XMVECTOR pos = XMLoadFloat4(&position); 
-	XMVECTOR dir = XMLoadFloat4(&direction);
-	XMVECTOR target = pos + dir;
-	sm[0] = std::make_shared<ShadowMap>(1024, 1024, 4, device_, pos, target, 1.0f, 0.75f);
-	shad_maps_.push_back(sm);
 };
 void Lights::AddAmbientlight(XMFLOAT3 strength, bool in_render_frame) {
 	LightData newlight;
@@ -56,16 +48,19 @@ void Lights::AddDirlight(XMFLOAT3 strength, XMFLOAT4 direction, bool in_render_f
 	newlight.spot_power = 0;
 	newlight.type = 0;
 	newlight.velocity = 0;
-	newlight.shad_map_index = shad_maps_.size();
 	lights_->AddElement(newlight, max_lights_->GetData().x, in_render_frame);
 	max_lights_->GetData().x += 1;
 	max_lights_->Save_changes();
     // shad map init
-	std::array<std::shared_ptr<ShadowMap>, 6> sm;
+	std::shared_ptr<ShadowMap> sm;
 	XMVECTOR dir = XMLoadFloat4(&direction);
-	XMVECTOR pos = -dir*500.0f;
-	sm[0] = std::make_shared<ShadowMap>(1024, 1024, 4, device_, pos, XMVectorSet(0, 0, 0, 1), 1.0f, 0.75f);
-	shad_maps_.push_back(sm);
+	XMVECTOR pos = -dir*5000.0f;
+	sm = std::make_shared<ShadowMap>(1024, 1024, 4, device_, pos, XMVectorSet(0, 0, 0, 1), 1.0f, 0.75f);
+	casc_shad_map_=sm;
+	casc_shad_map_handles.push_back(casc_shad_map_->GetCascade(0)->GetZbuffer()->handle_.gpu_);
+	casc_shad_map_handles.push_back(casc_shad_map_->GetCascade(1)->GetZbuffer()->handle_.gpu_);
+	casc_shad_map_handles.push_back(casc_shad_map_->GetCascade(2)->GetZbuffer()->handle_.gpu_);
+	casc_shad_map_handles.push_back(casc_shad_map_->GetCascade(3)->GetZbuffer()->handle_.gpu_);
 }
 void Lights::AddPointlight(XMFLOAT3 strength, XMFLOAT4 position, float falloff_start, float falloff_end, bool in_render_frame, float velocity, float spawn_time, XMFLOAT4 movement_direction) {
 	LightData newlight;
@@ -79,26 +74,9 @@ void Lights::AddPointlight(XMFLOAT3 strength, XMFLOAT4 position, float falloff_s
 	newlight.velocity = velocity;
 	newlight.spawn_time = spawn_time;
 	newlight.movement_direction = movement_direction;
-	newlight.shad_map_index = shad_maps_.size();
 	lights_->AddElement(newlight, max_lights_->GetData().x, in_render_frame);
 	max_lights_->GetData().x += 1;
 	max_lights_->Save_changes();
-	// shad map init
-	std::array<std::shared_ptr<ShadowMap>, 6> sm;
-	XMVECTOR pos = XMLoadFloat4(&position);
-	XMVECTOR target = pos + XMVectorSet(0, 1, 0, 0);
-	sm[0] = std::make_shared<ShadowMap>(1024, 1024, 4, device_, pos, target, 1.0f, 0.75f);
-	target = pos + XMVectorSet(0, -1, 0, 0);
-	sm[1] = std::make_shared<ShadowMap>(1024, 1024, 4, device_, pos, target, 1.0f, 0.75f);
-	target = pos + XMVectorSet(1, 0, 0, 0);
-	sm[2] = std::make_shared<ShadowMap>(1024, 1024, 4, device_, pos, target, 1.0f, 0.75f);
-	target = pos + XMVectorSet(-1, 0, 0, 0);
-	sm[3] = std::make_shared<ShadowMap>(1024, 1024, 4, device_, pos, target, 1.0f, 0.75f);
-	target = pos + XMVectorSet( 0, 0, 1, 0);
-	sm[4] = std::make_shared<ShadowMap>(1024, 1024, 4, device_, pos, target, 1.0f, 0.75f);
-	target = pos + XMVectorSet(0, 0, -1, 0);
-	sm[5] = std::make_shared<ShadowMap>(1024, 1024, 4, device_, pos, target, 1.0f, 0.75f);
-	shad_maps_.push_back(sm);
 }
 
 void Lights::RemoveLastLight(bool in_render_frame) {
@@ -114,25 +92,15 @@ std::shared_ptr <Cbuffer<XMFLOAT4>> Lights::GetMaxLights() {
 }
 
 
-std::array<std::shared_ptr<ShadowMap>, 6>& Lights::GetShadowMap(int ind) {
-	if (ind < shad_maps_.size()) {
-		return shad_maps_[ind];
-	}
-	else {
-		throw std::runtime_error("ind of shadow map out of range");
-	}
-}
+void Lights::SetViewProj(XMFLOAT4X4 new_view_proj) {
+	current_viewProj->GetData() = new_view_proj;
+	current_viewProj->Save_changes();
+};
 
 void Lights::UpdateShadowMatricies(XMVECTOR camera_target, XMVECTOR camera_pos, XMVECTOR camera_up_, float fov_y) {
 	for (int i = 0; i < max_lights_->GetData().x; i++) {
-		// if point light update all 6
-		if (lights_->GetData()[i].type != 3) {
-			shad_maps_[lights_->GetData()[i].shad_map_index][0]->UpdateMatricies(camera_target, camera_pos, camera_up_, fov_y);
-			if (lights_->GetData()[i].type == 1) {
-				for (int j = 1; j < 6; j++) {
-					shad_maps_[lights_->GetData()[i].shad_map_index][j]->UpdateMatricies(camera_target, camera_pos, camera_up_, fov_y);
-				}
-			}
+		if (lights_->GetData()[i].type == 0) {
+			casc_shad_map_->UpdateMatricies(camera_target, camera_pos, camera_up_, fov_y);
 		}
 	}
 }

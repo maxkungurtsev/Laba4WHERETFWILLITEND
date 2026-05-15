@@ -1,6 +1,7 @@
 #pragma once
 #include <DirectXMath.h>
 #include "ZBuffer.h"
+#include "CBuffer.h"
 using namespace DirectX;
 
 

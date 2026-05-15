@@ -3,7 +3,7 @@ Texture2D NormalMap : register(t1);
 Texture2D Depth : register(t2);
 Texture2D MaterialIndex : register(t3);
 SamplerState samplerState : register(s0);
-
+Texture2D shadowMaps[4] : register(t5);
 struct LightData
 {
     float3 strength;
@@ -15,8 +15,7 @@ struct LightData
     int type;
     float velocity;
     float spawn_time;
-    float shad_map_index;
-    float pad[2];
+    float pad[3];
     float4 movement_direction;
 };
 

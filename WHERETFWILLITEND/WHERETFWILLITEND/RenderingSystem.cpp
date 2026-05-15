@@ -80,6 +80,8 @@ void RenderingSystem::CreateLightRootSign() {
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    // shadow maps
+    shadow_root_signature_->AddParameter(Type::srv, 4, D3D12_SHADER_VISIBILITY_PIXEL);
     // Lights 
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     //lights amount
@@ -112,9 +114,15 @@ void RenderingSystem::CreateShadowRootSign() {
     if (shadow_root_signature_ == nullptr) {
         shadow_root_signature_ = std::make_shared<RootSignature>();
     }
-    //add params through
-    //shadow_root_signature_->AddParameter(Type::cbv/srv/uav/sampler, 1, D3D12_SHADER_VISIBILITY_ALL);
-    geom_root_signature_->CreateRootSignature(device_);
+    // g buffers zbuffer
+    shadow_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    //pass constants
+    shadow_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    //light ViewProj
+    shadow_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    //sampler
+    shadow_root_signature_->AddParameter(Type::sampler, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    shadow_root_signature_->CreateRootSignature(device_);
 };
 void RenderingSystem::CreateShadowPSO() {
     std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout = {};
@@ -322,9 +330,32 @@ void RenderingSystem::GeomPass(std::shared_ptr<Model> mesh) {
     }
 }
 
-void RenderingSystem::ShadowPass(XMVECTOR camera_pos, XMVECTOR camera_target, XMVECTOR camera_up_, float fov_y) {
+void RenderingSystem::ShadowPass(XMVECTOR camera_pos, XMVECTOR camera_target, XMVECTOR camera_up_, float fov_y, const float clearColor[4]) {
 
     light_buffer_->UpdateShadowMatricies(camera_target, camera_pos, camera_up_, fov_y);
+    device_->cmd_->command_list_->SetPipelineState(shadow_pso_->GetPSO().Get());
+    device_->cmd_->command_list_->SetGraphicsRootSignature(shadow_root_signature_->GetRootSign().Get());
+    // set & cler dsv, rtv
+    device_->cmd_->command_list_->OMSetRenderTargets(1, nullptr, FALSE, nullptr);
+    //set desc tables
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, g_buffer_->depth_->z_buffer_->GetResourse()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, cbuffer_->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, light_buffer_->GetViewProj()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, Sampler_handle_.gpu_);
+    // draw
+    device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+    for (int i = 0; i < light_buffer_->GetMaxLights()->GetData().x; i++) {
+        if (light_buffer_->GetBuffer()->GetData()[i].type == 0) {
+            for (int j = 0; j < 4; j++) {
+                std::shared_ptr<ShadowMap> sm= light_buffer_->GetShadowMap();
+                light_buffer_->SetViewProj(sm->GetCascade(j)->GetViewProj());
+                D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = sm->GetCascade(j)->GetZbuffer()->handle_.cpu_;
+                device_->cmd_->command_list_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
+                device_->cmd_->command_list_->DrawInstanced(3, 1, 0, 0);
+            }
+        }
+    }
 }
 
 void RenderingSystem::ComputePass(std::shared_ptr<ParticleEmiter> emiter) {
@@ -469,7 +500,8 @@ void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(4, g_buffer_->material_index_->texture_->GetResourse()->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(5, light_buffer_->GetBuffer()->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(6, light_buffer_->GetMaxLights()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(7, Sampler_handle_.gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(7, light_buffer_->GetShadowMapHandles()[0]);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(8, Sampler_handle_.gpu_);
     // draw
     device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     device_->cmd_->command_list_->DrawInstanced(3, 1, 0, 0);
@@ -579,22 +611,12 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
         // adding all shad maps into transition
         
         for (int i = 0; i < light_buffer_->GetMaxLights()->GetData().x; i++) {
-            int ind=light_buffer_->GetBuffer()->GetData()[i].shad_map_index;
-            if (light_buffer_->GetBuffer()->GetData()[i].type != 3) {
+            if (light_buffer_->GetBuffer()->GetData()[i].type == 0) {
                 for (int j=0; j<4;j++){
-                    OutputDebugStringA((std::to_string(ind) + " " + std::to_string(j) + " " + std::to_string(j)).c_str());
-                    toGeom.push_back(Transition(light_buffer_->GetShadowMap(ind)[0]->GetCascade(j)->GetZbuffer()->z_buffer_->GetResourse()->GetResourse().Get(),
+                    toGeom.push_back(Transition(light_buffer_->GetShadowMap()->GetCascade(j)->GetZbuffer()->z_buffer_->GetResourse()->GetResourse().Get(),
                     D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE));
                 }
-                if (light_buffer_->GetBuffer()->GetData()[i].type == 1) {
-                    for (int k = 1; k < 6; k++) {
-                        for (int j = 0; j < 4; j++) {
-                            OutputDebugStringA((std::to_string(ind) + " " + std::to_string(j) + " " + std::to_string(k)).c_str());
-                            toGeom.push_back(Transition(light_buffer_->GetShadowMap(ind)[k]->GetCascade(j)->GetZbuffer()->z_buffer_->GetResourse()->GetResourse().Get(),
-                                D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE));
-                        }
-                    }
-                }
+                break;
             }
         }
         device_->cmd_->command_list_.Get()->ResourceBarrier(toGeom.size(), toGeom.data());
@@ -689,24 +711,16 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
             Transition(g_buffer_->depth_->z_buffer_->GetResourse()->GetResourse().Get(),
                        D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
         };
-        /*
+        
         for (int i = 0; i < light_buffer_->GetMaxLights()->GetData().x; i++) {
-
-            if (light_buffer_->GetBuffer()->GetData()[i].type != 3) {
+            if (light_buffer_->GetBuffer()->GetData()[i].type == 0) {
                 for (int j = 0; j < 4; j++) {
-                    toLight.push_back(Transition(light_buffer_->GetShadowMap(i)[0]->GetCascade(j)->GetZbuffer()->z_buffer_->GetResourse()->GetResourse().Get(),
-                        D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+                    toLight.push_back(Transition(light_buffer_->GetShadowMap()->GetCascade(j)->GetZbuffer()->z_buffer_->GetResourse()->GetResourse().Get(),
+                        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE));
                 }
-                if (light_buffer_->GetBuffer()->GetData()[i].type == 1) {
-                    for (int k = 1; k < 6; k++) {
-                        for (int j = 0; j < 4; j++) {
-                            toLight.push_back(Transition(light_buffer_->GetShadowMap(i)[k]->GetCascade(j)->GetZbuffer()->z_buffer_->GetResourse()->GetResourse().Get(),
-                                D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
-                        }
-                    }
-                }
+                break;
             }
-        }*/
+        }
         device_->cmd_->command_list_.Get()->ResourceBarrier(toLight.size(), toLight.data());
     }
 
