@@ -98,10 +98,16 @@ void Cascade::UpdateMatrix(XMVECTOR camera_target, XMVECTOR camera_pos, XMVECTOR
 		max_bounds = XMVectorMax(max_bounds, corner_light_space);
 	}
 
-	const float min_x = XMVectorGetX(min_bounds);
-	const float max_x = XMVectorGetX(max_bounds);
-	const float min_y = XMVectorGetY(min_bounds);
-	const float max_y = XMVectorGetY(max_bounds);
+	const float cascade_extent = cascade_radius * 2.0f;
+	const float texel_size = cascade_extent / static_cast<float>(width_);
+	const XMVECTOR center_light_space = XMVector3TransformCoord(cascade_center, view);
+	const float snapped_center_x = std::floor(XMVectorGetX(center_light_space) / texel_size) * texel_size;
+	const float snapped_center_y = std::floor(XMVectorGetY(center_light_space) / texel_size) * texel_size;
+
+	const float min_x = snapped_center_x - cascade_radius;
+	const float max_x = snapped_center_x + cascade_radius;
+	const float min_y = snapped_center_y - cascade_radius;
+	const float max_y = snapped_center_y + cascade_radius;
 	const float min_z = XMVectorGetZ(min_bounds);
 	const float max_z = XMVectorGetZ(max_bounds);
 

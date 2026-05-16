@@ -21,7 +21,7 @@ private:
     UINT cascade_index_;
     UINT cascade_count_;
     float camera_near_ = 0.1f;
-    float camera_far_ = 10000.0f;
+    float camera_far_ = 250.0f;
     float aspect_ratio_;
 public:
     Cascade(UINT width, UINT height, std::shared_ptr<Gdevice> device, XMVECTOR light_pos,XMVECTOR target,UINT cascade_index,UINT cascade_count,
@@ -30,4 +30,5 @@ public:
     std::shared_ptr<Zbuffer> GetZbuffer() { return buffer_; }
     void UpdateMatrix(XMVECTOR camera_target, XMVECTOR camera_pos, XMVECTOR camera_up_, float fov_y);
     float CalculateSplitDepth(UINT split_index);
+    float GetSplitDepth() const { return split_depth_; }
 };

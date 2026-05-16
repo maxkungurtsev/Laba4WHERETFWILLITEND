@@ -76,8 +76,9 @@ void Lights::AddDirlight(XMFLOAT3 strength, XMFLOAT4 direction, bool in_render_f
     // shad map init
 	std::shared_ptr<ShadowMap> sm;
 	XMVECTOR dir = XMLoadFloat4(&direction);
-	XMVECTOR pos = -dir*5000.0f;
-	sm = std::make_shared<ShadowMap>(4096, 4096, 4, device_, pos, XMVectorSet(0, 0, 0, 1), 1.0f, 0.75f);
+	XMVECTOR pos = -dir*500.0f; 
+	const float aspect_ratio = static_cast<float>(device_->width_) / static_cast<float>(device_->height_);
+	sm = std::make_shared<ShadowMap>(4096, 4096, 4, device_, pos, XMVectorSet(0, 0, 0, 1), aspect_ratio, 0.75f);
 	casc_shad_map_=sm;
 	casc_shad_map_handles.clear();
 	casc_shad_map_handles.push_back(casc_shad_map_->GetSRVHandle(0).gpu_);
@@ -125,7 +126,9 @@ void Lights::UpdateShadowMatricies(XMVECTOR camera_target, XMVECTOR camera_pos, 
 		if (lights_->GetData()[i].type == 0) {
 			casc_shad_map_->UpdateMatricies(camera_target, camera_pos, camera_up_, fov_y);
 			for (int cascade = 0; cascade < 4; ++cascade) {
-				shadow_constants_->GetData().viewProj_mat[cascade] = casc_shad_map_->GetCascade(cascade)->GetViewProj();
+				std::shared_ptr<Cascade> cascade_data = casc_shad_map_->GetCascade(cascade);
+				shadow_constants_->GetData().viewProj_mat[cascade] = cascade_data->GetViewProj();
+				(&shadow_constants_->GetData().split_depths.x)[cascade] = cascade_data->GetSplitDepth();
 			}
 			shadow_constants_->Save_changes();
 		}
