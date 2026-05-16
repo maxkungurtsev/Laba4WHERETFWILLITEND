@@ -80,11 +80,13 @@ void RenderingSystem::CreateLightRootSign() {
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
-    // shadow maps
-    shadow_root_signature_->AddParameter(Type::srv, 4, D3D12_SHADER_VISIBILITY_PIXEL);
     // Lights 
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
-    //lights amount
+    // shadow maps (t5-t8)
+    light_root_signature_->AddParameter(Type::srv, 4, D3D12_SHADER_VISIBILITY_PIXEL);
+    //lights amount (b1)
+    light_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    // shadow matrices (b2)
     light_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
 
     //sampler
@@ -127,10 +129,11 @@ void RenderingSystem::CreateShadowRootSign() {
 void RenderingSystem::CreateShadowPSO() {
     std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout = {};
     std::string type = "vs_5_0";
-    //CompileShader(L"ShadowVertexShader.hlsl", shadow_vertex_shader_, type);
+    CompileShader(L"ShadowVertexShader.hlsl", shadow_vertex_shader_, type);
     type = "ps_5_0";
-    //CompileShader(L"ShadowPixelShader.hlsl", shadow_pixel_shader_, type);
-    //shadow_pso_ = std::make_shared<PSO>(input_layout, shadow_vertex_shader_, shadow_pixel_shader_, device_, shadow_root_signature_, 3, PSO_formats_);
+    CompileShader(L"ShadowPixelShader.hlsl", shadow_pixel_shader_, type);
+    std::vector<DXGI_FORMAT> formats = {};
+    shadow_pso_ = std::make_shared<PSO>(input_layout, shadow_vertex_shader_, shadow_pixel_shader_, device_, shadow_root_signature_, 0, formats);
 }
 void RenderingSystem::InitGeomPass() {
     CreateGeomRootSign();
@@ -335,8 +338,6 @@ void RenderingSystem::ShadowPass(XMVECTOR camera_pos, XMVECTOR camera_target, XM
     light_buffer_->UpdateShadowMatricies(camera_target, camera_pos, camera_up_, fov_y);
     device_->cmd_->command_list_->SetPipelineState(shadow_pso_->GetPSO().Get());
     device_->cmd_->command_list_->SetGraphicsRootSignature(shadow_root_signature_->GetRootSign().Get());
-    // set & cler dsv, rtv
-    device_->cmd_->command_list_->OMSetRenderTargets(1, nullptr, FALSE, nullptr);
     //set desc tables
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, g_buffer_->depth_->z_buffer_->GetResourse()->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, cbuffer_->GetHandle().gpu_);
@@ -351,6 +352,7 @@ void RenderingSystem::ShadowPass(XMVECTOR camera_pos, XMVECTOR camera_target, XM
                 std::shared_ptr<ShadowMap> sm= light_buffer_->GetShadowMap();
                 light_buffer_->SetViewProj(sm->GetCascade(j)->GetViewProj());
                 D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = sm->GetCascade(j)->GetZbuffer()->handle_.cpu_;
+                device_->cmd_->command_list_->OMSetRenderTargets(0, nullptr, FALSE, &dsvHandle);
                 device_->cmd_->command_list_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
                 device_->cmd_->command_list_->DrawInstanced(3, 1, 0, 0);
             }
@@ -499,9 +501,11 @@ void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, g_buffer_->depth_->z_buffer_->GetResourse()->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(4, g_buffer_->material_index_->texture_->GetResourse()->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(5, light_buffer_->GetBuffer()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(6, light_buffer_->GetMaxLights()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(7, light_buffer_->GetShadowMapHandles()[0]);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(8, Sampler_handle_.gpu_);
+    // THIS BREAKS IF NO DIR LIGHT
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(6, light_buffer_->GetShadowMapHandles()[0]);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(7, light_buffer_->GetMaxLights()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(8, light_buffer_->GetShadowConstants()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(9, Sampler_handle_.gpu_);
     // draw
     device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     device_->cmd_->command_list_->DrawInstanced(3, 1, 0, 0);
@@ -556,7 +560,7 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<st
     // let there be light
     light_buffer_ = std::make_shared<Lights>(device_);
     light_buffer_->AddAmbientlight({ 0.6,0.6,0.6 }, false);
-    light_buffer_->AddDirlight({ 0.6,0.6,0.6 }, { 0.6,-1.0,0.0, 0.0 }, false);
+    light_buffer_->AddDirlight({ 0.6,0.6,0.6 }, { 1.0 ,1.0,0.0, 0.0 }, false);
     OutputDebugStringA((std::to_string(light_buffer_->GetBuffer()->GetData()[0].type)+'\n').c_str());
 
     
@@ -622,7 +626,6 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
         device_->cmd_->command_list_.Get()->ResourceBarrier(toGeom.size(), toGeom.data());
     }
     }
-
     SetupGeomPass(clearColor);
     for (int i = 0; i < meshes_.size(); i++) {
         //fill buffer
@@ -698,7 +701,7 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
             ParticlePass(emiter);
         }
     }
-
+    // transition to light
     {
         std::vector<D3D12_RESOURCE_BARRIER> toLight =
         {
@@ -711,23 +714,29 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
             Transition(g_buffer_->depth_->z_buffer_->GetResourse()->GetResourse().Get(),
                        D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
         };
-        
-        for (int i = 0; i < light_buffer_->GetMaxLights()->GetData().x; i++) {
-            if (light_buffer_->GetBuffer()->GetData()[i].type == 0) {
-                for (int j = 0; j < 4; j++) {
-                    toLight.push_back(Transition(light_buffer_->GetShadowMap()->GetCascade(j)->GetZbuffer()->z_buffer_->GetResourse()->GetResourse().Get(),
-                        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE));
-                }
-                break;
-            }
-        }
         device_->cmd_->command_list_.Get()->ResourceBarrier(toLight.size(), toLight.data());
     }
 
     float fov_y;
     fov_y = 2.0f * atan(1/(cbuffer_->GetData().projection._22));
-    //ShadowPass(cam_pos, look_at, up, fov_y);
 
+    ShadowPass(cam_pos, look_at, up, fov_y, clearColor);
+    // transition shad maps to srv
+    std::vector<D3D12_RESOURCE_BARRIER> shadowMapsToRead;
+    {
+        for (int i = 0; i < light_buffer_->GetMaxLights()->GetData().x; i++) {
+            if (light_buffer_->GetBuffer()->GetData()[i].type == 0) {
+                for (int j = 0; j < 4; j++) {
+                    shadowMapsToRead.push_back(Transition(light_buffer_->GetShadowMap()->GetCascade(j)->GetZbuffer()->z_buffer_->GetResourse()->GetResourse().Get(),
+                        D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE));
+                }
+                break;
+            }
+        }
+    }
+    if (shadowMapsToRead.size()){
+            device_->cmd_->command_list_.Get()->ResourceBarrier(shadowMapsToRead.size(), shadowMapsToRead.data());
+    }
     LightPass(clearColor, rtvHandle);
 
 }

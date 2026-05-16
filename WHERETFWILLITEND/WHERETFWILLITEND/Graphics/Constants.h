@@ -39,6 +39,6 @@ struct PassConstants {
 };
 
 struct ShadowConstants {
-	XMFLOAT4X4 viewProj_mat;
+	XMFLOAT4X4 viewProj_mat[4];
 
 };

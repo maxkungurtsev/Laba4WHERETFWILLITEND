@@ -76,7 +76,7 @@ class RenderingSystem {
 	void GeomPass(std::shared_ptr<Model> mesh);
 	void ComputePass(std::shared_ptr<ParticleEmiter> emiter);
 	void ParticlePass(std::shared_ptr<ParticleEmiter> emiter);
-	void ShadowPass(XMVECTOR camera_target, XMVECTOR camera_pos, XMVECTOR camera_up_, float fov_y, const float clearColor[4]);
+	void ShadowPass(XMVECTOR camera_pos, XMVECTOR camera_target, XMVECTOR camera_up_, float fov_y, const float clearColor[4]);
 	void ParseModelToCBuffer(std::shared_ptr<Model> mesh);
 	void LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle);
 public:
