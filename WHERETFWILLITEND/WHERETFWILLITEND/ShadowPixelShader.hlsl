@@ -72,6 +72,10 @@ float main(PS_IN input) : SV_Depth
 
     float3 worldPos = RestoreWorldPosition(uv, depth);
     float4 shadowClip = mul(shadow_view_proj, float4(worldPos, 1.0));
+    if (abs(shadowClip.w) < 0.00001f)
+    {
+        discard;
+    }
     shadowClip.xyz /= shadowClip.w;
 
     return saturate(shadowClip.z);

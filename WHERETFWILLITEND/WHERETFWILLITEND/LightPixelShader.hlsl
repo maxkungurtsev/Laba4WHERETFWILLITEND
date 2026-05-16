@@ -198,6 +198,7 @@ float4 main(PS_IN input) : SV_Target{
         finalLight += CalcLight(lights[i], normal, worldPos, V, mats[matIndex]) * shadowFactor;
     }
     //float4 Final = float4(albedo*finalLight, 1.0);
-    float4 Final = float4(shadowFactor, shadowFactor, shadowFactor, 1.0);
+    float4 Final = float4(finalLight, 1.0);
+    //float4 Final = float4(shadowFactor, shadowFactor, shadowFactor, 1.0);
     return Final;
 }

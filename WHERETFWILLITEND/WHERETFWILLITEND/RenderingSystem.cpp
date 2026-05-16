@@ -560,7 +560,7 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<st
     // let there be light
     light_buffer_ = std::make_shared<Lights>(device_);
     light_buffer_->AddAmbientlight({ 0.6,0.6,0.6 }, false);
-    light_buffer_->AddDirlight({ 0.6,0.6,0.6 }, { 1.0 ,1.0,0.0, 0.0 }, false);
+    light_buffer_->AddDirlight({ 0.6,0.6,0.6 }, { 1.0 ,-1.0,0.0, 0.0 }, false);
     OutputDebugStringA((std::to_string(light_buffer_->GetBuffer()->GetData()[0].type)+'\n').c_str());
 
     

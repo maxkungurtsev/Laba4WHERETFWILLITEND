@@ -4,6 +4,11 @@ Lights::Lights(std::shared_ptr<Gdevice> device) {
 	max_lights_ = std::make_shared<Cbuffer<XMFLOAT4>>(device);
 	max_lights_->GetData() = XMFLOAT4{0,0,0,0};
 	device_ = device;
+	TGAImage dummy_;
+	dummy_.read_tga_file("dummy.tga");
+	std::string name = "dummy_sm";
+	dummy_shad_map_ = std::make_shared<GTexture>(dummy_, name, device, TextureUsage::Depth);
+	dummy_shad_map_handles = { dummy_shad_map_->GetResourse()->GetHandle().gpu_, dummy_shad_map_->GetResourse()->GetHandle().gpu_, dummy_shad_map_->GetResourse()->GetHandle().gpu_, dummy_shad_map_->GetResourse()->GetHandle().gpu_};
 	current_viewProj = std::make_shared<Cbuffer<XMFLOAT4X4>>(device);
 	shadow_constants_ = std::make_shared<Cbuffer<ShadowConstants>>(device);
 	XMStoreFloat4x4(&current_viewProj->GetData(), XMMatrixIdentity());
@@ -46,6 +51,15 @@ void Lights::AddAmbientlight(XMFLOAT3 strength, bool in_render_frame) {
 	max_lights_->Save_changes();
 }
 
+
+std::vector<D3D12_GPU_DESCRIPTOR_HANDLE>& Lights::GetShadowMapHandles() {
+	if (casc_shad_map_handles.size() == 0) {
+		OutputDebugStringA("shad maps empty!\n");
+		return dummy_shad_map_handles;
+	}
+	return casc_shad_map_handles;
+};
+
 void Lights::AddDirlight(XMFLOAT3 strength, XMFLOAT4 direction, bool in_render_frame) {
 	LightData newlight;
 	newlight.direction = direction;
@@ -63,7 +77,7 @@ void Lights::AddDirlight(XMFLOAT3 strength, XMFLOAT4 direction, bool in_render_f
 	std::shared_ptr<ShadowMap> sm;
 	XMVECTOR dir = XMLoadFloat4(&direction);
 	XMVECTOR pos = -dir*5000.0f;
-	sm = std::make_shared<ShadowMap>(1024, 1024, 4, device_, pos, XMVectorSet(0, 0, 0, 1), 1.0f, 0.75f);
+	sm = std::make_shared<ShadowMap>(4096, 4096, 4, device_, pos, XMVectorSet(0, 0, 0, 1), 1.0f, 0.75f);
 	casc_shad_map_=sm;
 	casc_shad_map_handles.clear();
 	casc_shad_map_handles.push_back(casc_shad_map_->GetSRVHandle(0).gpu_);
