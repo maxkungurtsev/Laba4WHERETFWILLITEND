@@ -72,11 +72,12 @@ class RenderingSystem {
 	void InitLightPass();
 	void SetupGeomPass(const float clearColor[4]);
 	void FillCbuffers(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time, XMMATRIX world = XMMatrixIdentity());
+	std::shared_ptr<Model> BilBoardMesh(std::shared_ptr<Model> mesh, float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up);
 	void CompileShader(std::wstring path, ComPtr<ID3DBlob>& shader, std::string& type);
 	void GeomPass(std::shared_ptr<Model> mesh);
 	void ComputePass(std::shared_ptr<ParticleEmiter> emiter);
 	void ParticlePass(std::shared_ptr<ParticleEmiter> emiter);
-	void ShadowPass(XMVECTOR camera_pos, XMVECTOR camera_target, XMVECTOR camera_up_, float fov_y, const float clearColor[4]);
+	void ShadowPass(XMVECTOR camera_pos, XMVECTOR camera_target, XMVECTOR camera_up_, float fov_y, const float clearColor[4], float time);
 	void ParseModelToCBuffer(std::shared_ptr<Model> mesh);
 	void LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle);
 public:

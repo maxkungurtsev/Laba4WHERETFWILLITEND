@@ -246,8 +246,55 @@ void RenderingSystem::CompileShader(std::wstring path, ComPtr<ID3DBlob>& shader,
     }
 };
 
-
 // PASSES 
+
+std::shared_ptr<Model> RenderingSystem::BilBoardMesh(std::shared_ptr<Model> mesh, float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up) {
+    XMFLOAT4 distance = XMFLOAT4(mesh->GetPosition().x - cbuffer_->GetData().cam_pos.x, mesh->GetPosition().y - cbuffer_->GetData().cam_pos.y, mesh->GetPosition().z - cbuffer_->GetData().cam_pos.z, mesh->GetPosition().w - cbuffer_->GetData().cam_pos.w);
+    float dist = XMVectorGetX(XMVector4Length(XMLoadFloat4(&distance)));
+    // if mesh needs to be bilboarded like an idiot
+    if ((mesh->GetBillBoardable() and dist > 5000) or mesh->IsBilboard()) {
+        XMFLOAT4 obj = mesh->GetPosition();
+        XMVECTOR objpos = XMLoadFloat4(&obj);
+        XMVECTOR forward = XMVector3Normalize(cam_pos - objpos);
+        XMVECTOR right = XMVector3Normalize(XMVector3Cross(up, forward));
+        XMVECTOR newUp = XMVector3Normalize(XMVector3Cross(forward, right));
+        XMMATRIX rotation = XMMATRIX(
+            right,
+            forward,
+            newUp,
+            XMVectorSet(0, 0, 0, 1)
+        );
+        XMMATRIX translation = XMMatrixTranslationFromVector(objpos);
+        XMMATRIX world = rotation * translation;
+        FillCbuffers(cam_pos, look_at, up, time, world);
+        if (!(mesh->IsBilboard())) {
+            mesh = mesh->GetBilboard();
+        }
+    }
+    else {
+        XMFLOAT3 pos = XMFLOAT3(mesh->GetPosition().x, mesh->GetPosition().y, mesh->GetPosition().z);
+        XMFLOAT3 rot = mesh->GetRotation();
+        XMFLOAT3 sca = mesh->GetScale();
+        XMMATRIX S = XMMatrixScaling(
+            sca.x,
+            sca.y,
+            sca.z);
+
+        XMMATRIX R = XMMatrixRotationRollPitchYaw(
+            rot.x,
+            rot.y,
+            rot.z);
+
+        XMMATRIX T = XMMatrixTranslation(
+            pos.x,
+            pos.y,
+            pos.z);
+
+        XMMATRIX world = T * R * S;
+        FillCbuffers(cam_pos, look_at, up, time, world);
+        return mesh;
+    }
+}
 
 void RenderingSystem::SetupGeomPass(const float clearColor[4]) {
     device_->cmd_->command_list_->SetPipelineState(geom_pso_->GetPSO().Get());
@@ -280,7 +327,6 @@ void RenderingSystem::GeomPass(std::shared_ptr<Model> mesh) {
     std::vector<int> submeshes;
 
     if (!culling_enabled_ or mesh->IsBilboard()) {
-        OutputDebugStringA("CULLING DISABLED\n");
             for (int i = 0; i < mesh->GetSubMeshes().size(); i++) {
                 submeshes.push_back(i);
             }
@@ -333,30 +379,34 @@ void RenderingSystem::GeomPass(std::shared_ptr<Model> mesh) {
     }
 }
 
-void RenderingSystem::ShadowPass(XMVECTOR camera_pos, XMVECTOR camera_target, XMVECTOR camera_up_, float fov_y, const float clearColor[4]) {
-
+void RenderingSystem::ShadowPass(XMVECTOR camera_pos, XMVECTOR camera_target, XMVECTOR camera_up_, float fov_y, const float clearColor[4], float time) {
     light_buffer_->UpdateShadowMatricies(camera_target, camera_pos, camera_up_, fov_y);
-    device_->cmd_->command_list_->SetPipelineState(shadow_pso_->GetPSO().Get());
-    device_->cmd_->command_list_->SetGraphicsRootSignature(shadow_root_signature_->GetRootSign().Get());
-    //set desc tables
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, g_buffer_->depth_->z_buffer_->GetResourse()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, cbuffer_->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, light_buffer_->GetViewProj()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, Sampler_handle_.gpu_);
-    // draw
-    device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
     for (int i = 0; i < light_buffer_->GetMaxLights()->GetData().x; i++) {
         if (light_buffer_->GetBuffer()->GetData()[i].type == 0) {
             for (int j = 0; j < 4; j++) {
                 std::shared_ptr<ShadowMap> sm= light_buffer_->GetShadowMap();
-                light_buffer_->SetViewProj(sm->GetCascade(j)->GetViewProj());
                 D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = sm->GetCascade(j)->GetZbuffer()->handle_.cpu_;
                 device_->cmd_->command_list_->OMSetRenderTargets(0, nullptr, FALSE, &dsvHandle);
                 device_->cmd_->command_list_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-                device_->cmd_->command_list_->DrawInstanced(3, 1, 0, 0);
+                for (int i = 0; i < meshes_.size(); i++) {
+                    //fill buffer
+                    std::shared_ptr<Model> mesh = meshes_[i];
+                    ParseModelToCBuffer(mesh);
+                    mesh = BilBoardMesh(mesh, time, camera_target, camera_pos, camera_up_);
+                    // make frustum
+                    cbuffer_->GetData().view = sm->GetCascade(j)->GetView();
+                    cbuffer_->GetData().projection = sm->GetCascade(j)->GetProj();
+                    XMStoreFloat4x4(&cbuffer_->GetData().inv_view, XMMatrixInverse(nullptr, XMLoadFloat4x4(&cbuffer_->GetData().view)));
+                    XMStoreFloat4x4(&cbuffer_->GetData().inv_projection, XMMatrixInverse(nullptr, XMLoadFloat4x4(&cbuffer_->GetData().projection)));
+                    cbuffer_->Save_changes();
+                    bool culling = culling_enabled_;
+                    culling_enabled_ = false;
+                    GeomPass(mesh);
+                    culling_enabled_ = culling;
+                }
             }
         }
+        break;
     }
 }
 
@@ -631,50 +681,7 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
         //fill buffer
         std::shared_ptr<Model> mesh = meshes_[i];
         ParseModelToCBuffer(mesh);
-        XMFLOAT4 distance = XMFLOAT4(mesh->GetPosition().x - cbuffer_->GetData().cam_pos.x, mesh->GetPosition().y - cbuffer_->GetData().cam_pos.y, mesh->GetPosition().z - cbuffer_->GetData().cam_pos.z, mesh->GetPosition().w - cbuffer_->GetData().cam_pos.w);
-        float dist = XMVectorGetX(XMVector4Length(XMLoadFloat4(&distance)));
-        // if mesh needs to be bilboarded like an idiot
-        if ((mesh->GetBillBoardable() and dist > 5000) or mesh->IsBilboard()) {
-            XMFLOAT4 obj = mesh->GetPosition();
-            XMVECTOR objpos = XMLoadFloat4(&obj);
-            XMVECTOR forward = XMVector3Normalize(cam_pos - objpos);
-            XMVECTOR right = XMVector3Normalize(XMVector3Cross(up, forward));
-            XMVECTOR newUp = XMVector3Normalize(XMVector3Cross(forward, right));
-            XMMATRIX rotation = XMMATRIX(
-                right,
-                forward,
-                newUp,
-                XMVectorSet(0, 0, 0, 1)
-            );
-            XMMATRIX translation = XMMatrixTranslationFromVector(objpos);
-            XMMATRIX world = rotation * translation;
-            FillCbuffers(cam_pos, look_at, up, time, world);
-            if (!(mesh->IsBilboard())){
-                mesh = mesh->GetBilboard();
-            }
-        }
-        else {
-            XMFLOAT3 pos = XMFLOAT3(mesh->GetPosition().x, mesh->GetPosition().y, mesh->GetPosition().z);
-            XMFLOAT3 rot = mesh->GetRotation();
-            XMFLOAT3 sca = mesh->GetScale();
-            XMMATRIX S = XMMatrixScaling(
-                sca.x,
-                sca.y,
-                sca.z);
-
-            XMMATRIX R = XMMatrixRotationRollPitchYaw(
-                rot.x,
-                rot.y,
-                rot.z);
-
-            XMMATRIX T = XMMatrixTranslation(
-                pos.x,
-                pos.y,
-                pos.z);
-
-            XMMATRIX world = T * R * S;
-            FillCbuffers(cam_pos, look_at, up, time, world);
-        }
+        mesh = BilBoardMesh(mesh, time, look_at, cam_pos, up);
 
         // make frustum
         XMMATRIX proj = XMLoadFloat4x4(&(cbuffer_->GetData().projection));
@@ -720,7 +727,7 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
     float fov_y;
     fov_y = 2.0f * atan(1/(cbuffer_->GetData().projection._22));
 
-    ShadowPass(cam_pos, look_at, up, fov_y, clearColor);
+    ShadowPass(cam_pos, look_at, up, fov_y, clearColor, time);
     // transition shad maps to srv
     std::vector<D3D12_RESOURCE_BARRIER> shadowMapsToRead;
     {

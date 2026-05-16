@@ -26,6 +26,8 @@ private:
 public:
     Cascade(UINT width, UINT height, std::shared_ptr<Gdevice> device, XMVECTOR light_pos,XMVECTOR target,UINT cascade_index,UINT cascade_count,
         float aspect_ratio, float split_lambda);
+    XMFLOAT4X4& GetView() { return view_mat; }
+    XMFLOAT4X4& GetProj() { return proj_mat; }
     XMFLOAT4X4& GetViewProj() { return viewProj_mat; }
     std::shared_ptr<Zbuffer> GetZbuffer() { return buffer_; }
     void UpdateMatrix(XMVECTOR camera_target, XMVECTOR camera_pos, XMVECTOR camera_up_, float fov_y);
