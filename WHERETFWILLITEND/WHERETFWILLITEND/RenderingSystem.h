@@ -25,7 +25,8 @@ class RenderingSystem {
 	std::shared_ptr<RootSignature> light_root_signature_;
 	//buffers
 	std::shared_ptr<GBuffer> g_buffer_;
-	std::shared_ptr <Cbuffer<PassConstants>> cbuffer_;
+	std::shared_ptr <Cbuffer<PassConstants>> pass_buffer_;
+	std::shared_ptr <Cbuffer<POVConstants>> pov_buffer_;
 	std::shared_ptr <Lights> light_buffer_;
 	//particles
 	ComPtr<ID3DBlob> p_compute_shader_;

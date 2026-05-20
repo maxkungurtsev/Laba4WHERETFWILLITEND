@@ -11,18 +11,23 @@ struct shaderMaterialData
 };
 cbuffer PassConstants : register(b0)
 {
+    float4 cam_pos;
+    float4 cam_forward;
+    shaderMaterialData mats[300];
+    float time;
+    int current_mat;
+    float cam_near;
+    float cam_far;
+};
+
+cbuffer POVConstants : register(b1)
+{
     float4x4 model;
     float4x4 inv_model;
     float4x4 view;
     float4x4 inv_view;
     float4x4 projection;
     float4x4 inv_projection;
-    float4 cam_pos;
-    float4 cam_forward;
-    shaderMaterialData mats[300];
-    float time;
-    int current_mat;
-    float pad2[2];
 };
 struct CONTR_POINT_IN
 {

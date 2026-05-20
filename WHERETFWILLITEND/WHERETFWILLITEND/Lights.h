@@ -8,7 +8,6 @@
 class Lights {
 	std::shared_ptr<StructBuffer<LightData>> lights_;
 	std::shared_ptr <Cbuffer<XMFLOAT4>> max_lights_;
-	std::shared_ptr <Cbuffer<XMFLOAT4X4>> current_viewProj;
 	std::shared_ptr<ShadowMap> casc_shad_map_;
 	std::shared_ptr <Cbuffer<ShadowConstants>> shadow_constants_;
 	std::shared_ptr<Gdevice> device_;
@@ -26,9 +25,7 @@ public:
 	std::vector<D3D12_GPU_DESCRIPTOR_HANDLE>& GetShadowMapHandles();
 	std::shared_ptr<StructBuffer<LightData>> GetBuffer();
 	std::shared_ptr <Cbuffer<XMFLOAT4>> GetMaxLights();
-	std::shared_ptr <Cbuffer<XMFLOAT4X4>> GetViewProj() { return current_viewProj; }
 	std::shared_ptr <Cbuffer<ShadowConstants>> GetShadowConstants() { return shadow_constants_; }
 
-	void SetViewProj(XMFLOAT4X4 new_view_proj);
-	void UpdateShadowMatricies(XMVECTOR camera_target, XMVECTOR camera_pos, XMVECTOR camera_up_, float fov_y);
+	void UpdateShadowMatricies(XMMATRIX& cameraView, XMMATRIX& cameraProj, float cameraFovY, float cameraAspect);
 };

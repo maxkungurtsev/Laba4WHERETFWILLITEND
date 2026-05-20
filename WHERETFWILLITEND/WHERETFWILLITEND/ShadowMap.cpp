@@ -29,8 +29,8 @@ Handle ShadowMap::GetDSVHandle(UINT cascade_index) const {
 UINT ShadowMap::GetCascadeCount() const {
 	return cascade_count_;
 }
-void ShadowMap::UpdateMatricies(XMVECTOR camera_target, XMVECTOR camera_pos, XMVECTOR camera_up_, float fov_y){
+void ShadowMap::UpdateMatricies(XMMATRIX& cameraView, XMMATRIX& cameraProj, float cameraFovY, float cameraAspect){
 	for (int i = 0; i < cascades_.size(); i++) {
-		cascades_[i]->UpdateMatrix(camera_target, camera_pos, camera_up_, fov_y);
+		cascades_[i]->UpdateMatrix(cameraView, cameraProj, cameraFovY, cameraAspect);
 	}
 }

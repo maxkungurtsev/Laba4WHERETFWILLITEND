@@ -32,26 +32,31 @@ struct shaderMaterialData
 };
 cbuffer PassConstants : register(b0)
 {
+    float4 cam_pos;
+    float4 cam_forward;
+    shaderMaterialData mats[300];
+    float time;
+    int current_mat;
+    float cam_near;
+    float cam_far;
+};
+cbuffer POVConstants : register(b1)
+{
     float4x4 model;
     float4x4 inv_model;
     float4x4 view;
     float4x4 inv_view;
     float4x4 projection;
     float4x4 inv_projection;
-    float4 cam_pos;
-    float4 cam_forward;
-    shaderMaterialData mats[300];
-    float time;
-    int current_mat;
-    float pad2[2];
+
 };
-cbuffer MaxLights : register(b1)
+cbuffer MaxLights : register(b2)
 {
     float4 max_lights;
 }
-cbuffer ShadowConstants : register(b2)
+cbuffer ShadowConstants : register(b3)
 {
-    float4x4 shadow_view_proj[4];
+    float4x4 view_proj_mat[4];
     float4 cascade_split_depths;
 }
 
@@ -59,32 +64,34 @@ float CalcShadowFactor(float3 worldPos, float viewDepth)
 {
     const float depthBias = 0.0015f;
     int cascade = 3;
-    for (int i = 0; i < 4; ++i)
+    for (int j = 0; j < 4; ++j)
     {
-        if (viewDepth <= cascade_split_depths[i]){
-            cascade = i;
+        if (viewDepth <= cascade_split_depths[j]){
+            cascade = j;
             break;
         }
-
     }
     float4 shadowClip;
     switch (cascade)
     {
         case 0:
-            shadowClip = mul(shadow_view_proj[0], float4(worldPos, 1.0f));
+            shadowClip = mul(view_proj_mat[0], float4(worldPos, 1.0f));
+            //shadowClip = mul(float4(worldPos, 1.0f),view_proj_mat[0]);
             break;
         case 1:
-            shadowClip = mul(shadow_view_proj[1], float4(worldPos, 1.0f));
+            shadowClip = mul(view_proj_mat[1], float4(worldPos, 1.0f));
+            //shadowClip = mul(float4(worldPos, 1.0f),view_proj_mat[1]);
             break;
         case 2:
-            shadowClip = mul(shadow_view_proj[2], float4(worldPos, 1.0f));
+            shadowClip = mul(view_proj_mat[2], float4(worldPos, 1.0f));
+            //shadowClip = mul(float4(worldPos, 1.0f),view_proj_mat[2]);
             break;
         case 3:
-            shadowClip = mul(shadow_view_proj[3], float4(worldPos, 1.0f));
+            shadowClip = mul(view_proj_mat[3], float4(worldPos, 1.0f));
+            //shadowClip = mul(float4(worldPos, 1.0f),view_proj_mat[3]);
             break;
     }
     shadowClip.xyz /= shadowClip.w;
-
 
     float2 shadowUv = float2(shadowClip.x * 0.5f + 0.5f, 0.5f - shadowClip.y * 0.5f);
     bool insideShadowMap = shadowUv.x >= 0.0f && shadowUv.x <= 1.0f &&
@@ -99,19 +106,19 @@ float CalcShadowFactor(float3 worldPos, float viewDepth)
     switch (cascade)
     {
         case 0:
-            storedDepth = shadowMaps[0].SampleLevel(samplerState, shadowUv, 0.0f).r;
+            storedDepth = shadowMaps[0].Sample(samplerState, shadowUv).r;
             break;
         case 1:
-            storedDepth = shadowMaps[1].SampleLevel(samplerState, shadowUv, 0.0f).r;
+            storedDepth = shadowMaps[1].Sample(samplerState, shadowUv).r;
             break;
         case 2:
-            storedDepth = shadowMaps[2].SampleLevel(samplerState, shadowUv, 0.0f).r;
+            storedDepth = shadowMaps[2].Sample(samplerState, shadowUv).r;
             break;
         case 3:
-            storedDepth = shadowMaps[3].SampleLevel(samplerState, shadowUv, 0.0f).r;
+            storedDepth = shadowMaps[3].Sample(samplerState, shadowUv).r;
             break;
     }
-    return (shadowClip.z - depthBias > storedDepth) ? 0.35f : 1.0f;
+    return (shadowClip-depthBias > storedDepth) ? 0.5f : 1.0f;
 }
 
 float3 CalcLight(LightData light, float3 normal, float3 worldPos, float3 viewDir, shaderMaterialData mat)
@@ -222,7 +229,7 @@ float4 main(PS_IN input) : SV_Target{
     uint elementCount;
     uint stride;
     lights.GetDimensions(elementCount, stride);
-    float shadowFactor = 0.0f;
+    float shadowFactor = 1.0f;
     float viewDepth = abs(viewPos.z);
     for (int i = 0; i < max_lights.x; i++)
     {
@@ -231,10 +238,24 @@ float4 main(PS_IN input) : SV_Target{
             shadowFactor = CalcShadowFactor(worldPos, viewDepth);
 
         }
-        finalLight += CalcLight(lights[i], normal, worldPos, V, mats[matIndex]) * shadowFactor;
+        finalLight += CalcLight(lights[i], normal, worldPos, V, mats[matIndex])*shadowFactor;
     }
-    //float4 Final = float4(albedo*finalLight, 1.0);
-    float4 Final = float4(finalLight, 1.0);
-    //float4 Final = float4(shadowFactor, shadowFactor, shadowFactor, 1.0);
+    float4 Final;
+    Final = float4(albedo * finalLight, 1.0);
+    float storedDepth1 = Depth.Sample(samplerState, uv).r;
+    float storedDepth2 = shadowFactor;
+    float z2 = ((storedDepth2 - cam_near) / (cam_far - cam_near));
+    float z = cam_near * cam_far / (cam_far - storedDepth2 * (cam_far - cam_near)) / cam_far;
+    //float d = shadowMaps[1].Sample(samplerState, uv).r;
     return Final;
+    return float4(shadowFactor, shadowFactor, shadowFactor, 1.0f);
+    if (z < 0)
+    {
+        return float4(0.0f, 0.7f, 0.0f, 1.0f);
+    }
+    else if (z > 1)
+    {
+        return float4(0.7f, 0.0f, 0.0f, 1.0f);
+    }
+    //return float4(finalLight, 1.0f);
 }

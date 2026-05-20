@@ -10,14 +10,23 @@ Cascade::Cascade(UINT width,
 	float aspect_ratio,
 	float split_lambda): width_(width), height_(height), light_pos_(light_pos), light_target_(target),
 	cascade_index_(cascade_index), cascade_count_(cascade_count) {
-		if (width_ == 0 || height_ == 0) {
+	pov_buffer_ = std::make_shared<Cbuffer<POVConstants>>(device);
+	if (width_ == 0 || height_ == 0) {
 			throw std::runtime_error("ShadowMap dimensions must be greater than zero");
-		}
-		std::string cascade_name = "cascade_";
-		buffer_ = std::make_shared<Zbuffer>(width_, height_, cascade_name, device, TextureUsage::Depth);
-		aspect_ratio_ = max(aspect_ratio, 0.01f);
-		split_lambda_ = max(split_lambda, 0.01f);
-		split_lambda_ = min(split_lambda_, 1.0f);
+	}
+	std::string cascade_name = "cascade_";
+	buffer_ = std::make_shared<Zbuffer>(width_, height_, cascade_name, device, TextureUsage::Depth);
+	aspect_ratio_ = max(aspect_ratio, 0.01f);
+	split_lambda_ = max(split_lambda, 0.01f);
+	const XMMATRIX view = XMMatrixLookAtLH(light_pos_ , target, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
+	XMStoreFloat4x4(&pov_buffer_->GetData().view, view);
+	XMStoreFloat4x4(&pov_buffer_->GetData().inv_view, XMMatrixInverse(nullptr, XMLoadFloat4x4(&pov_buffer_->GetData().view)));
+	XMStoreFloat4x4(&pov_buffer_->GetData().projection, XMMatrixIdentity());
+	XMStoreFloat4x4(&pov_buffer_->GetData().inv_projection, XMMatrixInverse(nullptr, XMLoadFloat4x4(&pov_buffer_->GetData().projection)));
+	XMStoreFloat4x4(&pov_buffer_->GetData().model, XMMatrixIdentity());
+	XMStoreFloat4x4(&pov_buffer_->GetData().inv_model, XMMatrixInverse(nullptr, XMLoadFloat4x4(&pov_buffer_->GetData().model)));
+	split_lambda_ = min(split_lambda_, 1.0f);
+	pov_buffer_->Save_changes();
 }
 
 float Cascade::CalculateSplitDepth(UINT split_index) {
@@ -35,88 +44,89 @@ float Cascade::CalculateSplitDepth(UINT split_index) {
 	return split_lambda_ * logarithmic_split + (1.0f - split_lambda_) * uniform_split;
 }
 
-void Cascade::UpdateMatrix(XMVECTOR camera_target, XMVECTOR camera_pos, XMVECTOR camera_up_, float fov_y) {
-	prev_split_depth_ = CalculateSplitDepth(cascade_index_);
-	split_depth_ = CalculateSplitDepth(cascade_index_ + 1);
+XMFLOAT4X4& Cascade::GetViewProj(){
+	XMStoreFloat4x4(&view_proj_, XMMatrixMultiply(XMLoadFloat4x4(&pov_buffer_->GetData().view), XMLoadFloat4x4(&pov_buffer_->GetData().projection)));
+	return view_proj_;
+}
 
-	XMVECTOR camera_forward = XMVector3Normalize(camera_target - camera_pos);
-	if (XMVectorGetX(XMVector3LengthSq(camera_forward)) <= 0.000001f) {
-		camera_forward = XMVectorSet(0.0f, 0.0f, 1.0f, 0.0f);
-	}
+void Cascade::UpdateMatrix(XMMATRIX& cameraView, XMMATRIX& cameraProj, float cameraFovY, float cameraAspect){
+    float cascadeNear = CalculateSplitDepth(cascade_index_);
+    float cascadeFar = CalculateSplitDepth(cascade_index_ + 1);
+    XMMATRIX invView = XMMatrixInverse(nullptr, cameraView);
+    float tanHalfFovY = tanf(cameraFovY * 0.5f);
+    float tanHalfFovX = tanHalfFovY * cameraAspect;
+    float nearY = cascadeNear * tanHalfFovY;
+    float nearX = cascadeNear * tanHalfFovX;
+    float farY = cascadeFar * tanHalfFovY;
+    float farX = cascadeFar * tanHalfFovX;
+    XMVECTOR frustumCornersVS[8] =
+    {
+        XMVectorSet(-nearX,  nearY, -cascadeNear, 1.0f),
+        XMVectorSet(nearX,  nearY, -cascadeNear, 1.0f),
+        XMVectorSet(nearX, -nearY, -cascadeNear, 1.0f),
+        XMVectorSet(-nearX, -nearY, -cascadeNear, 1.0f),
+        XMVectorSet(-farX,  farY, -cascadeFar, 1.0f),
+        XMVectorSet(farX,  farY, -cascadeFar, 1.0f),
+        XMVectorSet(farX, -farY, -cascadeFar, 1.0f),
+        XMVectorSet(-farX, -farY, -cascadeFar, 1.0f),
+    };
+    XMVECTOR frustumCornersWS[8];
+    for (int i = 0; i < 8; ++i)
+    {
+        frustumCornersWS[i] =
+            XMVector4Transform(
+                frustumCornersVS[i],
+                invView);
+    }
+    XMVECTOR cascadeCenter = XMVectorZero();
 
-	XMVECTOR camera_right = XMVector3Normalize(XMVector3Cross(camera_up_, camera_forward));
-	if (XMVectorGetX(XMVector3LengthSq(camera_right)) <= 0.000001f) {
-		camera_right = XMVectorSet(1.0f, 0.0f, 0.0f, 0.0f);
-	}
-	XMVECTOR camera_up = XMVector3Normalize(XMVector3Cross(camera_forward, camera_right));
-
-	const float near_height = 2.0f * std::tan(fov_y * 0.5f) * prev_split_depth_;
-	const float near_width = near_height * aspect_ratio_;
-	const float far_height = 2.0f * std::tan(fov_y * 0.5f) * split_depth_;
-	const float far_width = far_height * aspect_ratio_;
-
-	const XMVECTOR near_center = camera_pos + camera_forward * prev_split_depth_;
-	const XMVECTOR far_center = camera_pos + camera_forward * split_depth_;
-
-	XMVECTOR corners[8] = {
-		near_center + camera_up * (near_height * 0.5f) - camera_right * (near_width * 0.5f),
-		near_center + camera_up * (near_height * 0.5f) + camera_right * (near_width * 0.5f),
-		near_center - camera_up * (near_height * 0.5f) - camera_right * (near_width * 0.5f),
-		near_center - camera_up * (near_height * 0.5f) + camera_right * (near_width * 0.5f),
-		far_center + camera_up * (far_height * 0.5f) - camera_right * (far_width * 0.5f),
-		far_center + camera_up * (far_height * 0.5f) + camera_right * (far_width * 0.5f),
-		far_center - camera_up * (far_height * 0.5f) - camera_right * (far_width * 0.5f),
-		far_center - camera_up * (far_height * 0.5f) + camera_right * (far_width * 0.5f),
-	};
-
-	XMVECTOR cascade_center = XMVectorZero();
-	for (int i = 0; i < 8; ++i) {
-		cascade_center += corners[i];
-	}
-	cascade_center /= 8.0f;
-
-	XMVECTOR light_direction = XMVector3Normalize(light_target_ - light_pos_);
-	if (XMVectorGetX(XMVector3LengthSq(light_direction)) <= 0.000001f) {
-		light_direction = XMVectorSet(0.0f, -1.0f, 0.0f, 0.0f);
-	}
-
-	float cascade_radius = 0.0f;
-	for (int i = 0; i < 8; ++i) {
-		const float corner_distance = XMVectorGetX(XMVector3Length(corners[i] - cascade_center));
-		cascade_radius = max(cascade_radius, corner_distance);
-	}
-	cascade_radius = std::ceil(cascade_radius * 16.0f) / 16.0f;
-
-	const XMVECTOR light_eye = cascade_center - light_direction * (cascade_radius + split_depth_);
-	const XMMATRIX view = XMMatrixLookAtLH(light_eye, cascade_center, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
-
-	XMVECTOR min_bounds = XMVectorSet(FLT_MAX, FLT_MAX, FLT_MAX, 1.0f);
-	XMVECTOR max_bounds = XMVectorSet(-FLT_MAX, -FLT_MAX, -FLT_MAX, 1.0f);
-	for (int i = 0; i < 8; ++i) {
-		const XMVECTOR corner_light_space = XMVector3TransformCoord(corners[i], view);
-		min_bounds = XMVectorMin(min_bounds, corner_light_space);
-		max_bounds = XMVectorMax(max_bounds, corner_light_space);
-	}
-
-	const float cascade_extent = cascade_radius * 2.0f;
-	const float texel_size = cascade_extent / static_cast<float>(width_);
-	const XMVECTOR center_light_space = XMVector3TransformCoord(cascade_center, view);
-	const float snapped_center_x = std::floor(XMVectorGetX(center_light_space) / texel_size) * texel_size;
-	const float snapped_center_y = std::floor(XMVectorGetY(center_light_space) / texel_size) * texel_size;
-
-	const float min_x = snapped_center_x - cascade_radius;
-	const float max_x = snapped_center_x + cascade_radius;
-	const float min_y = snapped_center_y - cascade_radius;
-	const float max_y = snapped_center_y + cascade_radius;
-	const float min_z = XMVectorGetZ(min_bounds);
-	const float max_z = XMVectorGetZ(max_bounds);
-
-	const float near_z = max(0.0f, min_z - cascade_radius);
-	const float far_z = max(near_z + 0.1f, max_z + cascade_radius);
-	const XMMATRIX proj = XMMatrixOrthographicOffCenterLH(min_x, max_x, min_y, max_y, near_z, far_z);
-	const XMMATRIX view_proj = view * proj;
-
-	XMStoreFloat4x4(&view_mat, view);
-	XMStoreFloat4x4(&proj_mat, proj);
-	XMStoreFloat4x4(&viewProj_mat, view_proj);
-};
+    for (int i = 0; i < 8; ++i)
+    {
+        cascadeCenter += frustumCornersWS[i];
+    }
+    cascadeCenter /= 8.0f;
+    XMVECTOR lightDir =XMVector3Normalize(light_target_ - light_pos_);
+    float pullback = 500.0f;
+    XMVECTOR lightPos =
+        cascadeCenter - lightDir * pullback;
+    XMVECTOR up = XMVectorSet(0, 1, 0, 0);
+    XMMATRIX lightView =
+        XMMatrixLookAtRH(lightPos,cascadeCenter,up);
+    float minX = FLT_MAX;
+    float maxX = -FLT_MAX;
+    float minY = FLT_MAX;
+    float maxY = -FLT_MAX;
+    float minZ = FLT_MAX;
+    float maxZ = -FLT_MAX;
+    for (int i = 0; i < 8; ++i)
+    {
+        XMVECTOR cornerLS =XMVector4Transform(frustumCornersWS[i],lightView);
+        XMFLOAT3 p;
+        XMStoreFloat3(&p, cornerLS);
+        minX = min(minX, p.x);
+        maxX = max(maxX, p.x);
+        minY = min(minY, p.y);
+        maxY = max(maxY, p.y);
+        minZ = min(minZ, p.z);
+        maxZ = max(maxZ, p.z);
+    }
+    constexpr float zMult = 10.0f;
+    if (minZ < 0.0f){
+        minZ *= zMult;
+    }
+    else{
+        minZ /= zMult;
+    }
+    if (maxZ < 0.0f){
+        maxZ /= zMult;
+    }
+    else{
+        maxZ *= zMult;
+    }
+    XMMATRIX lightProj =XMMatrixOrthographicOffCenterRH(minX,maxX,minY,maxY,minZ,maxZ);
+    XMStoreFloat4x4(&pov_buffer_->GetData().view,lightView);
+    XMStoreFloat4x4(&pov_buffer_->GetData().inv_view,XMMatrixInverse(nullptr, lightView));
+    XMStoreFloat4x4(&pov_buffer_->GetData().projection,lightProj);
+    XMStoreFloat4x4(&pov_buffer_->GetData().inv_projection,XMMatrixInverse(nullptr, lightProj));
+    pov_buffer_->Save_changes();
+}

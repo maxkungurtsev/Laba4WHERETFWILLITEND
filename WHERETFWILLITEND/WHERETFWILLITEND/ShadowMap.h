@@ -13,5 +13,5 @@ public:
 	Handle GetSRVHandle(UINT cascade_index) const;
 	Handle GetDSVHandle(UINT cascade_index) const;
 	UINT GetCascadeCount() const;
-	void UpdateMatricies(XMVECTOR camera_target, XMVECTOR camera_pos, XMVECTOR camera_up_, float fov_y);
+	void UpdateMatricies(XMMATRIX& cameraView, XMMATRIX& cameraProj, float cameraFovY, float cameraAspect);
 };

@@ -24,7 +24,8 @@ cbuffer PassConstants : register(b0)
     shaderMaterialData mats[300];
     float time;
     int current_mat;
-    float pad2[2];
+    float cam_near;
+    float cam_far;
 };
 
 cbuffer ShadowViewProj : register(b1)

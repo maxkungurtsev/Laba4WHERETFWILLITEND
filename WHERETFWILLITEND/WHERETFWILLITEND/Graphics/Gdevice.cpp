@@ -13,6 +13,24 @@ void Gdevice::ViewportScissorSetup() {
     scissor_rect_.top = 0;
     scissor_rect_.right = width_;
     scissor_rect_.bottom = height_;
+    cmd_->command_list_->RSSetViewports(1, &viewport_);
+    cmd_->command_list_->RSSetScissorRects(1, &scissor_rect_);
+}
+void Gdevice::ViewportScissorSetup(float wigth, float height) {
+    viewport_ = {};
+    viewport_.TopLeftX = 0;
+    viewport_.TopLeftY = 0;
+    viewport_.Width = static_cast<float>(wigth);
+    viewport_.Height = static_cast<float>(height);
+    viewport_.MinDepth = 0.0f;
+    viewport_.MaxDepth = 1.0f;
+    scissor_rect_ = {};
+    scissor_rect_.left = 0;
+    scissor_rect_.top = 0;
+    scissor_rect_.right = wigth;
+    scissor_rect_.bottom = height;
+    cmd_->command_list_->RSSetViewports(1, &viewport_);
+    cmd_->command_list_->RSSetScissorRects(1, &scissor_rect_);
 }
 ComPtr<ID3D12Device> Gdevice::GetDXDevice() {
     return device_;

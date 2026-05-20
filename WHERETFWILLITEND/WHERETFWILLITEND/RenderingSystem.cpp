@@ -20,7 +20,9 @@ void RenderingSystem::CreateGeomRootSign() {
     if (geom_root_signature_ == nullptr) {
         geom_root_signature_ = std::make_shared<RootSignature>();
     }
-    //cbv
+    //pass
+    geom_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_ALL);
+    //pov 
     geom_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_ALL);
     // textures diffuse
     geom_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_ALL);
@@ -73,7 +75,13 @@ void RenderingSystem::CreateLightRootSign() {
     if (light_root_signature_ == nullptr) {
         light_root_signature_ = std::make_shared<RootSignature>();
     }
-    //cbv
+    //pass
+    light_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    //pov
+    light_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    //lights amount (b2)
+    light_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    // shadow constants (b3)
     light_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     // g buffer
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
@@ -84,10 +92,6 @@ void RenderingSystem::CreateLightRootSign() {
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     // shadow maps (t5-t8)
     light_root_signature_->AddParameter(Type::srv, 4, D3D12_SHADER_VISIBILITY_PIXEL);
-    //lights amount (b1)
-    light_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
-    // shadow matrices (b2)
-    light_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
 
     //sampler
     light_root_signature_->AddParameter(Type::sampler, 1, D3D12_SHADER_VISIBILITY_PIXEL);
@@ -129,11 +133,11 @@ void RenderingSystem::CreateShadowRootSign() {
 void RenderingSystem::CreateShadowPSO() {
     std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout = {};
     std::string type = "vs_5_0";
-    CompileShader(L"ShadowVertexShader.hlsl", shadow_vertex_shader_, type);
+    //CompileShader(L"ShadowVertexShader.hlsl", shadow_vertex_shader_, type);
     type = "ps_5_0";
-    CompileShader(L"ShadowPixelShader.hlsl", shadow_pixel_shader_, type);
+    //CompileShader(L"ShadowPixelShader.hlsl", shadow_pixel_shader_, type);
     std::vector<DXGI_FORMAT> formats = {};
-    shadow_pso_ = std::make_shared<PSO>(input_layout, shadow_vertex_shader_, shadow_pixel_shader_, device_, shadow_root_signature_, 0, formats);
+   // shadow_pso_ = std::make_shared<PSO>(input_layout, shadow_vertex_shader_, shadow_pixel_shader_, device_, shadow_root_signature_, 0, formats);
 }
 void RenderingSystem::InitGeomPass() {
     CreateGeomRootSign();
@@ -178,21 +182,26 @@ void RenderingSystem::InitLightPass() {
 ///  C BUFFER
 void RenderingSystem::FillCbuffers(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time, XMMATRIX world) {
     //identity
-    XMStoreFloat4x4(&cbuffer_->GetData().model, world);
+    float cam_near = 0.1f;
+    float cam_far = 10000.0f;
+    XMStoreFloat4x4(&pov_buffer_->GetData().model, world);
     //view
-    XMStoreFloat4x4(&cbuffer_->GetData().view, XMMatrixLookAtLH(cam_pos, look_at, up));
+    XMStoreFloat4x4(&pov_buffer_->GetData().view, XMMatrixLookAtLH(cam_pos, look_at, up));
     //projection
-    XMStoreFloat4x4(&cbuffer_->GetData().projection, XMMatrixPerspectiveFovLH(XM_PIDIV4, float(device_->width_) / float(device_->height_), 0.1f, 10000.0f));
+    XMStoreFloat4x4(&pov_buffer_->GetData().projection, XMMatrixPerspectiveFovLH(XM_PIDIV4, float(device_->width_) / float(device_->height_), cam_near, cam_far));
     //inv identity
-    XMStoreFloat4x4(&cbuffer_->GetData().inv_model, XMMatrixInverse(nullptr, XMLoadFloat4x4(&cbuffer_->GetData().model)));
+    XMStoreFloat4x4(&pov_buffer_->GetData().inv_model, XMMatrixInverse(nullptr, XMLoadFloat4x4(&pov_buffer_->GetData().model)));
     //inv view
-    XMStoreFloat4x4(&cbuffer_->GetData().inv_view, XMMatrixInverse(nullptr, XMLoadFloat4x4(&cbuffer_->GetData().view)));
+    XMStoreFloat4x4(&pov_buffer_->GetData().inv_view, XMMatrixInverse(nullptr, XMLoadFloat4x4(&pov_buffer_->GetData().view)));
     //inv projection
-    XMStoreFloat4x4(&cbuffer_->GetData().inv_projection, XMMatrixInverse(nullptr, XMLoadFloat4x4(&cbuffer_->GetData().projection)));
-    cbuffer_->GetData().time = time;
-    XMStoreFloat4(&cbuffer_->GetData().cam_pos, cam_pos);
-    XMStoreFloat4(&cbuffer_->GetData().cam_forward, XMVector3Normalize(look_at - cam_pos));
-    cbuffer_->Save_changes();
+    XMStoreFloat4x4(&pov_buffer_->GetData().inv_projection, XMMatrixInverse(nullptr, XMLoadFloat4x4(&pov_buffer_->GetData().projection)));
+    pass_buffer_->GetData().time = time;
+    XMStoreFloat4(&pass_buffer_->GetData().cam_pos, cam_pos);
+    XMStoreFloat4(&pass_buffer_->GetData().cam_forward, XMVector3Normalize(look_at - cam_pos));
+    pass_buffer_->GetData().cam_near = cam_near;
+    pass_buffer_->GetData().cam_far = cam_far;
+    pass_buffer_->Save_changes();
+    pov_buffer_->Save_changes();
     if (emiters_.size() >0) {
         for (int i = 0; i < emiters_.size(); i++) {
             std::shared_ptr<ParticleEmiter> emiter = emiters_[i];
@@ -204,21 +213,21 @@ void RenderingSystem::FillCbuffers(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR 
 };
 void RenderingSystem::ParseModelToCBuffer(std::shared_ptr<Model> mesh) {
     for (int i = 0; i < mesh->GetMaterials().size(); i++) {
-        cbuffer_->GetData().mats[i].ambient_ = mesh->GetMaterials()[i].ambient_k;
-        cbuffer_->GetData().mats[i].diffuse_ = mesh->GetMaterials()[i].diffuse_k;
-        cbuffer_->GetData().mats[i].spec_ = mesh->GetMaterials()[i].specular_k;
-        cbuffer_->GetData().mats[i].shiny_ = mesh->GetMaterials()[i].shiny_k;
+        pass_buffer_->GetData().mats[i].ambient_ = mesh->GetMaterials()[i].ambient_k;
+        pass_buffer_->GetData().mats[i].diffuse_ = mesh->GetMaterials()[i].diffuse_k;
+        pass_buffer_->GetData().mats[i].spec_ = mesh->GetMaterials()[i].specular_k;
+        pass_buffer_->GetData().mats[i].shiny_ = mesh->GetMaterials()[i].shiny_k;
         if (mesh->GetMaterials()[i].hasHeightTexture) {
-            cbuffer_->GetData().mats[i].NormalType = 2;
+            pass_buffer_->GetData().mats[i].NormalType = 2;
         }
         else if (mesh->GetMaterials()[i].hasNormTexture) {
-            cbuffer_->GetData().mats[i].NormalType = 1;
+            pass_buffer_->GetData().mats[i].NormalType = 1;
         }
         else {
-            cbuffer_->GetData().mats[i].NormalType = 0;
+            pass_buffer_->GetData().mats[i].NormalType = 0;
         }
     }
-    cbuffer_->Save_changes();
+    pass_buffer_->Save_changes();
 }
 void RenderingSystem::CreateInputLayout() {
     input_layout_ =
@@ -249,7 +258,7 @@ void RenderingSystem::CompileShader(std::wstring path, ComPtr<ID3DBlob>& shader,
 // PASSES 
 
 std::shared_ptr<Model> RenderingSystem::BilBoardMesh(std::shared_ptr<Model> mesh, float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up) {
-    XMFLOAT4 distance = XMFLOAT4(mesh->GetPosition().x - cbuffer_->GetData().cam_pos.x, mesh->GetPosition().y - cbuffer_->GetData().cam_pos.y, mesh->GetPosition().z - cbuffer_->GetData().cam_pos.z, mesh->GetPosition().w - cbuffer_->GetData().cam_pos.w);
+    XMFLOAT4 distance = XMFLOAT4(mesh->GetPosition().x - pass_buffer_->GetData().cam_pos.x, mesh->GetPosition().y - pass_buffer_->GetData().cam_pos.y, mesh->GetPosition().z - pass_buffer_->GetData().cam_pos.z, mesh->GetPosition().w - pass_buffer_->GetData().cam_pos.w);
     float dist = XMVectorGetX(XMVector4Length(XMLoadFloat4(&distance)));
     // if mesh needs to be bilboarded like an idiot
     if ((mesh->GetBillBoardable() and dist > 5000) or mesh->IsBilboard()) {
@@ -312,9 +321,11 @@ void RenderingSystem::SetupGeomPass(const float clearColor[4]) {
     device_->cmd_->command_list_->OMSetRenderTargets(3, &g_buffer_->albedo_->handle_.cpu_, TRUE, &dsvHandle);
 
     //desc tables setup
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, cbuffer_->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, Sampler_handle_.gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, pass_buffer_->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, pov_buffer_->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(4, Sampler_handle_.gpu_);
 }
+
 
 
 void RenderingSystem::GeomPass(std::shared_ptr<Model> mesh) {
@@ -333,9 +344,9 @@ void RenderingSystem::GeomPass(std::shared_ptr<Model> mesh) {
     }
     else {
         BoundingFrustum frust;
-        XMMATRIX invworld = XMLoadFloat4x4(&cbuffer_->GetData().inv_view);
+        XMMATRIX invworld = XMLoadFloat4x4(&pov_buffer_->GetData().inv_view);
         frustum_.Transform(frust, invworld);
-        invworld = XMLoadFloat4x4(&cbuffer_->GetData().inv_model);
+        invworld = XMLoadFloat4x4(&pov_buffer_->GetData().inv_model);
         frust.Transform(frust, invworld);
         mesh->GetOctree()->GetIndeciesToDraw(submeshes, frust);
         OutputDebugStringA("meshes drawn this frame: ");
@@ -350,11 +361,11 @@ void RenderingSystem::GeomPass(std::shared_ptr<Model> mesh) {
     for (int i = 0; i < submeshes.size(); i++) {
         //diffuse textures/
         SubMesh submesh = mesh->GetSubMeshes()[submeshes[i]];
-        cbuffer_->GetData().current_mat = submesh.materialIndex;
-        cbuffer_->Save_changes();
-        device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, mesh->GetMaterials()[submesh.materialIndex].diffuseTexture->GetResourse()->GetHandle().gpu_);
+        pass_buffer_->GetData().current_mat = submesh.materialIndex;
+        pass_buffer_->Save_changes();
+        device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, mesh->GetMaterials()[submesh.materialIndex].diffuseTexture->GetResourse()->GetHandle().gpu_);
         //normal textures
-        device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, mesh->GetMaterials()[submesh.materialIndex].HeightNormTexture->GetResourse()->GetHandle().gpu_);
+        device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, mesh->GetMaterials()[submesh.materialIndex].HeightNormTexture->GetResourse()->GetHandle().gpu_);
         if (mesh->GetName() == "water.obj") {
             device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
             device_->cmd_->command_list_->SetPipelineState(geom_pso_water_tes_->GetPSO().Get());
@@ -380,38 +391,39 @@ void RenderingSystem::GeomPass(std::shared_ptr<Model> mesh) {
 }
 
 void RenderingSystem::ShadowPass(XMVECTOR camera_pos, XMVECTOR camera_target, XMVECTOR camera_up_, float fov_y, const float clearColor[4], float time) {
-    light_buffer_->UpdateShadowMatricies(camera_target, camera_pos, camera_up_, fov_y);
+    XMMATRIX view = XMLoadFloat4x4(&pov_buffer_->GetData().view);
+    XMMATRIX proj = XMLoadFloat4x4(&pov_buffer_->GetData().projection);
+    light_buffer_->UpdateShadowMatricies(view, proj, XM_PIDIV4,device_->width_/device_->height_);
+    device_->cmd_->command_list_->SetPipelineState(geom_pso_->GetPSO().Get());
+    device_->cmd_->command_list_->SetGraphicsRootSignature(geom_root_signature_->GetRootSign().Get());
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, pass_buffer_->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(4, Sampler_handle_.gpu_);
     for (int i = 0; i < light_buffer_->GetMaxLights()->GetData().x; i++) {
         if (light_buffer_->GetBuffer()->GetData()[i].type == 0) {
+            bool culling = culling_enabled_;
+            culling_enabled_ = false;
             for (int j = 0; j < 4; j++) {
+                device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, light_buffer_->GetShadowMap()->GetCascade(j)->GetPovBuffer()->GetHandle().gpu_);
                 std::shared_ptr<ShadowMap> sm= light_buffer_->GetShadowMap();
-                D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = sm->GetCascade(j)->GetZbuffer()->handle_.cpu_;
-                device_->cmd_->command_list_->OMSetRenderTargets(0, nullptr, FALSE, &dsvHandle);
-                device_->cmd_->command_list_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
-                for (int i = 0; i < meshes_.size(); i++) {
+                D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = sm->GetDSVHandle(j).cpu_;
+                device_->cmd_->command_list_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 0.0f, 0, 0, nullptr);
+                device_->cmd_->command_list_->OMSetRenderTargets(0, nullptr, TRUE, &dsvHandle);
+                for (int k = 0; k < meshes_.size(); k++) {
                     //fill buffer
-                    std::shared_ptr<Model> mesh = meshes_[i];
+                    std::shared_ptr<Model> mesh = meshes_[k];
                     ParseModelToCBuffer(mesh);
-                    mesh = BilBoardMesh(mesh, time, camera_target, camera_pos, camera_up_);
-                    // make frustum
-                    cbuffer_->GetData().view = sm->GetCascade(j)->GetView();
-                    cbuffer_->GetData().projection = sm->GetCascade(j)->GetProj();
-                    XMStoreFloat4x4(&cbuffer_->GetData().inv_view, XMMatrixInverse(nullptr, XMLoadFloat4x4(&cbuffer_->GetData().view)));
-                    XMStoreFloat4x4(&cbuffer_->GetData().inv_projection, XMMatrixInverse(nullptr, XMLoadFloat4x4(&cbuffer_->GetData().projection)));
-                    cbuffer_->Save_changes();
-                    bool culling = culling_enabled_;
-                    culling_enabled_ = false;
+                    mesh = BilBoardMesh(mesh, pass_buffer_->GetData().time, camera_target, camera_pos, camera_up_);
                     GeomPass(mesh);
-                    culling_enabled_ = culling;
                 }
             }
-        }
+        culling_enabled_ = culling;
         break;
+        }
     }
 }
 
 void RenderingSystem::ComputePass(std::shared_ptr<ParticleEmiter> emiter) {
-    emiter->UpdateCbuffer(cbuffer_->GetData().time);
+    emiter->UpdateCbuffer(pass_buffer_->GetData().time);
 
     auto aliveIn = emiter->GetAliveIn();
     auto aliveOut = emiter->GetAliveOut();
@@ -545,17 +557,17 @@ void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_
     device_->cmd_->command_list_->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
     device_->cmd_->command_list_->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
     //set desc tables
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, cbuffer_->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, g_buffer_->albedo_->texture_->GetResourse()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, g_buffer_->normal_->texture_->GetResourse()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, g_buffer_->depth_->z_buffer_->GetResourse()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(4, g_buffer_->material_index_->texture_->GetResourse()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(5, light_buffer_->GetBuffer()->GetHandle().gpu_);
-    // THIS BREAKS IF NO DIR LIGHT
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(6, light_buffer_->GetShadowMapHandles()[0]);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(7, light_buffer_->GetMaxLights()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(8, light_buffer_->GetShadowConstants()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(9, Sampler_handle_.gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, pass_buffer_->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, pov_buffer_->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, light_buffer_->GetMaxLights()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, light_buffer_->GetShadowConstants()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(4, g_buffer_->albedo_->texture_->GetResourse()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(5, g_buffer_->normal_->texture_->GetResourse()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(6, g_buffer_->depth_->z_buffer_->GetResourse()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(7, g_buffer_->material_index_->texture_->GetResourse()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(8, light_buffer_->GetBuffer()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(9, light_buffer_->GetShadowMapHandles()[0]);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(10, Sampler_handle_.gpu_);
     // draw
     device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     device_->cmd_->command_list_->DrawInstanced(3, 1, 0, 0);
@@ -567,7 +579,7 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<st
     device_ = device;
         std::vector<std::string> texnames = { "jagertree.png","dark.png"};
     for (int i=0;i<texnames.size();i++){
-        XMFLOAT4 emiterpos = XMFLOAT4(100*i, 0, 0, 1);
+        XMFLOAT4 emiterpos = XMFLOAT4(100*(i+1), 0, 0, 1);
         XMFLOAT3 emiterdir = XMFLOAT3(10*i, 10, 0);
         emiters_.push_back(std::make_shared<ParticleEmiter>(texnames[i], device_, emiterpos, 0.1f, 0.0f, 100000, 100, 10, emiterdir, 0.2618f));
     }
@@ -605,13 +617,16 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<st
     CreateShadowRootSign();
     CreateShadowPSO();
     // c buffer
-    cbuffer_ = std::make_shared<Cbuffer<PassConstants>>(device_);
+    pass_buffer_ = std::make_shared<Cbuffer<PassConstants>>(device_);
+    pov_buffer_ = std::make_shared<Cbuffer<POVConstants>>(device_);
     FillCbuffers(cam_pos, look_at, up, time);
     // let there be light
     light_buffer_ = std::make_shared<Lights>(device_);
     light_buffer_->AddAmbientlight({ 0.6,0.6,0.6 }, false);
-    light_buffer_->AddDirlight({ 0.6,0.6,0.6 }, { 1.0 ,-1.0,0.0, 0.0 }, false);
-    OutputDebugStringA((std::to_string(light_buffer_->GetBuffer()->GetData()[0].type)+'\n').c_str());
+    light_buffer_->AddDirlight({ 0.6,0.6,0.6 }, { 1.0 ,-1.0,1.0, 0.0 }, false);
+    XMMATRIX view = XMLoadFloat4x4(&pov_buffer_->GetData().view);
+    XMMATRIX proj = XMLoadFloat4x4(&pov_buffer_->GetData().projection);
+    light_buffer_->UpdateShadowMatricies(view, proj, XM_PIDIV4, device_->width_ / device_->height_);
 
     
 
@@ -684,7 +699,7 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
         mesh = BilBoardMesh(mesh, time, look_at, cam_pos, up);
 
         // make frustum
-        XMMATRIX proj = XMLoadFloat4x4(&(cbuffer_->GetData().projection));
+        XMMATRIX proj = XMLoadFloat4x4(&(pov_buffer_->GetData().projection));
         BoundingFrustum::CreateFromMatrix(frustum_, proj);
         GeomPass(mesh);
     }
@@ -692,10 +707,10 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
     if (emiters_.size() > 0) {
         for(int i=0; i<emiters_.size();i++){
             std::shared_ptr<ParticleEmiter> emiter = emiters_[i];
-            cbuffer_->GetData().mats[0].ambient_ = XMFLOAT3(1.0f, 1.0f, 1.0f);
-            cbuffer_->GetData().mats[0].diffuse_ = XMFLOAT3(1.0f, 1.0f, 1.0f);
-            cbuffer_->GetData().mats[0].spec_ = XMFLOAT3(0.0f, 0.0f, 0.0f);
-            cbuffer_->GetData().mats[0].shiny_ = 1.0f;
+            pass_buffer_->GetData().mats[0].ambient_ = XMFLOAT3(1.0f, 1.0f, 1.0f);
+            pass_buffer_->GetData().mats[0].diffuse_ = XMFLOAT3(1.0f, 1.0f, 1.0f);
+            pass_buffer_->GetData().mats[0].spec_ = XMFLOAT3(0.0f, 0.0f, 0.0f);
+            pass_buffer_->GetData().mats[0].shiny_ = 1.0f;
             FillCbuffers(cam_pos, look_at, up, time);
             ComputePass(emiter);
             /*
@@ -724,10 +739,9 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
         device_->cmd_->command_list_.Get()->ResourceBarrier(toLight.size(), toLight.data());
     }
 
-    float fov_y;
-    fov_y = 2.0f * atan(1/(cbuffer_->GetData().projection._22));
-
-    ShadowPass(cam_pos, look_at, up, fov_y, clearColor, time);
+    device_->ViewportScissorSetup(4096, 4096);
+    ShadowPass(cam_pos, look_at, up, XM_PIDIV4, clearColor, time);
+    device_->ViewportScissorSetup();
     // transition shad maps to srv
     std::vector<D3D12_RESOURCE_BARRIER> shadowMapsToRead;
     {
@@ -745,5 +759,4 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
             device_->cmd_->command_list_.Get()->ResourceBarrier(shadowMapsToRead.size(), shadowMapsToRead.data());
     }
     LightPass(clearColor, rtvHandle);
-
 }

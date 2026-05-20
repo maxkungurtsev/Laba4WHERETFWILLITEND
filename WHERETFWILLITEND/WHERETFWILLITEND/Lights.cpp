@@ -9,13 +9,10 @@ Lights::Lights(std::shared_ptr<Gdevice> device) {
 	std::string name = "dummy_sm";
 	dummy_shad_map_ = std::make_shared<GTexture>(dummy_, name, device, TextureUsage::Depth);
 	dummy_shad_map_handles = { dummy_shad_map_->GetResourse()->GetHandle().gpu_, dummy_shad_map_->GetResourse()->GetHandle().gpu_, dummy_shad_map_->GetResourse()->GetHandle().gpu_, dummy_shad_map_->GetResourse()->GetHandle().gpu_};
-	current_viewProj = std::make_shared<Cbuffer<XMFLOAT4X4>>(device);
 	shadow_constants_ = std::make_shared<Cbuffer<ShadowConstants>>(device);
-	XMStoreFloat4x4(&current_viewProj->GetData(), XMMatrixIdentity());
 	for (int i = 0; i < 4; ++i) {
-		XMStoreFloat4x4(&shadow_constants_->GetData().viewProj_mat[i], XMMatrixIdentity());
+		XMStoreFloat4x4(&shadow_constants_->GetData().view_proj_mat[i], XMMatrixIdentity());
 	}
-	current_viewProj->Save_changes();
 	shadow_constants_->Save_changes();
 }
 
@@ -76,15 +73,21 @@ void Lights::AddDirlight(XMFLOAT3 strength, XMFLOAT4 direction, bool in_render_f
     // shad map init
 	std::shared_ptr<ShadowMap> sm;
 	XMVECTOR dir = XMLoadFloat4(&direction);
-	XMVECTOR pos = -dir*500.0f; 
+	XMVECTOR pos = -dir*2000.0f; 
 	const float aspect_ratio = static_cast<float>(device_->width_) / static_cast<float>(device_->height_);
-	sm = std::make_shared<ShadowMap>(4096, 4096, 4, device_, pos, XMVectorSet(0, 0, 0, 1), aspect_ratio, 0.75f);
+	sm = std::make_shared<ShadowMap>(4096, 4096, 4, device_, pos, XMVectorSet(0, 0, 0, 0), aspect_ratio, 0.75f);
 	casc_shad_map_=sm;
 	casc_shad_map_handles.clear();
 	casc_shad_map_handles.push_back(casc_shad_map_->GetSRVHandle(0).gpu_);
 	casc_shad_map_handles.push_back(casc_shad_map_->GetSRVHandle(1).gpu_);
 	casc_shad_map_handles.push_back(casc_shad_map_->GetSRVHandle(2).gpu_);
 	casc_shad_map_handles.push_back(casc_shad_map_->GetSRVHandle(3).gpu_);
+
+	shadow_constants_->GetData().view_proj_mat[0] = casc_shad_map_->GetCascade(0)->GetViewProj();
+	shadow_constants_->GetData().view_proj_mat[1] = casc_shad_map_->GetCascade(1)->GetViewProj();
+	shadow_constants_->GetData().view_proj_mat[2] = casc_shad_map_->GetCascade(2)->GetViewProj();
+	shadow_constants_->GetData().view_proj_mat[3] = casc_shad_map_->GetCascade(3)->GetViewProj();
+	shadow_constants_->Save_changes();
 }
 void Lights::AddPointlight(XMFLOAT3 strength, XMFLOAT4 position, float falloff_start, float falloff_end, bool in_render_frame, float velocity, float spawn_time, XMFLOAT4 movement_direction) {
 	LightData newlight;
@@ -116,20 +119,16 @@ std::shared_ptr <Cbuffer<XMFLOAT4>> Lights::GetMaxLights() {
 }
 
 
-void Lights::SetViewProj(XMFLOAT4X4 new_view_proj) {
-	current_viewProj->GetData() = new_view_proj;
-	current_viewProj->Save_changes();
-};
-
-void Lights::UpdateShadowMatricies(XMVECTOR camera_target, XMVECTOR camera_pos, XMVECTOR camera_up_, float fov_y) {
+void Lights::UpdateShadowMatricies(XMMATRIX& cameraView, XMMATRIX& cameraProj, float cameraFovY, float cameraAspect) {
 	for (int i = 0; i < max_lights_->GetData().x; i++) {
 		if (lights_->GetData()[i].type == 0) {
-			casc_shad_map_->UpdateMatricies(camera_target, camera_pos, camera_up_, fov_y);
+			casc_shad_map_->UpdateMatricies(cameraView, cameraProj, cameraFovY, cameraAspect);
 			for (int cascade = 0; cascade < 4; ++cascade) {
 				std::shared_ptr<Cascade> cascade_data = casc_shad_map_->GetCascade(cascade);
-				shadow_constants_->GetData().viewProj_mat[cascade] = cascade_data->GetViewProj();
+				shadow_constants_->GetData().view_proj_mat[cascade] = cascade_data->GetViewProj();
 				(&shadow_constants_->GetData().split_depths.x)[cascade] = cascade_data->GetSplitDepth();
 			}
+			OutputDebugStringA((std::to_string(shadow_constants_->GetData().split_depths.x) + " " + std::to_string(shadow_constants_->GetData().split_depths.y) + " " + std::to_string(shadow_constants_->GetData().split_depths.z) + " " + std::to_string(shadow_constants_->GetData().split_depths.w)).c_str());
 			shadow_constants_->Save_changes();
 		}
 	}
