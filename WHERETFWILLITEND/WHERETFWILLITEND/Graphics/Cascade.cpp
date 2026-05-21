@@ -32,7 +32,6 @@ Cascade::Cascade(UINT width,
 
 
 XMFLOAT4X4& Cascade::GetViewProj(){
-	XMStoreFloat4x4(&view_proj_, XMMatrixMultiply(XMLoadFloat4x4(&pov_buffer_->GetData().view), XMLoadFloat4x4(&pov_buffer_->GetData().projection)));
 	return view_proj_;
 }
 float Cascade::CalculateSplitDepth(UINT split_index) {
@@ -86,7 +85,7 @@ void Cascade::UpdateMatrix(XMMATRIX& cameraView, float cameraFovY, float cameraA
     }
     cascadeCenter /= 8.0f;
     XMVECTOR lightDir =XMVector3Normalize(light_target_ - light_pos_);
-    XMVECTOR lightPos = (cascadeCenter - lightDir)*distance_;
+    XMVECTOR lightPos =cascadeCenter - (lightDir*distance_);
     XMVECTOR up = XMVectorSet(0, 1, 0, 0);
     XMMATRIX lightView = XMMatrixLookAtLH(lightPos,cascadeCenter,up);
     float minX = FLT_MAX;
@@ -125,5 +124,6 @@ void Cascade::UpdateMatrix(XMMATRIX& cameraView, float cameraFovY, float cameraA
     XMStoreFloat4x4(&pov_buffer_->GetData().inv_view,XMMatrixInverse(nullptr, lightView));
     XMStoreFloat4x4(&pov_buffer_->GetData().projection,lightProj);
     XMStoreFloat4x4(&pov_buffer_->GetData().inv_projection,XMMatrixInverse(nullptr, lightProj));
+    XMStoreFloat4x4(&view_proj_, XMMatrixMultiply(lightProj, lightView));
     pov_buffer_->Save_changes();
 }

@@ -24,21 +24,23 @@ struct shaderMaterialData {
 	float pad1 = 0;
 };
 struct PassConstants {
+	XMFLOAT4 cam_pos;
+	XMFLOAT4 cam_forward;
+	shaderMaterialData mats[300];
+	float time;
+	int current_mat;
+	float cam_near;
+	float cam_far;
+};
+struct POVConstants {
 	XMFLOAT4X4 model;
 	XMFLOAT4X4 inv_model;
 	XMFLOAT4X4 view;
 	XMFLOAT4X4 inv_view;
 	XMFLOAT4X4 projection;
 	XMFLOAT4X4 inv_projection;
-	XMFLOAT4 cam_pos;
-	XMFLOAT4 cam_forward;
-	shaderMaterialData mats[300];
-	float time;
-	int current_mat;
-	float pad2[2];
 };
-
 struct ShadowConstants {
-	XMFLOAT4X4 viewProj_mat[4];
+	XMFLOAT4X4 view_proj_mat[4];
 	XMFLOAT4 split_depths;
 };
