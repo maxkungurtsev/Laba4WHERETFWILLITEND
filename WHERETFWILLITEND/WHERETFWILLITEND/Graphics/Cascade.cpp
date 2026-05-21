@@ -7,7 +7,7 @@ Cascade::Cascade(UINT width,
 	XMVECTOR target, 
 	UINT cascade_index, 
 	UINT cascade_count,
-	float aspect_ratio,
+	float distance,
 	float split_lambda): width_(width), height_(height), light_pos_(light_pos), light_target_(target),
 	cascade_index_(cascade_index), cascade_count_(cascade_count) {
 	pov_buffer_ = std::make_shared<Cbuffer<POVConstants>>(device);
@@ -16,7 +16,7 @@ Cascade::Cascade(UINT width,
 	}
 	std::string cascade_name = "cascade_";
 	buffer_ = std::make_shared<Zbuffer>(width_, height_, cascade_name, device, TextureUsage::Depth);
-	aspect_ratio_ = max(aspect_ratio, 0.01f);
+    distance_ = distance;
 	split_lambda_ = max(split_lambda, 0.01f);
 	const XMMATRIX view = XMMatrixLookAtLH(light_pos_ , target, XMVectorSet(0.0f, 1.0f, 0.0f, 0.0f));
 	XMStoreFloat4x4(&pov_buffer_->GetData().view, view);
@@ -29,6 +29,12 @@ Cascade::Cascade(UINT width,
 	pov_buffer_->Save_changes();
 }
 
+
+
+XMFLOAT4X4& Cascade::GetViewProj(){
+	XMStoreFloat4x4(&view_proj_, XMMatrixMultiply(XMLoadFloat4x4(&pov_buffer_->GetData().view), XMLoadFloat4x4(&pov_buffer_->GetData().projection)));
+	return view_proj_;
+}
 float Cascade::CalculateSplitDepth(UINT split_index) {
 	if (split_index == 0) {
 		return camera_near_;
@@ -43,32 +49,26 @@ float Cascade::CalculateSplitDepth(UINT split_index) {
 	const float uniform_split = camera_near_ + (camera_far_ - camera_near_) * cascade_ratio;
 	return split_lambda_ * logarithmic_split + (1.0f - split_lambda_) * uniform_split;
 }
-
-XMFLOAT4X4& Cascade::GetViewProj(){
-	XMStoreFloat4x4(&view_proj_, XMMatrixMultiply(XMLoadFloat4x4(&pov_buffer_->GetData().view), XMLoadFloat4x4(&pov_buffer_->GetData().projection)));
-	return view_proj_;
-}
-
-void Cascade::UpdateMatrix(XMMATRIX& cameraView, XMMATRIX& cameraProj, float cameraFovY, float cameraAspect){
-    float cascadeNear = CalculateSplitDepth(cascade_index_);
-    float cascadeFar = CalculateSplitDepth(cascade_index_ + 1);
+void Cascade::UpdateMatrix(XMMATRIX& cameraView, float cameraFovY, float cameraAspect){
+    prev_split_depth_ = CalculateSplitDepth(cascade_index_);
+    split_depth_ = CalculateSplitDepth(cascade_index_ + 1);
     XMMATRIX invView = XMMatrixInverse(nullptr, cameraView);
     float tanHalfFovY = tanf(cameraFovY * 0.5f);
     float tanHalfFovX = tanHalfFovY * cameraAspect;
-    float nearY = cascadeNear * tanHalfFovY;
-    float nearX = cascadeNear * tanHalfFovX;
-    float farY = cascadeFar * tanHalfFovY;
-    float farX = cascadeFar * tanHalfFovX;
+    float nearY = prev_split_depth_ * tanHalfFovY;
+    float nearX = prev_split_depth_ * tanHalfFovX;
+    float farY = split_depth_ * tanHalfFovY;
+    float farX = split_depth_ * tanHalfFovX;
     XMVECTOR frustumCornersVS[8] =
     {
-        XMVectorSet(-nearX,  nearY, -cascadeNear, 1.0f),
-        XMVectorSet(nearX,  nearY, -cascadeNear, 1.0f),
-        XMVectorSet(nearX, -nearY, -cascadeNear, 1.0f),
-        XMVectorSet(-nearX, -nearY, -cascadeNear, 1.0f),
-        XMVectorSet(-farX,  farY, -cascadeFar, 1.0f),
-        XMVectorSet(farX,  farY, -cascadeFar, 1.0f),
-        XMVectorSet(farX, -farY, -cascadeFar, 1.0f),
-        XMVectorSet(-farX, -farY, -cascadeFar, 1.0f),
+        XMVectorSet(-nearX,  nearY, prev_split_depth_, 1.0f),
+        XMVectorSet(nearX,   nearY, prev_split_depth_, 1.0f),
+        XMVectorSet(nearX,  -nearY, prev_split_depth_, 1.0f),
+        XMVectorSet(-nearX, -nearY, prev_split_depth_, 1.0f),
+        XMVectorSet(-farX,   farY, split_depth_, 1.0f),
+        XMVectorSet(farX,    farY, split_depth_, 1.0f),
+        XMVectorSet(farX,   -farY, split_depth_, 1.0f),
+        XMVectorSet(-farX,  -farY, split_depth_, 1.0f),
     };
     XMVECTOR frustumCornersWS[8];
     for (int i = 0; i < 8; ++i)
@@ -86,12 +86,9 @@ void Cascade::UpdateMatrix(XMMATRIX& cameraView, XMMATRIX& cameraProj, float cam
     }
     cascadeCenter /= 8.0f;
     XMVECTOR lightDir =XMVector3Normalize(light_target_ - light_pos_);
-    float pullback = 500.0f;
-    XMVECTOR lightPos =
-        cascadeCenter - lightDir * pullback;
+    XMVECTOR lightPos = (cascadeCenter - lightDir)*distance_;
     XMVECTOR up = XMVectorSet(0, 1, 0, 0);
-    XMMATRIX lightView =
-        XMMatrixLookAtRH(lightPos,cascadeCenter,up);
+    XMMATRIX lightView = XMMatrixLookAtLH(lightPos,cascadeCenter,up);
     float minX = FLT_MAX;
     float maxX = -FLT_MAX;
     float minY = FLT_MAX;
@@ -112,18 +109,18 @@ void Cascade::UpdateMatrix(XMMATRIX& cameraView, XMMATRIX& cameraProj, float cam
     }
     constexpr float zMult = 10.0f;
     if (minZ < 0.0f){
-        minZ *= zMult;
+        //minZ *= zMult;
     }
     else{
-        minZ /= zMult;
+        //minZ /= zMult;
     }
     if (maxZ < 0.0f){
-        maxZ /= zMult;
+        //maxZ /= zMult;
     }
     else{
-        maxZ *= zMult;
+        //maxZ *= zMult;
     }
-    XMMATRIX lightProj =XMMatrixOrthographicOffCenterRH(minX,maxX,minY,maxY,minZ,maxZ);
+    XMMATRIX lightProj =XMMatrixOrthographicOffCenterLH(minX,maxX,minY,maxY,minZ,maxZ);
     XMStoreFloat4x4(&pov_buffer_->GetData().view,lightView);
     XMStoreFloat4x4(&pov_buffer_->GetData().inv_view,XMMatrixInverse(nullptr, lightView));
     XMStoreFloat4x4(&pov_buffer_->GetData().projection,lightProj);

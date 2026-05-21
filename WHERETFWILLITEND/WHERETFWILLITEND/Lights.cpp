@@ -73,9 +73,9 @@ void Lights::AddDirlight(XMFLOAT3 strength, XMFLOAT4 direction, bool in_render_f
     // shad map init
 	std::shared_ptr<ShadowMap> sm;
 	XMVECTOR dir = XMLoadFloat4(&direction);
-	XMVECTOR pos = -dir*2000.0f; 
-	const float aspect_ratio = static_cast<float>(device_->width_) / static_cast<float>(device_->height_);
-	sm = std::make_shared<ShadowMap>(4096, 4096, 4, device_, pos, XMVectorSet(0, 0, 0, 0), aspect_ratio, 0.75f);
+	float distance = 5000.0f;
+	XMVECTOR pos = -dir* distance;
+	sm = std::make_shared<ShadowMap>(4096, 4096, 4, device_, pos, XMVectorSet(0, 0, 0, 0), distance, 0.75f);
 	casc_shad_map_=sm;
 	casc_shad_map_handles.clear();
 	casc_shad_map_handles.push_back(casc_shad_map_->GetSRVHandle(0).gpu_);
@@ -119,16 +119,29 @@ std::shared_ptr <Cbuffer<XMFLOAT4>> Lights::GetMaxLights() {
 }
 
 
-void Lights::UpdateShadowMatricies(XMMATRIX& cameraView, XMMATRIX& cameraProj, float cameraFovY, float cameraAspect) {
+void Lights::UpdateShadowMatricies(XMMATRIX& cameraView, float cameraFovY, float cameraAspect) {
 	for (int i = 0; i < max_lights_->GetData().x; i++) {
 		if (lights_->GetData()[i].type == 0) {
-			casc_shad_map_->UpdateMatricies(cameraView, cameraProj, cameraFovY, cameraAspect);
+			casc_shad_map_->UpdateMatricies(cameraView, cameraFovY, cameraAspect);
 			for (int cascade = 0; cascade < 4; ++cascade) {
 				std::shared_ptr<Cascade> cascade_data = casc_shad_map_->GetCascade(cascade);
 				shadow_constants_->GetData().view_proj_mat[cascade] = cascade_data->GetViewProj();
-				(&shadow_constants_->GetData().split_depths.x)[cascade] = cascade_data->GetSplitDepth();
+				switch (cascade) {
+				case 0:
+					shadow_constants_->GetData().split_depths.x = cascade_data->GetSplitDepth();
+					break;
+				case 1:
+					shadow_constants_->GetData().split_depths.y = cascade_data->GetSplitDepth();
+					break;
+				case 2:
+					shadow_constants_->GetData().split_depths.z = cascade_data->GetSplitDepth();
+					break;
+				case 3:
+					shadow_constants_->GetData().split_depths.w = cascade_data->GetSplitDepth();
+					break;
+				}
 			}
-			OutputDebugStringA((std::to_string(shadow_constants_->GetData().split_depths.x) + " " + std::to_string(shadow_constants_->GetData().split_depths.y) + " " + std::to_string(shadow_constants_->GetData().split_depths.z) + " " + std::to_string(shadow_constants_->GetData().split_depths.w)).c_str());
+			OutputDebugStringA(("split depths: "+std::to_string(shadow_constants_->GetData().split_depths.x) + " " + std::to_string(shadow_constants_->GetData().split_depths.y) + " " + std::to_string(shadow_constants_->GetData().split_depths.z) + " " + std::to_string(shadow_constants_->GetData().split_depths.w) + '\n').c_str());
 			shadow_constants_->Save_changes();
 		}
 	}

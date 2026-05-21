@@ -47,7 +47,7 @@ VS_OUT main(VS_IN input)
 {
     VS_OUT output;
     
-    float4 worldPosition = mul(float4(input.pos,1.0), model);
+    float4 worldPosition = mul(model, float4(input.pos,1.0));
     output.pos = mul(projection, mul(view, worldPosition));
     output.worldPos = worldPosition.xyz;
     output.normal = normalize(mul((float3x3)model, input.normal));

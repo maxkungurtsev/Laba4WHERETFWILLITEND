@@ -66,7 +66,7 @@ float CalcShadowFactor(float3 worldPos, float viewDepth)
     int cascade = 3;
     for (int j = 0; j < 4; ++j)
     {
-        if (viewDepth <= cascade_split_depths[j]){
+        if (viewDepth < cascade_split_depths[j]){
             cascade = j;
             break;
         }
@@ -118,7 +118,7 @@ float CalcShadowFactor(float3 worldPos, float viewDepth)
             storedDepth = shadowMaps[3].Sample(samplerState, shadowUv).r;
             break;
     }
-    return (shadowClip-depthBias > storedDepth) ? 0.5f : 1.0f;
+    return (shadowClip.z-depthBias > storedDepth) ? 0.3f : 1.0f;
 }
 
 float3 CalcLight(LightData light, float3 normal, float3 worldPos, float3 viewDir, shaderMaterialData mat)
@@ -241,14 +241,15 @@ float4 main(PS_IN input) : SV_Target{
         finalLight += CalcLight(lights[i], normal, worldPos, V, mats[matIndex])*shadowFactor;
     }
     float4 Final;
-    Final = float4(albedo * finalLight, 1.0);
+    Final = float4(finalLight, 1.0);
     float storedDepth1 = Depth.Sample(samplerState, uv).r;
-    float storedDepth2 = shadowFactor;
+    float storedDepth2 = shadowMaps[0].Sample(samplerState, uv).r;
     float z2 = ((storedDepth2 - cam_near) / (cam_far - cam_near));
     float z = cam_near * cam_far / (cam_far - storedDepth2 * (cam_far - cam_near)) / cam_far;
     //float d = shadowMaps[1].Sample(samplerState, uv).r;
     return Final;
-    return float4(shadowFactor, shadowFactor, shadowFactor, 1.0f);
+    //return float4(shadowFactor * 0.1, shadowFactor * 0.1, shadowFactor*0.1, 1.0f);
+    return float4(z, z, z, 1.0f);
     if (z < 0)
     {
         return float4(0.0f, 0.7f, 0.0f, 1.0f);

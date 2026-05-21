@@ -27,5 +27,5 @@ public:
 	std::shared_ptr <Cbuffer<XMFLOAT4>> GetMaxLights();
 	std::shared_ptr <Cbuffer<ShadowConstants>> GetShadowConstants() { return shadow_constants_; }
 
-	void UpdateShadowMatricies(XMMATRIX& cameraView, XMMATRIX& cameraProj, float cameraFovY, float cameraAspect);
+	void UpdateShadowMatricies(XMMATRIX& cameraView, float cameraFovY, float cameraAspect);
 };

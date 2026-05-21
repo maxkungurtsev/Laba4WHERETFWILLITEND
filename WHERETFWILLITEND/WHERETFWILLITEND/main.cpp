@@ -10,9 +10,9 @@ const int width = 800;
 const int height = 800;
 //light stuff
 //camera stuff
-XMVECTOR cam_coords = {0.0, 10.0, 0.0, 1.0};
-XMVECTOR look_at = {0.0, 0.0, 0.0, 1.0};
-XMVECTOR up = {0.0, 0.0, 1.0, 1.0 };
+XMVECTOR cam_coords = {-1400.0, 10.0, 0.0, 1.0};
+XMVECTOR look_at = {1.0, 10.0, 0.0, 1.0};
+XMVECTOR up = {0.0, 1.0, 0.0, 1.0 };
 // material stuff
 const float ambient_k = 0.3;
 const float diffuse_k = 0.5;
@@ -72,16 +72,16 @@ int Run() {
             culling_enabled = true;
         }
         if (g_Input.IsKeyDown('W')) {
-            cam_coords += forward * 1;
+            cam_coords += forward * 0.1f;
         }
         if (g_Input.IsKeyDown('S')) {
-            cam_coords -= forward * 1;
+            cam_coords -= forward * 0.1f;
         }
         if (g_Input.IsKeyDown('A')) {
-            cam_coords += right * 1;
+            cam_coords += right * 10.0f;
         }
         if (g_Input.IsKeyDown('D')) {
-            cam_coords -= right * 1;
+            cam_coords -= right * 10.0f;
         }
        auto currentTime = clock::now();
        float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
