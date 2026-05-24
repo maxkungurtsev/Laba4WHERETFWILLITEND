@@ -23,6 +23,7 @@ class RenderingSystem {
 	std::shared_ptr<RootSignature> compute_root_signature_;
 	std::shared_ptr<RootSignature> particle_root_signature_;
 	std::shared_ptr<RootSignature> light_root_signature_;
+	std::shared_ptr<RootSignature> present_root_signature_;
 	//buffers
 	std::shared_ptr<GBuffer> g_buffer_;
 	std::shared_ptr <Cbuffer<PassConstants>> pass_buffer_;
@@ -55,22 +56,32 @@ class RenderingSystem {
 	ComPtr<ID3DBlob> light_vertex_shader_;
 	ComPtr<ID3DBlob> light_pixel_shader_;
 	std::shared_ptr<PSO> light_pso_;
+	//present pass
+	ComPtr<ID3DBlob> empty_vertex_shader_;
+	ComPtr<ID3DBlob> empty_pixel_shader_;
+	std::shared_ptr<PSO> present_pso_;
 	BoundingFrustum frustum_;
 	std::vector<std::shared_ptr<Model>> meshes_;
+	std::shared_ptr<RenderTarget> scene_color;
+	std::shared_ptr<RenderTarget> post_proccess_color0;
+	std::shared_ptr<RenderTarget> post_proccess_color1;
+
+
 	bool culling_enabled_=true;
 	Handle Sampler_handle_;
 	bool first_frame_ = true;
 	void CreateGeomRootSign();
 	void CreateParticleRootSign();
 	void CreateLightRootSign();
-	void CreateComputeRootSign(); 
-	void CreateShadowRootSign();
+	void CreateComputeRootSign();
+	void CreatePresentRootSign();
 	void CreateParticlePSO();
 	void CreateComputePSO();
-	void CreateShadowPSO();
+	void CreatePresentPSO();
 	void CreateInputLayout();
 	void InitGeomPass();
 	void InitLightPass();
+	void InitPresentPass();
 	void SetupGeomPass(const float clearColor[4]);
 	void FillCbuffers(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time, XMMATRIX world = XMMatrixIdentity());
 	std::shared_ptr<Model> BilBoardMesh(std::shared_ptr<Model> mesh, float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up);
@@ -81,6 +92,8 @@ class RenderingSystem {
 	void ShadowPass(XMVECTOR camera_pos, XMVECTOR camera_target, XMVECTOR camera_up_, float fov_y, const float clearColor[4], float time);
 	void ParseModelToCBuffer(std::shared_ptr<Model> mesh);
 	void LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle);
+	void PresentPass(const float clearColor[4], D3D12_GPU_DESCRIPTOR_HANDLE& ToRender, D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle);
+	void CompileEmptyShaders();
 public:
 	RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<std::string> mesh_pathes, XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR up, float time);
 	void RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up, D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle, bool shootlight, bool culling_enabled);
