@@ -125,8 +125,9 @@ void RenderingSystem::CreatePresentRootSign() {
     present_root_signature_->CreateRootSignature(device_);
 };
 void RenderingSystem::CreatePresentPSO() {
-    std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout = {};
-    present_pso_ = std::make_shared<PSO>(input_layout, empty_vertex_shader_, empty_pixel_shader_, device_, present_root_signature_, 3, PSO_formats_);
+    std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout;
+    std::vector<DXGI_FORMAT> format = { DXGI_FORMAT_R8G8B8A8_UNORM };
+    present_pso_ = std::make_shared<PSO>(input_layout, empty_vertex_shader_, empty_pixel_shader_, device_, present_root_signature_, 1, format);
 }
 void RenderingSystem::InitGeomPass() {
     CreateGeomRootSign();
@@ -570,12 +571,12 @@ void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_
     device_->cmd_->command_list_->DrawInstanced(3, 1, 0, 0);
 }
 
+
 void RenderingSystem::PresentPass(const float clearColor[4], D3D12_GPU_DESCRIPTOR_HANDLE& ToRender, D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle) {
     // set pso
-    device_->cmd_->command_list_->SetPipelineState(light_pso_->GetPSO().Get());
-    device_->cmd_->command_list_->SetGraphicsRootSignature(light_root_signature_->GetRootSign().Get());
-    // set & cler dsv, rtv
-    //D3D12_CPU_DESCRIPTOR_HANDLE dsvHandle = g_buffer_->depth_->handle_.cpu_;
+    device_->cmd_->command_list_->SetPipelineState(present_pso_->GetPSO().Get());
+    device_->cmd_->command_list_->SetGraphicsRootSignature(present_root_signature_->GetRootSign().Get());
+    // set & cler dsv, rtv;
     device_->cmd_->command_list_->OMSetRenderTargets(1, &rtvHandle, FALSE, nullptr);
     device_->cmd_->command_list_->ClearRenderTargetView(rtvHandle, clearColor, 0, nullptr);
     //set desc tables
@@ -644,8 +645,21 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<st
     XMMATRIX view = XMLoadFloat4x4(&pov_buffer_->GetData().view);
     XMMATRIX proj = XMLoadFloat4x4(&pov_buffer_->GetData().projection);
     light_buffer_->UpdateShadowMatricies(view, XM_PIDIV4, device_->width_ / device_->height_);
+    // post proccesses
+    name = "pp_color0";
+    post_proccess_color0 = std::make_shared<RenderTarget>(device->width_, device->height_, name, device, TextureUsage::Albedo);
+    name = "pp_color1";
+    post_proccess_color1 = std::make_shared<RenderTarget>(device->width_, device->height_, name, device, TextureUsage::Albedo);
+    std::string pixel_shader = "EmptyPixelShader.hlsl";
+    std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout = {};
+    std::vector<Type> type_array;
+    std::vector<int> amount_array;
+    std::vector<D3D12_SHADER_VISIBILITY> visibility_array;
+    std::shared_ptr<PostProccess> post = std::make_shared<PostProccess>(device_, type_array, amount_array, visibility_array, pixel_shader, input_layout, PSO_formats_);
+    post_procs.push_back(post);
+    std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> params = {};
+    post_proc_params.push_back(params);
 
-    
 
 }
 void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up, D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle, bool shootlight, bool culling_enabled) {
@@ -667,6 +681,7 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
         device_->heaps_->GetSamplerHeap().Get()
     };
     device_->cmd_->command_list_->SetDescriptorHeaps(_countof(heaps), heaps);
+
     if (first_frame_) {
         std::vector<D3D12_RESOURCE_BARRIER> toRenderframe =
         {
@@ -677,7 +692,13 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
             Transition(g_buffer_->material_index_->texture_->GetResourse()->GetResourse().Get(),
                        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET),
             Transition(scene_color->texture_->GetResourse()->GetResourse().Get(),
-                       D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET)
+                       D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET),
+            Transition(post_proccess_color0->texture_->GetResourse()->GetResourse().Get(),
+                       D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET),
+            Transition(post_proccess_color1->texture_->GetResourse()->GetResourse().Get(),
+                       D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+
+                       
         };
 
         device_->cmd_->command_list_.Get()->ResourceBarrier(toRenderframe.size(), toRenderframe.data());
@@ -770,11 +791,44 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
     }
     LightPass(clearColor, scene_color->handle_.cpu_);
 
-    std::vector<D3D12_RESOURCE_BARRIER> ToPostProc =
-    {
+    std::vector<D3D12_RESOURCE_BARRIER> ToPostProc ={
         Transition(scene_color->texture_->GetResourse()->GetResourse().Get(),
                    D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
     };
     device_->cmd_->command_list_.Get()->ResourceBarrier(ToPostProc.size(), ToPostProc.data());
+
     PresentPass(clearColor, scene_color->handle_.gpu_, rtvHandle);
+
+
+    /*post proccesses
+    bool color0_targeted = true;
+    D3D12_GPU_DESCRIPTOR_HANDLE base;// = scene_color->handle_.gpu_;
+    D3D12_CPU_DESCRIPTOR_HANDLE target = post_proccess_color0->handle_.cpu_;
+    for (int i = 0; i < post_procs.size(); i++) {
+        //post_procs[i]->ApplyPostProc(clearColor, base, Sampler_handle_.gpu_, post_proc_params[i],target);
+        std::vector<D3D12_RESOURCE_BARRIER> InPostProc;
+        if (color0_targeted) {
+            InPostProc ={
+                Transition(post_proccess_color1->texture_->GetResourse()->GetResourse().Get(),
+                           D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET),
+                Transition(post_proccess_color0->texture_->GetResourse()->GetResourse().Get(),
+                           D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+            };
+            target = post_proccess_color1->handle_.cpu_;
+            base = post_proccess_color0->handle_.gpu_;
+        }
+        else {
+            InPostProc = {
+                Transition(post_proccess_color0->texture_->GetResourse()->GetResourse().Get(),
+                           D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET),
+                Transition(post_proccess_color1->texture_->GetResourse()->GetResourse().Get(),
+                           D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+            };
+            base = post_proccess_color1->handle_.gpu_;
+            target = post_proccess_color0->handle_.cpu_;
+        }
+        device_->cmd_->command_list_.Get()->ResourceBarrier(InPostProc.size(), InPostProc.data());
+    }
+    */
+
 }

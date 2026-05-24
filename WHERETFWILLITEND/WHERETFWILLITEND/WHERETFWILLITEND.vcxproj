@@ -135,6 +135,7 @@
     <ClCompile Include="Graphics\GResourse.cpp" />
     <ClCompile Include="Graphics\GTexture.cpp" />
     <ClCompile Include="Graphics\Heaps.cpp" />
+    <ClCompile Include="Graphics\PostProccess.cpp" />
     <ClCompile Include="Graphics\PSO.cpp" />
     <ClCompile Include="Graphics\RenderTarget.cpp" />
     <ClCompile Include="Graphics\RootSignature.cpp" />
@@ -164,6 +165,7 @@
     <ClInclude Include="Graphics\GResourse.h" />
     <ClInclude Include="Graphics\GTexture.h" />
     <ClInclude Include="Graphics\Heaps.h" />
+    <ClInclude Include="Graphics\PostProccess.h" />
     <ClInclude Include="Graphics\PSO.h" />
     <ClInclude Include="Graphics\RenderTarget.h" />
     <ClInclude Include="Graphics\RootSignature.h" />

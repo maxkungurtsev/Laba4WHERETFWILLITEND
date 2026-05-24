@@ -1,5 +1,5 @@
 Texture2D inputTex : register(t0);
-SamplerState Sample : register(s0);
+SamplerState Sampler : register(s0);
 
 struct VSOut
 {
@@ -9,5 +9,10 @@ struct VSOut
 
 float4 main(VSOut input) : SV_Target
 {
-    return inputTex.Sample(Sample, input.uv);
+    float4 output = inputTex.Sample(Sampler, input.uv);
+    if (length(output) == 0)
+    {
+        return float4(input.uv.x, input.uv.y, input.uv.x,1.0f);
+    }
+    return output;
 }

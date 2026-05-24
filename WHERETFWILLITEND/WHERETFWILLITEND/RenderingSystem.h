@@ -1,12 +1,12 @@
 #pragma once
 #include "Graphics/RootSignature.h"
+#include "Graphics/PostProccess.h"
 #include "Graphics/RenderTarget.h"
 #include "Graphics/BackBuffer.h"
 #include "Graphics/Constants.h"
 #include "Graphics/GBuffer.h"
 #include "Graphics/CBuffer.h"
 #include "ParticleEmiter.h"
-#include "Graphics/PSO.h"
 #include "Window.h"
 #include "Lights.h"
 #include "Model.h"
@@ -24,6 +24,7 @@ class RenderingSystem {
 	std::shared_ptr<RootSignature> particle_root_signature_;
 	std::shared_ptr<RootSignature> light_root_signature_;
 	std::shared_ptr<RootSignature> present_root_signature_;
+	std::vector<std::shared_ptr<RootSignature>> post_proc_root_signs;
 	//buffers
 	std::shared_ptr<GBuffer> g_buffer_;
 	std::shared_ptr <Cbuffer<PassConstants>> pass_buffer_;
@@ -65,7 +66,8 @@ class RenderingSystem {
 	std::shared_ptr<RenderTarget> scene_color;
 	std::shared_ptr<RenderTarget> post_proccess_color0;
 	std::shared_ptr<RenderTarget> post_proccess_color1;
-
+	std::vector<std::shared_ptr<PostProccess>> post_procs;
+	std::vector<std::vector<D3D12_GPU_DESCRIPTOR_HANDLE>> post_proc_params;
 
 	bool culling_enabled_=true;
 	Handle Sampler_handle_;
