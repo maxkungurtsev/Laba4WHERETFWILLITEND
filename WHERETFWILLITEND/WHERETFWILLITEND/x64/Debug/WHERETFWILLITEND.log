@@ -8,13 +8,14 @@ C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWIL
 C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(644,38): warning C4305: аргумент: усечение из "double" в "float"
 C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(644,34): warning C4305: аргумент: усечение из "double" в "float"
 C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(647,75): warning C4244: аргумент: преобразование "UINT" в "float", возможна потеря данных
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(674,48): warning C4305: аргумент: усечение из "double" в "float"
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(674,44): warning C4305: аргумент: усечение из "double" в "float"
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(704,79): warning C4267: аргумент: преобразование из "size_t" в "UINT"; возможна потеря данных
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(732,72): warning C4267: аргумент: преобразование из "size_t" в "UINT"; возможна потеря данных
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(772,73): warning C4267: аргумент: преобразование из "size_t" в "UINT"; возможна потеря данных
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(790,86): warning C4267: аргумент: преобразование из "size_t" в "UINT"; возможна потеря данных
-C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(798,72): warning C4267: аргумент: преобразование из "size_t" в "UINT"; возможна потеря данных
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(679,48): warning C4305: аргумент: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(679,44): warning C4305: аргумент: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(709,79): warning C4267: аргумент: преобразование из "size_t" в "UINT"; возможна потеря данных
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(737,72): warning C4267: аргумент: преобразование из "size_t" в "UINT"; возможна потеря данных
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(777,73): warning C4267: аргумент: преобразование из "size_t" в "UINT"; возможна потеря данных
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(795,86): warning C4267: аргумент: преобразование из "size_t" в "UINT"; возможна потеря данных
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(803,72): warning C4267: аргумент: преобразование из "size_t" в "UINT"; возможна потеря данных
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(836,76): warning C4267: аргумент: преобразование из "size_t" в "UINT"; возможна потеря данных
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(476,82): warning C4244: аргумент: преобразование "_Ty" в "float", возможна потеря данных
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(476,82): warning C4244:         with
 C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(476,82): warning C4244:         [

@@ -650,14 +650,19 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<st
     post_proccess_color0 = std::make_shared<RenderTarget>(device->width_, device->height_, name, device, TextureUsage::Albedo);
     name = "pp_color1";
     post_proccess_color1 = std::make_shared<RenderTarget>(device->width_, device->height_, name, device, TextureUsage::Albedo);
-    std::string pixel_shader = "EmptyPixelShader.hlsl";
+    std::string pixel_shader = "PostProccessPixelShader0.hlsl";
     std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout = {};
-    std::vector<Type> type_array;
-    std::vector<int> amount_array;
-    std::vector<D3D12_SHADER_VISIBILITY> visibility_array;
+    std::vector<Type> type_array = {Type::srv, Type::cbv, Type::srv};
+    std::vector<int> amount_array = { 1, 1, 1 };
+    std::vector<D3D12_SHADER_VISIBILITY> visibility_array = { D3D12_SHADER_VISIBILITY_PIXEL, D3D12_SHADER_VISIBILITY_PIXEL, D3D12_SHADER_VISIBILITY_PIXEL };
     std::shared_ptr<PostProccess> post = std::make_shared<PostProccess>(device_, type_array, amount_array, visibility_array, pixel_shader, input_layout, PSO_formats_);
     post_procs.push_back(post);
-    std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> params = {};
+    pixel_shader = "EmptyPixelShader.hlsl";
+    post = std::make_shared<PostProccess>(device_, type_array, amount_array, visibility_array, pixel_shader, input_layout, PSO_formats_);
+    post_procs.push_back(post);
+    std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> params = { g_buffer_->depth_->z_buffer_->GetResourse()->GetHandle().gpu_, pass_buffer_->GetHandle().gpu_,  g_buffer_->normal_->texture_->GetResourse()->GetHandle().gpu_ };
+    post_proc_params.push_back(params);
+    params = { g_buffer_->normal_->texture_->GetResourse()->GetHandle().gpu_ };
     post_proc_params.push_back(params);
 
 
@@ -796,16 +801,16 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
                    D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
     };
     device_->cmd_->command_list_.Get()->ResourceBarrier(ToPostProc.size(), ToPostProc.data());
+    D3D12_GPU_DESCRIPTOR_HANDLE h = scene_color->texture_->GetResourse()->GetHandle().gpu_;
 
-    PresentPass(clearColor, scene_color->handle_.gpu_, rtvHandle);
 
+    //post proccesses
 
-    /*post proccesses
     bool color0_targeted = true;
-    D3D12_GPU_DESCRIPTOR_HANDLE base;// = scene_color->handle_.gpu_;
+    D3D12_GPU_DESCRIPTOR_HANDLE base = scene_color->texture_->GetResourse()->GetHandle().gpu_;
     D3D12_CPU_DESCRIPTOR_HANDLE target = post_proccess_color0->handle_.cpu_;
     for (int i = 0; i < post_procs.size(); i++) {
-        //post_procs[i]->ApplyPostProc(clearColor, base, Sampler_handle_.gpu_, post_proc_params[i],target);
+        post_procs[i]->ApplyPostProc(clearColor, base, Sampler_handle_.gpu_, post_proc_params[i],target);
         std::vector<D3D12_RESOURCE_BARRIER> InPostProc;
         if (color0_targeted) {
             InPostProc ={
@@ -815,7 +820,7 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
                            D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
             };
             target = post_proccess_color1->handle_.cpu_;
-            base = post_proccess_color0->handle_.gpu_;
+            base = post_proccess_color0->texture_->GetResourse()->GetHandle().gpu_;
         }
         else {
             InPostProc = {
@@ -824,11 +829,14 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
                 Transition(post_proccess_color1->texture_->GetResourse()->GetResourse().Get(),
                            D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
             };
-            base = post_proccess_color1->handle_.gpu_;
             target = post_proccess_color0->handle_.cpu_;
+            base = post_proccess_color1->texture_->GetResourse()->GetHandle().gpu_;
         }
+        color0_targeted = not(color0_targeted);
         device_->cmd_->command_list_.Get()->ResourceBarrier(InPostProc.size(), InPostProc.data());
     }
-    */
 
+
+    //present
+    PresentPass(clearColor, base, rtvHandle);
 }

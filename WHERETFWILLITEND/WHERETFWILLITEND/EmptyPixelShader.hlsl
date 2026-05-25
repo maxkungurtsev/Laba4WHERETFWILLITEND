@@ -10,9 +10,5 @@ struct VSOut
 float4 main(VSOut input) : SV_Target
 {
     float4 output = inputTex.Sample(Sampler, input.uv);
-    if (length(output) == 0)
-    {
-        return float4(input.uv.x, input.uv.y, input.uv.x,1.0f);
-    }
     return output;
 }
