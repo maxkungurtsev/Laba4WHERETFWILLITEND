@@ -657,12 +657,17 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<st
     std::vector<D3D12_SHADER_VISIBILITY> visibility_array = { D3D12_SHADER_VISIBILITY_PIXEL, D3D12_SHADER_VISIBILITY_PIXEL, D3D12_SHADER_VISIBILITY_PIXEL };
     std::shared_ptr<PostProccess> post = std::make_shared<PostProccess>(device_, type_array, amount_array, visibility_array, pixel_shader, input_layout, PSO_formats_);
     post_procs.push_back(post);
-    pixel_shader = "EmptyPixelShader.hlsl";
-    post = std::make_shared<PostProccess>(device_, type_array, amount_array, visibility_array, pixel_shader, input_layout, PSO_formats_);
-    post_procs.push_back(post);
     std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> params = { g_buffer_->depth_->z_buffer_->GetResourse()->GetHandle().gpu_, pass_buffer_->GetHandle().gpu_,  g_buffer_->normal_->texture_->GetResourse()->GetHandle().gpu_ };
     post_proc_params.push_back(params);
-    params = { g_buffer_->normal_->texture_->GetResourse()->GetHandle().gpu_ };
+
+
+    type_array = {Type::cbv};
+    amount_array = { 1 };
+    visibility_array = { D3D12_SHADER_VISIBILITY_PIXEL };
+    pixel_shader = "PostProccessPixelShader1.hlsl";
+    post = std::make_shared<PostProccess>(device_, type_array, amount_array, visibility_array, pixel_shader, input_layout, PSO_formats_);
+    post_procs.push_back(post);
+    params = { pass_buffer_->GetHandle().gpu_ };
     post_proc_params.push_back(params);
 
 
