@@ -645,29 +645,32 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<st
     XMMATRIX view = XMLoadFloat4x4(&pov_buffer_->GetData().view);
     XMMATRIX proj = XMLoadFloat4x4(&pov_buffer_->GetData().projection);
     light_buffer_->UpdateShadowMatricies(view, XM_PIDIV4, device_->width_ / device_->height_);
+
+
+
     // post proccesses
     name = "pp_color0";
     post_proccess_color0 = std::make_shared<RenderTarget>(device->width_, device->height_, name, device, TextureUsage::Albedo);
     name = "pp_color1";
     post_proccess_color1 = std::make_shared<RenderTarget>(device->width_, device->height_, name, device, TextureUsage::Albedo);
-    std::string pixel_shader = "PostProccessPixelShader0.hlsl";
+    std::string pixel_shader = "EmptyPixelShader.hlsl"; //"PostProccessPixelShader0.hlsl";
     std::vector<D3D12_INPUT_ELEMENT_DESC> input_layout = {};
-    std::vector<Type> type_array = {Type::srv, Type::cbv, Type::srv};
-    std::vector<int> amount_array = { 1, 1, 1 };
-    std::vector<D3D12_SHADER_VISIBILITY> visibility_array = { D3D12_SHADER_VISIBILITY_PIXEL, D3D12_SHADER_VISIBILITY_PIXEL, D3D12_SHADER_VISIBILITY_PIXEL };
+    std::vector<Type> type_array = {};//{Type::srv, Type::cbv, Type::srv};
+    std::vector<int> amount_array = {};// = { 1, 1, 1 };
+    std::vector<D3D12_SHADER_VISIBILITY> visibility_array = {};//{ D3D12_SHADER_VISIBILITY_PIXEL, D3D12_SHADER_VISIBILITY_PIXEL, D3D12_SHADER_VISIBILITY_PIXEL };
     std::shared_ptr<PostProccess> post = std::make_shared<PostProccess>(device_, type_array, amount_array, visibility_array, pixel_shader, input_layout, PSO_formats_);
     post_procs.push_back(post);
     std::vector<D3D12_GPU_DESCRIPTOR_HANDLE> params = { g_buffer_->depth_->z_buffer_->GetResourse()->GetHandle().gpu_, pass_buffer_->GetHandle().gpu_,  g_buffer_->normal_->texture_->GetResourse()->GetHandle().gpu_ };
     post_proc_params.push_back(params);
 
 
-    type_array = {Type::cbv};
-    amount_array = { 1 };
-    visibility_array = { D3D12_SHADER_VISIBILITY_PIXEL };
-    pixel_shader = "PostProccessPixelShader1.hlsl";
+    type_array = {};// {Type::cbv};
+    amount_array = {};// { 1 };
+    visibility_array = {};//{ D3D12_SHADER_VISIBILITY_PIXEL };
+    pixel_shader = "EmptyPixelShader.hlsl"; //"PostProccessPixelShader1.hlsl";
     post = std::make_shared<PostProccess>(device_, type_array, amount_array, visibility_array, pixel_shader, input_layout, PSO_formats_);
     post_procs.push_back(post);
-    params = { pass_buffer_->GetHandle().gpu_ };
+    params = {};// { pass_buffer_->GetHandle().gpu_ };
     post_proc_params.push_back(params);
 
 
@@ -782,7 +785,7 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
         device_->cmd_->command_list_.Get()->ResourceBarrier(toLight.size(), toLight.data());
     }
     
-    //ShadowPass(cam_pos, look_at, up, XM_PIDIV4, clearColor, time);
+    ShadowPass(cam_pos, look_at, up, XM_PIDIV4, clearColor, time);
     // transition shad maps to srv
     std::vector<D3D12_RESOURCE_BARRIER> shadowMapsToRead;
     {

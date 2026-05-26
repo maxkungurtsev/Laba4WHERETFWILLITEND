@@ -240,10 +240,10 @@ float4 main(PS_IN input) : SV_Target{
     }
     float4 Final;
     Final = float4(albedo*finalLight, 1.0);
-    return Final;
+    //return Final;
     float storedDepth1 = Depth.Sample(samplerState, uv).r;
-    float storedDepth2 = shadowMaps[0].Sample(samplerState, uv).r;
+    float storedDepth2 = shadowMaps[3].Sample(samplerState, uv).r;
     float z2 = ((storedDepth2 - cam_near) / (cam_far - cam_near));
     float z = cam_near * cam_far / (cam_far - storedDepth2 * (cam_far - cam_near)) / cam_far;
-
-    }
+    return float4(storedDepth2, storedDepth2, storedDepth2, 1.0f);
+}
