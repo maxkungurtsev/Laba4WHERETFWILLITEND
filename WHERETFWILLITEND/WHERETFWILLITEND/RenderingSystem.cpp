@@ -75,13 +75,13 @@ void RenderingSystem::CreateLightRootSign() {
     if (light_root_signature_ == nullptr) {
         light_root_signature_ = std::make_shared<RootSignature>();
     }
-    //pass
+    //pass(b1)
     light_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
-    //pov
+    //pov(b2)
     light_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
-    //lights amount (b2)
+    //lights amount (b3)
     light_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
-    // shadow constants (b3)
+    // shadow constants (b4)
     light_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     // g buffer
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
@@ -91,7 +91,10 @@ void RenderingSystem::CreateLightRootSign() {
     // Lights 
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     // shadow maps (t5-t8)
-    light_root_signature_->AddParameter(Type::srv, 4, D3D12_SHADER_VISIBILITY_PIXEL);
+    light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
 
     //sampler
     light_root_signature_->AddParameter(Type::sampler, 1, D3D12_SHADER_VISIBILITY_PIXEL);
@@ -565,7 +568,10 @@ void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(7, g_buffer_->material_index_->texture_->GetResourse()->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(8, light_buffer_->GetBuffer()->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(9, light_buffer_->GetShadowMapHandles()[0]);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(10, Sampler_handle_.gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(10, light_buffer_->GetShadowMapHandles()[1]);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(11, light_buffer_->GetShadowMapHandles()[2]);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(12, light_buffer_->GetShadowMapHandles()[3]);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(13, Sampler_handle_.gpu_);
     // draw
     device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     device_->cmd_->command_list_->DrawInstanced(3, 1, 0, 0);

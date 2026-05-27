@@ -3,7 +3,10 @@ Texture2D NormalMap : register(t1);
 Texture2D Depth : register(t2);
 Texture2D MaterialIndex : register(t3);
 SamplerState samplerState : register(s0);
-Texture2D shadowMaps[4] : register(t5);
+Texture2D shadowMap0 : register(t5);
+Texture2D shadowMap1 : register(t6);
+Texture2D shadowMap2 : register(t7);
+Texture2D shadowMap3 : register(t8);
 struct LightData
 {
     float3 strength;
@@ -104,16 +107,16 @@ float CalcShadowFactor(float3 worldPos, float viewDepth)
     switch (cascade)
     {
         case 0:
-            storedDepth = shadowMaps[0].Sample(samplerState, shadowUv).r;
+            storedDepth = shadowMap0.Sample(samplerState, shadowUv).r;
             break;
         case 1:
-            storedDepth = shadowMaps[1].Sample(samplerState, shadowUv).r;
+            storedDepth = shadowMap1.Sample(samplerState, shadowUv).r;
             break;
         case 2:
-            storedDepth = shadowMaps[2].Sample(samplerState, shadowUv).r;
+            storedDepth = shadowMap2.Sample(samplerState, shadowUv).r;
             break;
         case 3:
-            storedDepth = shadowMaps[3].Sample(samplerState, shadowUv).r;
+            storedDepth = shadowMap3.Sample(samplerState, shadowUv).r;
             break;
     }
     return (shadowClip.z-depthBias > storedDepth) ? 0.3f : 1.0f;
@@ -236,13 +239,13 @@ float4 main(PS_IN input) : SV_Target{
             shadowFactor = CalcShadowFactor(worldPos, viewDepth);
 
         }
-        finalLight += CalcLight(lights[i], normal, worldPos, V, mats[matIndex]);// * shadowFactor;
+        finalLight += CalcLight(lights[i], normal, worldPos, V, mats[matIndex])* shadowFactor;
     }
     float4 Final;
-    Final = float4(albedo*finalLight, 1.0);
+    Final = float4(finalLight, 1.0);
     //return Final;
     float storedDepth1 = Depth.Sample(samplerState, uv).r;
-    float storedDepth2 = shadowMaps[3].Sample(samplerState, uv).r;
+    float storedDepth2 = shadowMap0.Sample(samplerState, uv).r;
     float z2 = ((storedDepth2 - cam_near) / (cam_far - cam_near));
     float z = cam_near * cam_far / (cam_far - storedDepth2 * (cam_far - cam_near)) / cam_far;
     return float4(storedDepth2, storedDepth2, storedDepth2, 1.0f);
