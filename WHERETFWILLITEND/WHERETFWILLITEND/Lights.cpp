@@ -11,7 +11,8 @@ Lights::Lights(std::shared_ptr<Gdevice> device) {
 	dummy_shad_map_handles = { dummy_shad_map_->GetResourse()->GetHandle().gpu_, dummy_shad_map_->GetResourse()->GetHandle().gpu_, dummy_shad_map_->GetResourse()->GetHandle().gpu_, dummy_shad_map_->GetResourse()->GetHandle().gpu_};
 	shadow_constants_ = std::make_shared<Cbuffer<ShadowConstants>>(device);
 	for (int i = 0; i < 4; ++i) {
-		XMStoreFloat4x4(&shadow_constants_->GetData().view_proj_mat[i], XMMatrixIdentity());
+		XMStoreFloat4x4(&shadow_constants_->GetData().shad_view[i], XMMatrixIdentity());
+		XMStoreFloat4x4(&shadow_constants_->GetData().shad_proj[i], XMMatrixIdentity());
 	}
 	shadow_constants_->Save_changes();
 }
@@ -83,10 +84,15 @@ void Lights::AddDirlight(XMFLOAT3 strength, XMFLOAT4 direction, bool in_render_f
 	casc_shad_map_handles.push_back(casc_shad_map_->GetSRVHandle(2).gpu_);
 	casc_shad_map_handles.push_back(casc_shad_map_->GetSRVHandle(3).gpu_);
 
-	shadow_constants_->GetData().view_proj_mat[0] = casc_shad_map_->GetCascade(0)->GetViewProj();
-	shadow_constants_->GetData().view_proj_mat[1] = casc_shad_map_->GetCascade(1)->GetViewProj();
-	shadow_constants_->GetData().view_proj_mat[2] = casc_shad_map_->GetCascade(2)->GetViewProj();
-	shadow_constants_->GetData().view_proj_mat[3] = casc_shad_map_->GetCascade(3)->GetViewProj();
+	shadow_constants_->GetData().shad_view[0] = casc_shad_map_->GetCascade(0)->GetView();
+	shadow_constants_->GetData().shad_view[1] = casc_shad_map_->GetCascade(1)->GetView();
+	shadow_constants_->GetData().shad_view[2] = casc_shad_map_->GetCascade(2)->GetView();
+	shadow_constants_->GetData().shad_view[3] = casc_shad_map_->GetCascade(3)->GetView();
+
+	shadow_constants_->GetData().shad_proj[0] = casc_shad_map_->GetCascade(0)->GetProj();
+	shadow_constants_->GetData().shad_proj[1] = casc_shad_map_->GetCascade(1)->GetProj();
+	shadow_constants_->GetData().shad_proj[2] = casc_shad_map_->GetCascade(2)->GetProj();
+	shadow_constants_->GetData().shad_proj[3] = casc_shad_map_->GetCascade(3)->GetProj();
 	shadow_constants_->Save_changes();
 }
 void Lights::AddPointlight(XMFLOAT3 strength, XMFLOAT4 position, float falloff_start, float falloff_end, bool in_render_frame, float velocity, float spawn_time, XMFLOAT4 movement_direction) {
@@ -125,7 +131,8 @@ void Lights::UpdateShadowMatricies(XMMATRIX& cameraView, float cameraFovY, float
 			casc_shad_map_->UpdateMatricies(cameraView, cameraFovY, cameraAspect);
 			for (int cascade = 0; cascade < 4; ++cascade) {
 				std::shared_ptr<Cascade> cascade_data = casc_shad_map_->GetCascade(cascade);
-				shadow_constants_->GetData().view_proj_mat[cascade] = cascade_data->GetViewProj();
+				shadow_constants_->GetData().shad_view[cascade] = cascade_data->GetView();
+				shadow_constants_->GetData().shad_proj[cascade] = cascade_data->GetProj();
 				switch (cascade) {
 				case 0:
 					shadow_constants_->GetData().split_depths.x = cascade_data->GetSplitDepth();

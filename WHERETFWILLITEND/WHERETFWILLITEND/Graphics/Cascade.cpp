@@ -124,6 +124,6 @@ void Cascade::UpdateMatrix(XMMATRIX& cameraView, float cameraFovY, float cameraA
     XMStoreFloat4x4(&pov_buffer_->GetData().inv_view,XMMatrixInverse(nullptr, lightView));
     XMStoreFloat4x4(&pov_buffer_->GetData().projection,lightProj);
     XMStoreFloat4x4(&pov_buffer_->GetData().inv_projection,XMMatrixInverse(nullptr, lightProj));
-    XMStoreFloat4x4(&view_proj_, XMMatrixMultiply(lightProj, lightView));
+    XMStoreFloat4x4(&view_proj_, XMMatrixMultiply(lightView, lightProj));
     pov_buffer_->Save_changes();
 }

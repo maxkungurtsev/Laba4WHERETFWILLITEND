@@ -41,6 +41,7 @@ struct POVConstants {
 	XMFLOAT4X4 inv_projection;
 };
 struct ShadowConstants {
-	XMFLOAT4X4 view_proj_mat[4];
+	XMFLOAT4X4 shad_view[4];
+	XMFLOAT4X4 shad_proj[4];
 	XMFLOAT4 split_depths;
 };

@@ -59,7 +59,8 @@ cbuffer MaxLights : register(b2)
 }
 cbuffer ShadowConstants : register(b3)
 {
-    float4x4 view_proj_mat[4];
+    float4x4 shad_view[4];
+    float4x4 shad_proj[4];
     float4 cascade_split_depths;
 }
 
@@ -79,29 +80,29 @@ float CalcShadowFactor(float3 worldPos, float viewDepth)
     {
         case 0:
             //shadowClip = mul(view_proj_mat[0], float4(worldPos, 1.0f));
-            shadowClip = mul(float4(worldPos, 1.0f),view_proj_mat[0]);
+            shadowClip = mul(shad_proj[0], mul(shad_view[0], float4(worldPos, 1.0f)));
             break;
         case 1:
             //shadowClip = mul(view_proj_mat[1], float4(worldPos, 1.0f));
-            shadowClip = mul(float4(worldPos, 1.0f),view_proj_mat[1]);
+            shadowClip = mul(shad_proj[1], mul(shad_view[1], float4(worldPos, 1.0f)));
             break;
         case 2:
             //shadowClip = mul(view_proj_mat[2], float4(worldPos, 1.0f));
-            shadowClip = mul(float4(worldPos, 1.0f),view_proj_mat[2]);
+            shadowClip = mul(shad_proj[2], mul(shad_view[2], float4(worldPos, 1.0f)));
             break;
         case 3:
             //shadowClip = mul(view_proj_mat[3], float4(worldPos, 1.0f));
-            shadowClip = mul(float4(worldPos, 1.0f),view_proj_mat[3]);
+            shadowClip = mul(shad_proj[3], mul(shad_view[3], float4(worldPos, 1.0f)));
             break;
     }
-
+    shadowClip /= shadowClip.w;
     float2 shadowUv = float2(shadowClip.x * 0.5f + 0.5f, 0.5f - shadowClip.y * 0.5f);
     bool insideShadowMap = shadowUv.x >= 0.0f && shadowUv.x <= 1.0f &&
                            shadowUv.y >= 0.0f && shadowUv.y <= 1.0f &&
                            shadowClip.z >= 0.0f && shadowClip.z <= 1.0f;
     if (!insideShadowMap)
     {
-        return 1.0f;
+        return 0.0f;
     }
     float storedDepth;
     switch (cascade)
@@ -119,7 +120,8 @@ float CalcShadowFactor(float3 worldPos, float viewDepth)
             storedDepth = shadowMap3.Sample(samplerState, shadowUv).r;
             break;
     }
-    return (shadowClip.z-depthBias > storedDepth) ? 0.3f : 1.0f;
+    return storedDepth;
+    return (shadowClip.z > storedDepth) ? 0.3f : 1.0f;
 }
 
 float3 CalcLight(LightData light, float3 normal, float3 worldPos, float3 viewDir, shaderMaterialData mat)
@@ -243,10 +245,11 @@ float4 main(PS_IN input) : SV_Target{
     }
     float4 Final;
     Final = float4(finalLight, 1.0);
-    //return Final;
+    return Final;
     float storedDepth1 = Depth.Sample(samplerState, uv).r;
     float storedDepth2 = shadowMap0.Sample(samplerState, uv).r;
     float z2 = ((storedDepth2 - cam_near) / (cam_far - cam_near));
     float z = cam_near * cam_far / (cam_far - storedDepth2 * (cam_far - cam_near)) / cam_far;
-    return float4(storedDepth2, storedDepth2, storedDepth2, 1.0f);
+    //return float4(shadowFactor, shadowFactor, shadowFactor, 1.0f);
+    
 }

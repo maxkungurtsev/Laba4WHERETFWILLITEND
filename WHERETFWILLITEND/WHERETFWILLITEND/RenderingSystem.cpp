@@ -298,7 +298,8 @@ std::shared_ptr<Model> RenderingSystem::BilBoardMesh(std::shared_ptr<Model> mesh
             pos.y,
             pos.z);
 
-        XMMATRIX world = T * R * S;
+        XMMATRIX world = XMMatrixIdentity();
+        //XMMATRIX world = T * R * S;
         FillCbuffers(cam_pos, look_at, up, time, world);
         
     }
