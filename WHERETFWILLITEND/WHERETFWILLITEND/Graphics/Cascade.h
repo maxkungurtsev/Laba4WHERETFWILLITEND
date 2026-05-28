@@ -8,9 +8,6 @@ using namespace DirectX;
 
 class Cascade {
 private:
-    XMFLOAT4X4 view_mat;
-    XMFLOAT4X4 proj_mat;
-    XMFLOAT4X4 view_proj_;
     std::shared_ptr<Cbuffer<POVConstants>> pov_buffer_;
     float split_depth_ = 0.0f;
     float prev_split_depth_=0.0f;
@@ -28,9 +25,8 @@ private:
 public:
     Cascade(UINT width, UINT height, std::shared_ptr<Gdevice> device, XMVECTOR light_pos,XMVECTOR target,UINT cascade_index,UINT cascade_count,
         float aspect_ratio, float split_lambda);
-    XMFLOAT4X4& GetView() { return view_mat; }
-    XMFLOAT4X4& GetProj() { return proj_mat; }
-    XMFLOAT4X4& GetViewProj();
+    XMFLOAT4X4& GetView() { return pov_buffer_->GetData().view; }
+    XMFLOAT4X4& GetProj() { return pov_buffer_->GetData().projection; }
     std::shared_ptr<Zbuffer> GetZbuffer() { return buffer_; }
     std::shared_ptr<Cbuffer<POVConstants>> GetPovBuffer() { return pov_buffer_; }
     void UpdateMatrix(XMMATRIX& cameraView, float cameraFovY, float cameraAspect);

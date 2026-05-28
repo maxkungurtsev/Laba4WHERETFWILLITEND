@@ -31,9 +31,6 @@ Cascade::Cascade(UINT width,
 
 
 
-XMFLOAT4X4& Cascade::GetViewProj(){
-	return view_proj_;
-}
 float Cascade::CalculateSplitDepth(UINT split_index) {
 	if (split_index == 0) {
 		return camera_near_;
@@ -108,22 +105,21 @@ void Cascade::UpdateMatrix(XMMATRIX& cameraView, float cameraFovY, float cameraA
     }
     constexpr float zMult = 10.0f;
     if (minZ < 0.0f){
-        //minZ *= zMult;
+        minZ *= zMult;
     }
     else{
-        //minZ /= zMult;
+        minZ /= zMult;
     }
     if (maxZ < 0.0f){
-        //maxZ /= zMult;
+        maxZ /= zMult;
     }
     else{
-        //maxZ *= zMult;
+        maxZ *= zMult;
     }
     XMMATRIX lightProj =XMMatrixOrthographicOffCenterLH(minX,maxX,minY,maxY,minZ,maxZ);
     XMStoreFloat4x4(&pov_buffer_->GetData().view,lightView);
     XMStoreFloat4x4(&pov_buffer_->GetData().inv_view,XMMatrixInverse(nullptr, lightView));
     XMStoreFloat4x4(&pov_buffer_->GetData().projection,lightProj);
     XMStoreFloat4x4(&pov_buffer_->GetData().inv_projection,XMMatrixInverse(nullptr, lightProj));
-    XMStoreFloat4x4(&view_proj_, XMMatrixMultiply(lightView, lightProj));
     pov_buffer_->Save_changes();
 }

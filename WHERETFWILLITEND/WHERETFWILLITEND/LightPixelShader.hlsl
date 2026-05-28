@@ -102,7 +102,7 @@ float CalcShadowFactor(float3 worldPos, float viewDepth)
                            shadowClip.z >= 0.0f && shadowClip.z <= 1.0f;
     if (!insideShadowMap)
     {
-        return 0.0f;
+        return 1.0f;
     }
     float storedDepth;
     switch (cascade)
@@ -120,8 +120,7 @@ float CalcShadowFactor(float3 worldPos, float viewDepth)
             storedDepth = shadowMap3.Sample(samplerState, shadowUv).r;
             break;
     }
-    return storedDepth;
-    return (shadowClip.z > storedDepth) ? 0.3f : 1.0f;
+    return (shadowClip.z - depthBias/(cascade+1) > storedDepth) ? 0.3f : 1.0f;
 }
 
 float3 CalcLight(LightData light, float3 normal, float3 worldPos, float3 viewDir, shaderMaterialData mat)
@@ -236,10 +235,11 @@ float4 main(PS_IN input) : SV_Target{
     float viewDepth = abs(viewPos.z);
     for (int i = 0; i < max_lights.x; i++)
     {
+        
+        shadowFactor = 1.0f;
         if (lights[i].type == 0)
         {
             shadowFactor = CalcShadowFactor(worldPos, viewDepth);
-
         }
         finalLight += CalcLight(lights[i], normal, worldPos, V, mats[matIndex])* shadowFactor;
     }
