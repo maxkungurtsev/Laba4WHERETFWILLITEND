@@ -82,8 +82,7 @@
               "RelativeToolTip": "WHERETFWILLITEND\\Lights.cpp",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-05-28T10:44:51.764Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-28T10:44:51.764Z"
             },
             {
               "$type": "Document",
@@ -95,8 +94,7 @@
               "RelativeToolTip": "WHERETFWILLITEND\\GeomVertexShader.hlsl",
               "ViewState": "AgIAACoAAAAAAAAAAAAAADYAAAAjAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
-              "WhenOpened": "2026-05-28T10:38:50.924Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-28T10:38:50.924Z"
             },
             {
               "$type": "Document",
@@ -108,8 +106,7 @@
               "RelativeToolTip": "WHERETFWILLITEND\\Graphics\\Cascade.cpp",
               "ViewState": "AgIAAAwAAAAAAAAAAAAAABAAAAAPAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-05-27T18:03:55.289Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-27T18:03:55.289Z"
             },
             {
               "$type": "Document",
@@ -121,8 +118,7 @@
               "RelativeToolTip": "WHERETFWILLITEND\\Graphics\\Cascade.h",
               "ViewState": "AgIAAAkAAAAAAAAAAAAAABwAAABHAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2026-05-28T10:07:43.187Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-05-28T10:07:43.187Z"
             },
             {
               "$type": "Document",
@@ -142,9 +138,9 @@
               "Title": "LightPixelShader.hlsl",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\LightPixelShader.hlsl",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\LightPixelShader.hlsl",
-              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\LightPixelShader.hlsl*",
-              "RelativeToolTip": "WHERETFWILLITEND\\LightPixelShader.hlsl*",
-              "ViewState": "AgIAAGMAAAAAAAAAAAAqwG8AAAASAAAAAAAAAA==",
+              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\LightPixelShader.hlsl",
+              "RelativeToolTip": "WHERETFWILLITEND\\LightPixelShader.hlsl",
+              "ViewState": "AgIAADwAAAAAAAAAAAAAAEIAAAAqAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
               "WhenOpened": "2026-05-24T20:15:22.706Z",
               "EditorCaption": ""

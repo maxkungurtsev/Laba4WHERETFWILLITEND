@@ -67,6 +67,7 @@ cbuffer ShadowConstants : register(b3)
 float CalcShadowFactor(float3 worldPos, float viewDepth)
 {
     const float depthBias = 0.01f;
+    const float PCF_sample_radius=0.001f;
     int cascade = 3;
     for (int j = 0; j < 4; ++j)
     {
@@ -105,6 +106,44 @@ float CalcShadowFactor(float3 worldPos, float viewDepth)
         return 1.0f;
     }
     float storedDepth;
+    float accumulated_light=0.0f;
+    float iterations=0.0f;
+    for (int i = -2; i < 2; i++)
+    {
+        for (int j = -2; j < 2; j++)
+        {
+            float2 sampleUV = shadowUv + (float2(i, j) * PCF_sample_radius/ (cascade+1));
+            sampleUV.x = max(sampleUV.x, 0.0f);
+            sampleUV.x = min(sampleUV.x, 1.0f);
+            sampleUV.y = max(sampleUV.y, 0.0f);
+            sampleUV.y = min(sampleUV.y, 1.0f);
+            switch (cascade)
+            {
+                case 0:
+                   storedDepth = shadowMap0.Sample(samplerState, sampleUV).r;
+                    break;
+                case 1:
+                    storedDepth = shadowMap1.Sample(samplerState, sampleUV).r;
+                    break;
+                case 2:
+                    storedDepth = shadowMap2.Sample(samplerState, sampleUV).r;
+                    break;
+                case 3:
+                    storedDepth = shadowMap3.Sample(samplerState, sampleUV).r;
+                    break;
+            }
+            if (shadowClip.z - depthBias / (cascade + 1) > storedDepth)
+            {
+                accumulated_light += 0.3f;
+            }
+            else
+            {
+                accumulated_light += 1.0f;
+            }
+            iterations++;
+            //accumulated_light += ((shadowClip.z - depthBias / (cascade + 1) > storedDepth) ? 0.3f : 1.0f);
+        }
+    }
     switch (cascade)
     {
         case 0:
@@ -120,7 +159,7 @@ float CalcShadowFactor(float3 worldPos, float viewDepth)
             storedDepth = shadowMap3.Sample(samplerState, shadowUv).r;
             break;
     }
-    return (shadowClip.z - depthBias/(cascade+1) > storedDepth) ? 0.3f : 1.0f;
+    return accumulated_light/iterations;
 }
 
 float3 CalcLight(LightData light, float3 normal, float3 worldPos, float3 viewDir, shaderMaterialData mat)
