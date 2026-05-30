@@ -1,25 +1,69 @@
-﻿  Cascade.cpp
+﻿  RenderingSystem.cpp
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(602,42): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(603,41): warning C4244: аргумент: преобразование "int" в "float", возможна потеря данных
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(650,46): warning C4305: аргумент: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(650,42): warning C4305: аргумент: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(650,38): warning C4305: аргумент: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(651,42): warning C4305: аргумент: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(651,38): warning C4305: аргумент: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(651,34): warning C4305: аргумент: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(654,75): warning C4244: аргумент: преобразование "UINT" в "float", возможна потеря данных
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(694,48): warning C4305: аргумент: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(694,44): warning C4305: аргумент: усечение из "double" в "float"
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(724,79): warning C4267: аргумент: преобразование из "size_t" в "UINT"; возможна потеря данных
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(752,72): warning C4267: аргумент: преобразование из "size_t" в "UINT"; возможна потеря данных
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(792,73): warning C4267: аргумент: преобразование из "size_t" в "UINT"; возможна потеря данных
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(810,86): warning C4267: аргумент: преобразование из "size_t" в "UINT"; возможна потеря данных
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(818,72): warning C4267: аргумент: преобразование из "size_t" в "UINT"; возможна потеря данных
+C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(851,76): warning C4267: аргумент: преобразование из "size_t" в "UINT"; возможна потеря данных
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(476,82): warning C4244: аргумент: преобразование "_Ty" в "float", возможна потеря данных
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(476,82): warning C4244:         with
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(476,82): warning C4244:         [
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(476,82): warning C4244:             _Ty=int
+C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(476,82): warning C4244:         ]
+  (компиляция исходного файла "RenderingSystem.cpp")
+      C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(476,82):
+      контекст создания экземпляра шаблона (сначала самый старый)
+          C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(604,33):
+          выполняется компиляция ссылки на экземпляр шаблон функции "std::shared_ptr<ParticleEmiter> std::make_shared<ParticleEmiter,_Ty&,std::shared_ptr<Gdevice>&,DirectX::XMFLOAT4&,float,float,int,int,int,DirectX::XMFLOAT3&,float>(_Ty &,std::shared_ptr<Gdevice> &,DirectX::XMFLOAT4 &,float &&,float &&,int &&,int &&,int &&,DirectX::XMFLOAT3 &,float &&)"
+          with
+          [
+              _Ty=std::string
+          ]
+          C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\memory(2913,46):
+          выполняется компиляция ссылки на экземпляр шаблон функции "std::_Ref_count_obj2<ParticleEmiter>::_Ref_count_obj2<_Ty&,std::shared_ptr<Gdevice>&,DirectX::XMFLOAT4&,float,float,int,int,int,DirectX::XMFLOAT3&,float>(_Ty &,std::shared_ptr<Gdevice> &,DirectX::XMFLOAT4 &,float &&,float &&,int &&,int &&,int &&,DirectX::XMFLOAT3 &,float &&)"
+          with
+          [
+              _Ty=std::string
+          ]
+          C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\memory(2100,18):
+          выполняется компиляция ссылки на экземпляр шаблон функции "void std::_Construct_in_place<_Ty,std::basic_string<char,std::char_traits<char>,std::allocator<char>>&,std::shared_ptr<Gdevice>&,DirectX::XMFLOAT4&,float,float,int,int,int,DirectX::XMFLOAT3&,float>(_Ty &,std::basic_string<char,std::char_traits<char>,std::allocator<char>> &,std::shared_ptr<Gdevice> &,DirectX::XMFLOAT4 &,float &&,float &&,int &&,int &&,int &&,DirectX::XMFLOAT3 &,float &&) noexcept(false)"
+          with
+          [
+              _Ty=ParticleEmiter
+          ]
+  
 C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\CBuffer.h(38,37): warning C4244: =: преобразование "UINT64" в "UINT", возможна потеря данных
-  (компиляция исходного файла "Graphics/Cascade.cpp")
+  (компиляция исходного файла "RenderingSystem.cpp")
       C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\CBuffer.h(38,37):
       контекст создания экземпляра шаблона (сначала самый старый)
-          C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\Cascade.h(28,36):
-          выполняется компиляция ссылки на экземпляр класс шаблон функции "Cbuffer<POVConstants>"
+          C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\RenderingSystem.cpp(194,5):
+          выполняется компиляция ссылки на экземпляр класс шаблон функции "Cbuffer<PassConstants>"
           C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\CBuffer.h(12,2):
-          во время компиляции функции-члена класс шаблон "Cbuffer<POVConstants>::Cbuffer(std::shared_ptr<_Ty>)"
+          во время компиляции функции-члена класс шаблон "Cbuffer<PassConstants>::Cbuffer(std::shared_ptr<_Ty>)"
           with
           [
               _Ty=Gdevice
           ]
               C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\xutility(476,61):
-              см. первую ссылку на "Cbuffer<POVConstants>::Cbuffer" в "std::_Construct_in_place"
+              см. первую ссылку на "Cbuffer<PassConstants>::Cbuffer" в "std::_Construct_in_place"
               C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\memory(2100,18):
-              см. первую ссылку на "std::_Construct_in_place" в "std::_Ref_count_obj2<Cbuffer<POVConstants>>::_Ref_count_obj2"
+              см. первую ссылку на "std::_Construct_in_place" в "std::_Ref_count_obj2<Cbuffer<PassConstants>>::_Ref_count_obj2"
               C:\Program Files\Microsoft Visual Studio\2022\Community\VC\Tools\MSVC\14.44.35207\include\memory(2913,20):
-              см. первую ссылку на "std::_Ref_count_obj2<Cbuffer<POVConstants>>::_Ref_count_obj2" в "std::make_shared"
+              см. первую ссылку на "std::_Ref_count_obj2<Cbuffer<PassConstants>>::_Ref_count_obj2" в "std::make_shared"
   
 C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\WHERETFWILLITEND\Graphics\CBuffer.h(39,55): warning C4244: аргумент: преобразование "UINT64" в "UINT", возможна потеря данных
-  (компиляция исходного файла "Graphics/Cascade.cpp")
+  (компиляция исходного файла "RenderingSystem.cpp")
   
   WHERETFWILLITEND.vcxproj -> C:\Users\Asus\source\repos\Laba5 suicde is an answer\WHERETFWILLITEND\x64\Debug\WHERETFWILLITEND.exe
   "pwsh.exe" не является внутренней или внешней

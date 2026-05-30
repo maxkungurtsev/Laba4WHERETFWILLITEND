@@ -7,6 +7,10 @@
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:WHERETFWILLITEND\\LightPixelShader.hlsl||{8B382828-6202-11D1-8870-0000F87579D2}"
     },
     {
+      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\RenderingSystem.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\RenderingSystem.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\GeomVertexShader.hlsl||{8B382828-6202-11D1-8870-0000F87579D2}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:WHERETFWILLITEND\\GeomVertexShader.hlsl||{8B382828-6202-11D1-8870-0000F87579D2}"
     },
@@ -25,10 +29,6 @@
     {
       "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Lights.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
       "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\Lights.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    },
-    {
-      "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\RenderingSystem.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|solutionrelative:WHERETFWILLITEND\\RenderingSystem.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     },
     {
       "AbsoluteMoniker": "D:0:0:{32DD2005-AB05-41BD-9D73-2705B8552AA2}|WHERETFWILLITEND\\WHERETFWILLITEND.vcxproj|C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\RenderingSystem.h||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
@@ -58,35 +58,11 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 6,
+          "SelectedChildIndex": 4,
           "Children": [
             {
               "$type": "Document",
-              "DocumentIndex": 5,
-              "Title": "Lights.h",
-              "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Lights.h",
-              "RelativeDocumentMoniker": "WHERETFWILLITEND\\Lights.h",
-              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Lights.h",
-              "RelativeToolTip": "WHERETFWILLITEND\\Lights.h",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAwAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2026-05-28T10:44:47.758Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 4,
-              "Title": "Lights.cpp",
-              "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Lights.cpp",
-              "RelativeDocumentMoniker": "WHERETFWILLITEND\\Lights.cpp",
-              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Lights.cpp",
-              "RelativeToolTip": "WHERETFWILLITEND\\Lights.cpp",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2026-05-28T10:44:51.764Z"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
+              "DocumentIndex": 2,
               "Title": "GeomVertexShader.hlsl",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\GeomVertexShader.hlsl",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\GeomVertexShader.hlsl",
@@ -98,7 +74,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 2,
+              "DocumentIndex": 3,
               "Title": "Cascade.cpp",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Graphics\\Cascade.cpp",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\Graphics\\Cascade.cpp",
@@ -110,7 +86,7 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 3,
+              "DocumentIndex": 4,
               "Title": "Cascade.h",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Graphics\\Cascade.h",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\Graphics\\Cascade.h",
@@ -140,7 +116,7 @@
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\LightPixelShader.hlsl",
               "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\LightPixelShader.hlsl",
               "RelativeToolTip": "WHERETFWILLITEND\\LightPixelShader.hlsl",
-              "ViewState": "AgIAABIBAAAAAAAAAAAuwB4BAAARAAAAAAAAAA==",
+              "ViewState": "AgIAAC0BAAAAAAAAAAAAwD8BAAARAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
               "WhenOpened": "2026-05-24T20:15:22.706Z",
               "EditorCaption": ""
@@ -171,15 +147,39 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 6,
+              "DocumentIndex": 1,
               "Title": "RenderingSystem.cpp",
               "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\RenderingSystem.cpp",
               "RelativeDocumentMoniker": "WHERETFWILLITEND\\RenderingSystem.cpp",
               "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\RenderingSystem.cpp",
               "RelativeToolTip": "WHERETFWILLITEND\\RenderingSystem.cpp",
-              "ViewState": "AgIAACUBAAAAAAAAAAAAwCwBAAAsAAAAAAAAAA==",
+              "ViewState": "AgIAAIwCAAAAAAAAAAAwwKMCAAA/AAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
               "WhenOpened": "2026-05-16T07:28:28.096Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "Lights.cpp",
+              "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Lights.cpp",
+              "RelativeDocumentMoniker": "WHERETFWILLITEND\\Lights.cpp",
+              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Lights.cpp",
+              "RelativeToolTip": "WHERETFWILLITEND\\Lights.cpp",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABMAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2026-05-28T10:44:51.764Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "Lights.h",
+              "DocumentMoniker": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Lights.h",
+              "RelativeDocumentMoniker": "WHERETFWILLITEND\\Lights.h",
+              "ToolTip": "C:\\Users\\Asus\\source\\repos\\Laba5 suicde is an answer\\WHERETFWILLITEND\\WHERETFWILLITEND\\Lights.h",
+              "RelativeToolTip": "WHERETFWILLITEND\\Lights.h",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAwAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
+              "WhenOpened": "2026-05-28T10:44:47.758Z"
             },
             {
               "$type": "Document",

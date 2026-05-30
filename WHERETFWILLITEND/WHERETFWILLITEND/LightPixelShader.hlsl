@@ -64,7 +64,7 @@ cbuffer ShadowConstants : register(b3)
     float4 cascade_split_depths;
 }
 
-float CalcShadowFactor(float3 worldPos, float viewDepth)
+float4 CalcShadowFactor(float3 worldPos, float viewDepth)
 {
     const float depthBias = 0.01f;
     const float PCF_sample_radius=0.001f;
@@ -103,10 +103,10 @@ float CalcShadowFactor(float3 worldPos, float viewDepth)
                            shadowClip.z >= 0.0f && shadowClip.z <= 1.0f;
     if (!insideShadowMap)
     {
-        return 1.0f;
+        return float4(1.0f, 1.0f, 1.0f, 1.0f);
     }
     float storedDepth;
-    float accumulated_light=0.0f;
+    float4 accumulated_light = float4(0.0f, 0.0f, 0.0f, 0.0f);
     float iterations=0.0f;
     for (int i = -2; i < 2; i++)
     {
@@ -134,30 +134,29 @@ float CalcShadowFactor(float3 worldPos, float viewDepth)
             }
             if (shadowClip.z - depthBias / (cascade + 1) > storedDepth)
             {
+                switch (cascade)
+                {
+                    case 0:
+                        accumulated_light += float4(1.0f, 0.0f, 0.0f, 1.0f);
+                        break;
+                    case 1:
+                        accumulated_light += float4(0.0f, 1.0f, 0.0f, 1.0f);
+                        break;
+                    case 2:
+                        accumulated_light += float4(0.0f, 0.0f, 1.0f, 1.0f);
+                        break;
+                    case 3:
+                        accumulated_light += float4(10000.0f, 10000.0f, 10000.0f, 100000.0f);
+                        break;
+                }
                 accumulated_light += 0.3f;
             }
             else
             {
-                accumulated_light += 1.0f;
+                accumulated_light += float4(1.0f, 1.0f, 1.0f, 1.0f);
             }
             iterations++;
-            //accumulated_light += ((shadowClip.z - depthBias / (cascade + 1) > storedDepth) ? 0.3f : 1.0f);
         }
-    }
-    switch (cascade)
-    {
-        case 0:
-            storedDepth = shadowMap0.Sample(samplerState, shadowUv).r;
-            break;
-        case 1:
-            storedDepth = shadowMap1.Sample(samplerState, shadowUv).r;
-            break;
-        case 2:
-            storedDepth = shadowMap2.Sample(samplerState, shadowUv).r;
-            break;
-        case 3:
-            storedDepth = shadowMap3.Sample(samplerState, shadowUv).r;
-            break;
     }
     return accumulated_light/iterations;
 }
@@ -270,20 +269,56 @@ float4 main(PS_IN input) : SV_Target{
     uint elementCount;
     uint stride;
     lights.GetDimensions(elementCount, stride);
-    float shadowFactor = 1.0f;
+    float4 shadowFactor = float4(1.0f, 1.0f, 1.0f, 1.0f);
     float viewDepth = abs(viewPos.z);
+    
+    int cascade = 3;
+    for (int j = 0; j < 4; ++j)
+    {
+        if (viewDepth < cascade_split_depths[j])
+        {
+            cascade = j;
+            break;
+        }
+    }
+    
+    
+        
     for (int i = 0; i < max_lights.x; i++)
     {
         
         shadowFactor = 1.0f;
+        float3 light = CalcLight(lights[i], normal, worldPos, V, mats[matIndex]);
         if (lights[i].type == 0)
         {
             shadowFactor = CalcShadowFactor(worldPos, viewDepth);
         }
-        finalLight += CalcLight(lights[i], normal, worldPos, V, mats[matIndex])* shadowFactor;
+        
+        
+        
+        float4 out_lighting;
+        if (cascade == 0)
+        {
+            out_lighting =float4(1, 0, 0, 1);
+        }
+        if (cascade == 1)
+        {
+            out_lighting = float4(0, 1, 0, 1);
+        }
+        if (cascade == 2)
+        {
+            out_lighting = float4(0, 0, 1, 1);
+        }
+        if (cascade == 3)
+        {
+            out_lighting = float4(1, 1, 1, 1);
+        }
+        
+        float4 out_light = float4(light.x * shadowFactor.x, light.y * shadowFactor.y, light.z * shadowFactor.z, 1.0f);
+        finalLight += out_light;
     }
     float4 Final;
-    Final = float4(albedo*finalLight, 1.0);
+    Final = float4(finalLight, 1.0);
     return Final;
     float storedDepth1 = Depth.Sample(samplerState, uv).r;
     float storedDepth2 = shadowMap0.Sample(samplerState, uv).r;
