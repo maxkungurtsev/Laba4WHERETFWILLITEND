@@ -291,34 +291,13 @@ float4 main(PS_IN input) : SV_Target{
         float3 light = CalcLight(lights[i], normal, worldPos, V, mats[matIndex]);
         if (lights[i].type == 0)
         {
-            shadowFactor = CalcShadowFactor(worldPos, viewDepth);
+           // shadowFactor = CalcShadowFactor(worldPos, viewDepth);
         }
-        
-        
-        
-        float4 out_lighting;
-        if (cascade == 0)
-        {
-            out_lighting =float4(1, 0, 0, 1);
-        }
-        if (cascade == 1)
-        {
-            out_lighting = float4(0, 1, 0, 1);
-        }
-        if (cascade == 2)
-        {
-            out_lighting = float4(0, 0, 1, 1);
-        }
-        if (cascade == 3)
-        {
-            out_lighting = float4(1, 1, 1, 1);
-        }
-        
         float4 out_light = float4(light.x * shadowFactor.x, light.y * shadowFactor.y, light.z * shadowFactor.z, 1.0f);
         finalLight += out_light;
     }
     float4 Final;
-    Final = float4(finalLight, 1.0);
+    Final = float4(albedo*finalLight, 1.0);
     return Final;
     float storedDepth1 = Depth.Sample(samplerState, uv).r;
     float storedDepth2 = shadowMap0.Sample(samplerState, uv).r;

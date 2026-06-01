@@ -113,6 +113,8 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool 
     materials_.clear();
     submeshes_.clear(); 
     //mats and diffuse textures
+
+
     materials_.resize(scene->mNumMaterials);
     OutputDebugStringA("material amount:\n");
     OutputDebugStringA((std::to_string(materials_.size()) + '\n').c_str());
@@ -227,6 +229,7 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool 
     }
     // meshs
 
+    
     for (unsigned m = 0; m < scene->mNumMeshes; ++m){
         aiMesh* mesh = scene->mMeshes[m];
         SubMesh part;
@@ -263,12 +266,11 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool 
                 v.bitangent = XMFLOAT3(mesh->mBitangents[i][0],
                                        mesh->mBitangents[i][1],
                                        mesh->mBitangents[i][2]);
-                //OutputDebugStringA((std::to_string(mesh->mBitangents[i][0])+" "+ std::to_string(mesh->mBitangents[i][1]) + " " + std::to_string(mesh->mBitangents[i][2]) + "\n").c_str());
             }
             vertices_.push_back(v);
         }
-    std::vector<int> tangentCount(vertices_.size(), 0);
-    std::vector<int> bitangentCount(vertices_.size(), 0);
+        std::vector<int> tangentCount(vertices_.size(), 0);
+        std::vector<int> bitangentCount(vertices_.size(), 0);
         //meshs
         for (unsigned f = 0; f < mesh->mNumFaces; ++f)
         {
@@ -367,11 +369,13 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool 
     }
     CreateVertexBuffer();
     CreateIndexBuffer();
-    MakeOctree();
+    MakeOctree();      
+    
 }
 
 
 void Model::MakeOctree() {
+
     std::vector<int> all_submesh_indices;
     std::vector<BoundingSphere> all_spheres;
     for (int i = 0; i < submeshes_.size(); i++) {
@@ -379,4 +383,5 @@ void Model::MakeOctree() {
         all_spheres.push_back(submeshes_[i].bounding_sphere_);
     }
     octree_ = std::make_shared<OctreeNode>(0, mesh_box_, true, all_submesh_indices, all_spheres);
+    check();
 }

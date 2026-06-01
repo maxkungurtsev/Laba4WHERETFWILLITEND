@@ -349,6 +349,7 @@ void RenderingSystem::GeomPass(std::shared_ptr<Model> mesh) {
         frustum_.Transform(frust, invworld);
         invworld = XMLoadFloat4x4(&pov_buffer_->GetData().inv_model);
         frust.Transform(frust, invworld);
+        
         mesh->GetOctree()->GetIndeciesToDraw(submeshes, frust);
         OutputDebugStringA("meshes drawn this frame: ");
         for (int i = 0; i < submeshes.size(); i++) {
@@ -609,15 +610,23 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<st
         XMFLOAT3 rot = XMFLOAT3(0, 0, 0);
         XMFLOAT3 scale = XMFLOAT3(1, 1, 1);
         std::shared_ptr<Model> mesh = std::make_shared<Model>(mesh_pathes[i], device_, true, false,pos,rot,scale);
-            meshes_.push_back(mesh);
+        
+        OutputDebugStringA((std::to_string(mesh->GetBillBoardable()) + "\n").c_str());
+        meshes_.push_back(mesh);
         if (mesh->GetBillBoardable()) {
             OutputDebugStringA("model bilboardable\n");
             mesh->SetBilboard(std::make_shared<Model>("sponza_bilboard.obj", device_, false, true, pos, rot, scale));
+        }
+        else {
+            OutputDebugStringA("model not bilboardable\n");
         }
 
     }
     // making up "all submesh indices" array for octree to be based on.
     OutputDebugStringA("model loaded\n");
+    if (!meshes_[0]->GetOctree()) {
+            throw std::runtime_error("no octree\n");
+        }
     OutputDebugStringA((std::to_string(meshes_.size()) + "\n").c_str());
     // scene color
     std::string name = "scene_color";
@@ -756,9 +765,10 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
     for (int i = 0; i < meshes_.size(); i++) {
         //fill buffer
         std::shared_ptr<Model> mesh = meshes_[i];
+
         ParseModelToCBuffer(mesh);
         mesh = BilBoardMesh(mesh, time, look_at, cam_pos, up);
-
+        
         // make frustum
         XMMATRIX proj = XMLoadFloat4x4(&(pov_buffer_->GetData().projection));
         BoundingFrustum::CreateFromMatrix(frustum_, proj);
@@ -792,7 +802,7 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
         device_->cmd_->command_list_.Get()->ResourceBarrier(toLight.size(), toLight.data());
     }
     
-    ShadowPass(cam_pos, look_at, up, XM_PIDIV4, clearColor, time);
+    //ShadowPass(cam_pos, look_at, up, XM_PIDIV4, clearColor, time);
     // transition shad maps to srv
     std::vector<D3D12_RESOURCE_BARRIER> shadowMapsToRead;
     {

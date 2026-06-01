@@ -10,7 +10,7 @@ const int width = 800;
 const int height = 800;
 //light stuff
 //camera stuff
-XMVECTOR cam_coords = {-1400.0, 10.0, 0.0, 1.0};
+XMVECTOR cam_coords = {-14.0, 10.0, 0.0, 1.0};
 XMVECTOR look_at = {1.0, 10.0, 0.0, 1.0};
 XMVECTOR up = {0.0, 1.0, 0.0, 1.0 };
 // material stuff
@@ -101,7 +101,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow){
     //init input device
     g_Input.Initialize(g_Window.GetHWND());
     //catch messege stuff
-    std::vector<std::string> pathes = {"sponza.obj"};
+    std::vector<std::string> pathes = {"R870WM_Deluxe_SF.fbx"};
     g_Renderer = std::make_shared<NewRenderer>(width,height,2, &(g_Window), pathes, cam_coords, look_at, up, 0);
 
     int messege = Run();

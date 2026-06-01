@@ -48,6 +48,14 @@ public:
     D3D12_VERTEX_BUFFER_VIEW GetVBV() { return vertex_buffer_view_; }
     D3D12_INDEX_BUFFER_VIEW GetIBV() { return index_buffer_view_; }
     void MakeOctree();
+    void check() {
+        if (octree_) {
+            OutputDebugStringA("octree present\n");
+        }
+        else {
+            throw std::runtime_error("octree not prese");
+        }
+    }
     void SetBilboard(std::shared_ptr<Model> bilboard) { bilboard_ = bilboard; }
     std::shared_ptr<Model> GetBilboard() { return bilboard_; }
     std::shared_ptr<OctreeNode> GetOctree() { return octree_; }
