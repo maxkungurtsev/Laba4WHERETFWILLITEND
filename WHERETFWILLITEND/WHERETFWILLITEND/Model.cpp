@@ -159,6 +159,9 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool 
             //choose between parsers
             if (outMat.diffuseTexPath.substr(outMat.diffuseTexPath.size() - 3) == "tga"){
             image_tga.read_tga_file(outMat.diffuseTexPath.c_str());
+            if (image_tga.get_width() == 0 or image_tga.get_height() == 0) {
+                throw std::runtime_error("diffuse texture failed to load");
+            }
             OutputDebugStringA(("diffuse texture for material " + std::to_string(i) + " exists"+'\n').c_str());
             outMat.diffuseTexture = std::make_shared<GTexture>(image_tga, outMat.diffuseTexPath, device, TextureUsage::Albedo);
             }
