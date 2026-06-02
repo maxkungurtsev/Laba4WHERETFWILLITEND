@@ -106,15 +106,16 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool 
         aiProcess_Triangulate |
         aiProcess_GenNormals |
         aiProcess_FlipUVs);
-    if (!scene || !scene->HasMeshes()) {
-        return;
+    if (!scene) {
+        throw std::runtime_error("no scene there\n");
+    }
+    if (!scene->HasMeshes()) {
+        throw std::runtime_error("no meshes there\n");
     }
     vertices_.clear();
     materials_.clear();
     submeshes_.clear(); 
     //mats and diffuse textures
-
-
     materials_.resize(scene->mNumMaterials);
     OutputDebugStringA("material amount:\n");
     OutputDebugStringA((std::to_string(materials_.size()) + '\n').c_str());

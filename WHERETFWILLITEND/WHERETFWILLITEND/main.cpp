@@ -101,7 +101,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow){
     //init input device
     g_Input.Initialize(g_Window.GetHWND());
     //catch messege stuff
-    std::vector<std::string> pathes = {"R870WM_Deluxe_SF.fbx"};
+    std::vector<std::string> pathes = {"sponza.obj"};
     g_Renderer = std::make_shared<NewRenderer>(width,height,2, &(g_Window), pathes, cam_coords, look_at, up, 0);
 
     int messege = Run();

@@ -609,9 +609,7 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<st
         XMFLOAT3 pos = XMFLOAT3(0, 0, 0);
         XMFLOAT3 rot = XMFLOAT3(0, 0, 0);
         XMFLOAT3 scale = XMFLOAT3(1, 1, 1);
-        std::shared_ptr<Model> mesh = std::make_shared<Model>(mesh_pathes[i], device_, true, false,pos,rot,scale);
-        
-        OutputDebugStringA((std::to_string(mesh->GetBillBoardable()) + "\n").c_str());
+        std::shared_ptr<Model> mesh = std::make_shared<Model>(mesh_pathes[i], device_, false, false,pos,rot,scale);
         meshes_.push_back(mesh);
         if (mesh->GetBillBoardable()) {
             OutputDebugStringA("model bilboardable\n");
@@ -625,9 +623,8 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<st
     // making up "all submesh indices" array for octree to be based on.
     OutputDebugStringA("model loaded\n");
     if (!meshes_[0]->GetOctree()) {
-            throw std::runtime_error("no octree\n");
-        }
-    OutputDebugStringA((std::to_string(meshes_.size()) + "\n").c_str());
+            //throw std::runtime_error("no octree\n");
+    }
     // scene color
     std::string name = "scene_color";
     scene_color = std::make_shared<RenderTarget>(device->width_, device->height_,name, device, TextureUsage::Albedo);
