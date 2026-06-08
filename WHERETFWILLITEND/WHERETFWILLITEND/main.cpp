@@ -101,7 +101,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow){
     //init input device
     g_Input.Initialize(g_Window.GetHWND());
     //catch messege stuff
-    std::vector<std::string> pathes = {"sponza.obj"};
+    std::vector<std::string> pathes = {"Cerberus_by_Andrew_Maximov/Cerberus_LP.FBX"};
     g_Renderer = std::make_shared<NewRenderer>(width,height,2, &(g_Window), pathes, cam_coords, look_at, up, 0);
 
     int messege = Run();

@@ -1,5 +1,7 @@
 #pragma once
 #include "Graphics\GTexture.h"
+#include "Graphics\Constants.h"
+#include "Graphics\CBuffer.h"
 #include "OctreeNode.h"
 struct Vertex
 {
@@ -16,13 +18,29 @@ struct MaterialData
     XMFLOAT3 diffuse_k = { 1,1,1 };
     XMFLOAT3 specular_k = { 0,0,0 };
     float shiny_k = 32.0f;
+    //diffuse
     std::string diffuseTexPath;
     bool hasDiffuseTexture = false;
     std::shared_ptr<GTexture> diffuseTexture;
+    //normal
     std::string HeightNormTexPath;
     bool hasHeightTexture = false;
     bool hasNormTexture = false;
     std::shared_ptr<GTexture> HeightNormTexture;
+    //roughness
+    std::string roughnessTexPath;
+    bool hasRoughnessTexture = false;
+    std::shared_ptr<GTexture> roughnessTexture;
+
+    //metallic
+    std::string metallicTexPath;
+    bool hasMetallicTexture = false;
+    std::shared_ptr<GTexture> metallicTexture;
+
+    //ambent occolision
+    std::string AOTexPath;
+    bool hasAOTexture = false;
+    std::shared_ptr<GTexture> AOTexture;
 };
 struct SubMesh
 {
@@ -61,7 +79,9 @@ public:
     std::shared_ptr<OctreeNode> GetOctree() { return octree_; }
     bool IsBilboard() {return is_bilboard_; }
     const std::string& GetName() { return name; }
+    std::shared_ptr<Cbuffer<MaterialConstants>> GetMaterialBuffer() { return mat_buffer_; }
 private:
+    std::shared_ptr <Cbuffer<MaterialConstants>> mat_buffer_;
     std::shared_ptr<Gdevice> device_;
     bool billboardable_ = false;
     bool is_bilboard_ = false;

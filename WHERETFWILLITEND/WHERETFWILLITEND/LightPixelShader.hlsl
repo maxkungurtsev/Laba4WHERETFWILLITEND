@@ -31,17 +31,21 @@ struct shaderMaterialData
     float3 diffuse_;
     float NormalType;
     float3 spec_;
-    float pad1;
+    float using_pbr_;
 };
 cbuffer PassConstants : register(b0)
 {
     float4 cam_pos;
     float4 cam_forward;
-    shaderMaterialData mats[300];
     float time;
     int current_mat;
     float cam_near;
     float cam_far;
+};
+
+cbuffer MaterialConstants : register(b4)
+{
+    shaderMaterialData mats[300];
 };
 cbuffer POVConstants : register(b1)
 {
@@ -161,80 +165,93 @@ float4 CalcShadowFactor(float3 worldPos, float viewDepth)
     return accumulated_light/iterations;
 }
 
-float3 CalcLight(LightData light, float3 normal, float3 worldPos, float3 viewDir, shaderMaterialData mat)
+float3 CalcLightPBR()
+{
+    return float3(1.0f, 0.0f, 0.0f);
+}
+
+float3 CalcLightPhong(LightData light, float3 normal, float3 worldPos, float3 viewDir, shaderMaterialData mat)
 {
     float3 lightContrib = 0.0f;
     float4 pos = light.position;
-    if (light.velocity > 0.0f){
+    if (light.velocity > 0.0f)
+    {
         pos += normalize(light.movement_direction) * light.velocity * (time - light.spawn_time);
     }
-        switch (light.type)
+    switch (light.type)
+    {
+        case 0: // directional
         {
-            case 0: // directional
+                float3 L = normalize(-light.direction.xyz); // если direction = "куда свет светит"
+                float NdotL = max(dot(normal, L), 0.0f);
+                float3 diffuse = mat.diffuse_ * NdotL;
+                float3 R = normalize(reflect(-L, normal));
+                float specPow = pow(max(dot(R, viewDir), 0.00001), mat.shiny_);
+                float3 spec = mat.spec_ * specPow;
+                lightContrib = (diffuse + spec) * light.strength;
+                break;
+            }
+        case 1: // point
         {
-                    float3 L = normalize(-light.direction.xyz); // если direction = "куда свет светит"
-                    float NdotL = max(dot(normal, L), 0.0f);
+                float3 toLight = pos.xyz - worldPos;
+                float dist = length(toLight);
+                float3 L = normalize(pos.xyz - worldPos);
+                float NdotL = max(dot(normal, L), 0.0f);
+                float attenuation = 1.0f;
+                float range = max(light.falloff_end - light.falloff_start, 0.00001f);
 
-                    float3 diffuse = mat.diffuse_ * NdotL;
+                attenuation = saturate((light.falloff_end - dist) / range);
 
-                    float3 R = normalize(reflect(-L, normal));
-                    float specPow = pow(max(dot(R, viewDir), 0.00001), mat.shiny_);
-                    float3 spec = mat.spec_ * specPow;
+                float3 diffuse = mat.diffuse_ * NdotL;
 
-                    lightContrib = (diffuse + spec) * light.strength;
-                    break;
-                }
+                float3 R = normalize(reflect(-L, normal));
+                float specPow = pow(max(dot(R, viewDir), 0.000000001), mat.shiny_);
+                float3 spec = mat.spec_ * specPow;
 
-            case 1: // point
+                lightContrib = (diffuse + spec) * light.strength * attenuation;
+                break;
+            }
+        case 2: // spot
         {
-                    float3 toLight = pos.xyz - worldPos;
-                    float dist = length(toLight);
-                    float3 L = normalize(pos.xyz - worldPos);
-                    float NdotL = max(dot(normal, L), 0.0f);
+                float3 L = normalize(pos.xyz - worldPos);
+                float NdotL = max(dot(normal, L), 0.0f);
+                float3 spotDir = normalize(-light.direction.xyz); // ось прожектор
+                float spotCos = dot(L, spotDir);
 
-                    float attenuation = 1.0f;
-                    float range = max(light.falloff_end - light.falloff_start, 0.00001f);
+                float spotFactor = smoothstep(light.falloff_end, light.falloff_start, spotCos);
+                spotFactor = pow(spotFactor, light.spot_power);
+                spotFactor = saturate(spotFactor);
+                float3 diffuse = mat.diffuse_ * NdotL;
 
-                    attenuation = saturate((light.falloff_end - dist) / range);
+                float3 R = normalize(reflect(-L, normal));
+                float specPow = pow(max(dot(R, viewDir), 0.000000001), mat.shiny_);
+                float3 spec = mat.spec_ * specPow;
 
-                    float3 diffuse = mat.diffuse_ * NdotL;
-
-                    float3 R = normalize(reflect(-L, normal));
-                    float specPow = pow(max(dot(R, viewDir), 0.000000001), mat.shiny_);
-                    float3 spec = mat.spec_ * specPow;
-
-                    lightContrib = (diffuse + spec) * light.strength * attenuation;
-                    break;
-                }
-
-            case 2: // spot
+                lightContrib = (diffuse + spec) * light.strength * spotFactor;
+                break;
+            }
+        case 3: // ambient
         {
-                    float3 L = normalize(pos.xyz - worldPos);
-                    float NdotL = max(dot(normal, L), 0.0f);
-                    float3 spotDir = normalize(-light.direction.xyz); // ось прожектор
-                    float spotCos = dot(L, spotDir);
-
-                    float spotFactor = smoothstep(light.falloff_end, light.falloff_start, spotCos);
-                    spotFactor = pow(spotFactor, light.spot_power);
-                    spotFactor = saturate(spotFactor);
-                    float3 diffuse = mat.diffuse_ * NdotL;
-
-                    float3 R = normalize(reflect(-L, normal));
-                    float specPow = pow(max(dot(R, viewDir), 0.000000001), mat.shiny_);
-                    float3 spec = mat.spec_ * specPow;
-
-                    lightContrib = (diffuse + spec) * light.strength * spotFactor;
-                    break;
-                }
-            case 3: // ambient
-        {
-                    lightContrib = light.strength;
-                    break;
-                }
-        }
-
-        return lightContrib;
+                lightContrib = light.strength;
+                break;
+            }
     }
+    return lightContrib;
+}
+
+float3 CalcLight(LightData light, float3 normal, float3 worldPos, float3 viewDir, shaderMaterialData mat)
+{
+    if (mat.using_pbr_)
+    {
+        return CalcLightPBR();
+    }
+    else
+    {
+        return CalcLightPhong(light, normal, worldPos, viewDir, mat);
+    }
+}
+
+
 
 
 struct PS_IN

@@ -99,6 +99,7 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool 
     device_ = device;
     billboardable_ = billboardable;
     is_bilboard_ = is_billboard;
+    mat_buffer_ = std::make_shared<Cbuffer<MaterialConstants>>(device);
     Assimp::Importer importer;
     dummy_.read_tga_file("dummy.tga");
     const aiScene* scene = importer.ReadFile(
@@ -125,17 +126,25 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool 
         aiColor3D color;
         // ambient
         if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_AMBIENT, color))
+        {
             outMat.ambient_k = { color.r, color.g, color.b };
+        }
         // diffuse
         if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_DIFFUSE, color))
+        {
             outMat.diffuse_k = { color.r, color.g, color.b };
+        }
         // specular
         if (AI_SUCCESS == mat->Get(AI_MATKEY_COLOR_SPECULAR, color))
+        {
             outMat.specular_k = { color.r, color.g, color.b };
+        }
         // shiny
         float shininess = 0;
         if (AI_SUCCESS == mat->Get(AI_MATKEY_SHININESS, shininess))
+        {
             outMat.shiny_k = shininess;
+        }
         OutputDebugStringA(("material " + std::to_string(i)+'\n').c_str());
         for (int type = aiTextureType_NONE; type <= aiTextureType_UNKNOWN; type++)
         {
@@ -144,8 +153,19 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool 
             unsigned int count = mat->GetTextureCount(texType);
             OutputDebugStringA(("amount of "+std::to_string(texType) + " is "+ std::to_string(count) +'\n').c_str());
         }
-        
-
+        mat_buffer_->GetData().mats[i].ambient_ = outMat.ambient_k;
+        mat_buffer_->GetData().mats[i].diffuse_ = outMat.diffuse_k;
+        mat_buffer_->GetData().mats[i].spec_ = outMat.specular_k;
+        mat_buffer_->GetData().mats[i].shiny_ = outMat.shiny_k;
+        if (outMat.hasHeightTexture) {
+            mat_buffer_->GetData().mats[i].NormalType = 2;
+        }
+        else if (outMat.hasNormTexture) {
+            mat_buffer_->GetData().mats[i].NormalType = 1;
+        }
+        else {
+            mat_buffer_->GetData().mats[i].NormalType = 0;
+        }
 
         // diffuse texture
         if (mat->GetTextureCount(aiTextureType_DIFFUSE) > 0)
@@ -158,12 +178,12 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool 
             const Image* image_png;
             //choose between parsers
             if (outMat.diffuseTexPath.substr(outMat.diffuseTexPath.size() - 3) == "tga"){
-            image_tga.read_tga_file(outMat.diffuseTexPath.c_str());
-            if (image_tga.get_width() == 0 or image_tga.get_height() == 0) {
-                throw std::runtime_error("diffuse texture failed to load");
-            }
-            OutputDebugStringA(("diffuse texture for material " + std::to_string(i) + " exists"+'\n').c_str());
-            outMat.diffuseTexture = std::make_shared<GTexture>(image_tga, outMat.diffuseTexPath, device, TextureUsage::Albedo);
+                image_tga.read_tga_file(outMat.diffuseTexPath.c_str());
+                if (image_tga.get_width() == 0 or image_tga.get_height() == 0) {
+                    throw std::runtime_error("diffuse texture failed to load");
+                }
+                OutputDebugStringA(("diffuse texture for material " + std::to_string(i) + " exists"+'\n').c_str());
+                outMat.diffuseTexture = std::make_shared<GTexture>(image_tga, outMat.diffuseTexPath, device, TextureUsage::Albedo);
             }
             else {
                 ScratchImage image;
@@ -184,6 +204,7 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool 
             OutputDebugStringA(("diffuse texture for material " + std::to_string(i) + " is missing" + '\n').c_str());
         }
     }
+    mat_buffer_->Save_changes();
     // normal textures
     for (unsigned i = 0; i < scene->mNumMaterials; ++i) {
         aiMaterial* mat = scene->mMaterials[i];
@@ -231,6 +252,142 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool 
            // OutputDebugStringA((outMat.normalTexPath + '\n').c_str());
         }
     }
+
+    //metallic
+    for (unsigned i = 0; i < scene->mNumMaterials; ++i) {
+        aiMaterial* mat = scene->mMaterials[i];
+        MaterialData& outMat = materials_[i];
+        outMat.hasMetallicTexture = false;
+        if (mat->GetTextureCount(aiTextureType_METALNESS) > 0)
+        {
+            outMat.hasMetallicTexture = true;
+            aiString path;
+            mat->GetTexture(aiTextureType_METALNESS, 0, &path);
+            std::string path_ = path.C_Str();
+            TGAImage image_tga;
+            const Image* image_png;
+            //choose between parsers
+            outMat.metallicTexPath = path_;
+            if (path_.substr(path_.size() - 3) == "tga") {
+                image_tga.read_tga_file(path_.c_str());
+                OutputDebugStringA(("loading metallic texture for material " + path_ + '\n').c_str());
+                if (image_tga.get_height() == 0 or image_tga.get_width() == 0) {
+                    throw std::runtime_error("metallic texture failed to load");
+                }
+                OutputDebugStringA(("metallic texture for material " + path_ + "loaded" + '\n').c_str());
+                outMat.metallicTexture = std::make_shared<GTexture>(image_tga, path_, device, TextureUsage::Albedo);
+            }
+            else {
+                ScratchImage image;
+                std::wstring wpath(path_.begin(), path_.end());
+                HRESULT hr = LoadFromWICFile(wpath.c_str(), WIC_FLAGS_NONE, nullptr, image);
+                if (FAILED(hr)) {
+                    OutputDebugStringA(("metallic texture for material " + outMat.metallicTexPath + " failed to load" + '\n').c_str());
+                    throw std::runtime_error("failed loading metallic texture from png");
+                }
+                image_png = image.GetImage(0, 0, 0);
+                outMat.metallicTexture = std::make_shared<GTexture>(image_png, outMat.metallicTexPath, device, TextureUsage::Albedo);
+            }
+        }
+        else {
+            std::string name = "no texture = no path";
+            outMat.metallicTexture = std::make_shared<GTexture>(dummy_, name, device, TextureUsage::Albedo);
+            OutputDebugStringA(("metallic texture for material " + std::to_string(i) + " is missing" + '\n').c_str());
+        }
+        mat_buffer_->GetData().mats[i].using_pbr_ = outMat.hasMetallicTexture;
+    }
+
+    //roughness
+
+
+    for (unsigned i = 0; i < scene->mNumMaterials; ++i) {
+        aiMaterial* mat = scene->mMaterials[i];
+        MaterialData& outMat = materials_[i];
+        outMat.hasRoughnessTexture = false;
+        if (mat->GetTextureCount(aiTextureType_DIFFUSE_ROUGHNESS) > 0)
+        {
+            outMat.hasRoughnessTexture = true;
+            aiString path;
+            mat->GetTexture(aiTextureType_METALNESS, 0, &path);
+            std::string path_ = path.C_Str();
+            TGAImage image_tga;
+            const Image* image_png;
+            //choose between parsers
+            outMat.roughnessTexPath = path_;
+            if (path_.substr(path_.size() - 3) == "tga") {
+                image_tga.read_tga_file(path_.c_str());
+                OutputDebugStringA(("loading roughness texture for material " + path_ + '\n').c_str());
+                if (image_tga.get_height() == 0 or image_tga.get_width() == 0) {
+                    throw std::runtime_error("roughness texture failed to load");
+                }
+                OutputDebugStringA(("roughness texture for material " + path_ + "loaded" + '\n').c_str());
+                outMat.roughnessTexture = std::make_shared<GTexture>(image_tga, path_, device, TextureUsage::Albedo);
+            }
+            else {
+                ScratchImage image;
+                std::wstring wpath(path_.begin(), path_.end());
+                HRESULT hr = LoadFromWICFile(wpath.c_str(), WIC_FLAGS_NONE, nullptr, image);
+                if (FAILED(hr)) {
+                    OutputDebugStringA(("roughness texture for material " + outMat.roughnessTexPath + " failed to load" + '\n').c_str());
+
+                    throw std::runtime_error("failed loading roughness texture from png");
+                }
+                image_png = image.GetImage(0, 0, 0);
+                outMat.roughnessTexture = std::make_shared<GTexture>(image_png, outMat.roughnessTexPath, device, TextureUsage::Albedo);
+            }
+        }
+        else {
+            std::string name = "no texture = no path";
+            outMat.roughnessTexture = std::make_shared<GTexture>(dummy_, name, device, TextureUsage::Albedo);
+            OutputDebugStringA(("roughness texture for material " + std::to_string(i) + " is missing" + '\n').c_str());
+        }
+        mat_buffer_->GetData().mats[i].using_pbr_ *= outMat.hasRoughnessTexture;
+    }
+    //ambient_occolision
+    for (unsigned i = 0; i < scene->mNumMaterials; ++i) {
+        aiMaterial* mat = scene->mMaterials[i];
+        MaterialData& outMat = materials_[i];
+        outMat.hasAOTexture = false;
+        if (mat->GetTextureCount(aiTextureType_AMBIENT_OCCLUSION) > 0)
+        {
+            outMat.hasAOTexture = true;
+            aiString path;
+            mat->GetTexture(aiTextureType_METALNESS, 0, &path);
+            std::string path_ = path.C_Str();
+            TGAImage image_tga;
+            const Image* image_png;
+            //choose between parsers
+            outMat.AOTexPath = path_;
+            if (path_.substr(path_.size() - 3) == "tga") {
+                image_tga.read_tga_file(path_.c_str());
+                OutputDebugStringA(("loading AO texture for material " + path_ + '\n').c_str());
+                if (image_tga.get_height() == 0 or image_tga.get_width() == 0) {
+                    throw std::runtime_error("roughness texture failed to load");
+                }
+                OutputDebugStringA(("AO texture for material " + path_ + "loaded" + '\n').c_str());
+                outMat.AOTexture = std::make_shared<GTexture>(image_tga, path_, device, TextureUsage::Albedo);
+            }
+            else {
+                ScratchImage image;
+                std::wstring wpath(path_.begin(), path_.end());
+                HRESULT hr = LoadFromWICFile(wpath.c_str(), WIC_FLAGS_NONE, nullptr, image);
+                if (FAILED(hr)) {
+                    OutputDebugStringA(("AO texture for material " + outMat.AOTexPath + " failed to load" + '\n').c_str());
+
+                    throw std::runtime_error("failed loading AO texture from png");
+                }
+                image_png = image.GetImage(0, 0, 0);
+                outMat.AOTexture = std::make_shared<GTexture>(image_png, outMat.AOTexPath, device, TextureUsage::Albedo);
+            }
+        }
+        else {
+            std::string name = "no texture = no path";
+            outMat.AOTexture = std::make_shared<GTexture>(dummy_, name, device, TextureUsage::Albedo);
+            OutputDebugStringA(("AO texture for material " + std::to_string(i) + " is missing" + '\n').c_str());
+        }
+        mat_buffer_->GetData().mats[i].using_pbr_ *= outMat.hasAOTexture;
+    }
+    mat_buffer_->Save_changes();
     // meshs
 
     

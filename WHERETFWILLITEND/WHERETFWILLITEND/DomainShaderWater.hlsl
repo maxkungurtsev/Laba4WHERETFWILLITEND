@@ -1,19 +1,11 @@
 Texture2D NormalMap : register(t1);
 SamplerState samplerState : register(s0);
-struct shaderMaterialData
-{
-    float3 ambient_;
-    float shiny_;
-    float3 diffuse_;
-    float NormalType;
-    float3 spec_;
-    float pad1;
-};
+
+
 cbuffer PassConstants : register(b0)
 {
     float4 cam_pos;
     float4 cam_forward;
-    shaderMaterialData mats[300];
     float time;
     int current_mat;
     float cam_near;

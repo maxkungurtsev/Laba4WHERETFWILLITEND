@@ -21,12 +21,14 @@ struct shaderMaterialData {
 	// if has normal texture - 1; heigth -2; or none of those-0;
 	float NormalType = 0;
 	XMFLOAT3 spec_;
-	float pad1 = 0;
+	float using_pbr_;
+};
+struct MaterialConstants {
+	shaderMaterialData mats[300];
 };
 struct PassConstants {
 	XMFLOAT4 cam_pos;
 	XMFLOAT4 cam_forward;
-	shaderMaterialData mats[300];
 	float time;
 	int current_mat;
 	float cam_near;

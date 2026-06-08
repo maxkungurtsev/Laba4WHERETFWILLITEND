@@ -5,6 +5,12 @@ GBuffer::GBuffer(UINT width, UINT height, std::shared_ptr<Gdevice> device) {
 	albedo_ = std::make_shared<RenderTarget>(width, height, name, device, TextureUsage::Albedo);
 	name = "normalmap";
 	normal_ = std::make_shared<RenderTarget>(width, height, name, device, TextureUsage::Normalmap);
+	name = "metallic";
+	metallic_ = std::make_shared<RenderTarget>(width, height, name, device, TextureUsage::Albedo);
+	name = "roughness";
+	roughness_ = std::make_shared<RenderTarget>(width, height, name, device, TextureUsage::Albedo);
+	name = "ambient_occolision";
+	ambient_occolision_ = std::make_shared<RenderTarget>(width, height, name, device, TextureUsage::Albedo);
 	name = "z buffer";
 	depth_ = std::make_shared<Zbuffer>(width, height, name, device, TextureUsage::Depth);
 	name = "material_index";

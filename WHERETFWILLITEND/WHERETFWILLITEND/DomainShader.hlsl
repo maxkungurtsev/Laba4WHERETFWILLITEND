@@ -1,14 +1,6 @@
 Texture2D NormalMap : register(t1);
 SamplerState samplerState : register(s0);
-struct shaderMaterialData
-{
-    float3 ambient_;
-    float shiny_;
-    float3 diffuse_;
-    float NormalType;
-    float3 spec_;
-    float pad1;
-};
+
 cbuffer POVConstants : register(b1)
 {
     float4x4 model;

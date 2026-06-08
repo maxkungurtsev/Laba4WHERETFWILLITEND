@@ -9,17 +9,21 @@ struct shaderMaterialData
     float3 diffuse_;
     float NormalType;
     float3 spec_;
-    float pad1;
+    float using_pbr_;
 };
 cbuffer PassConstants : register(b0)
 {
     float4 cam_pos;
     float4 cam_forward;
-    shaderMaterialData mats[300];
     float time;
     int current_mat;
     float cam_near;
     float cam_far;
+};
+
+cbuffer MaterialConstants : register(b2)
+{
+    shaderMaterialData mats[300];
 };
 cbuffer POVConstants : register(b1)
 {

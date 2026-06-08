@@ -24,6 +24,8 @@ void RenderingSystem::CreateGeomRootSign() {
     geom_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_ALL);
     //pov 
     geom_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_ALL);
+    //material
+    geom_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_ALL);
     // textures diffuse
     geom_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_ALL);
     //normal
@@ -75,13 +77,15 @@ void RenderingSystem::CreateLightRootSign() {
     if (light_root_signature_ == nullptr) {
         light_root_signature_ = std::make_shared<RootSignature>();
     }
-    //pass(b1)
+    //pass(b0)
     light_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
-    //pov(b2)
+    //pov(b1)
     light_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
-    //lights amount (b3)
+    //lights amount (b2)
     light_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
-    // shadow constants (b4)
+    // shadow constants (b3)
+    light_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    //material constants (b4)
     light_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     // g buffer
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
@@ -207,24 +211,7 @@ void RenderingSystem::FillCbuffers(XMVECTOR cam_pos, XMVECTOR look_at, XMVECTOR 
         }
     }
 };
-void RenderingSystem::ParseModelToCBuffer(std::shared_ptr<Model> mesh) {
-    for (int i = 0; i < mesh->GetMaterials().size(); i++) {
-        pass_buffer_->GetData().mats[i].ambient_ = mesh->GetMaterials()[i].ambient_k;
-        pass_buffer_->GetData().mats[i].diffuse_ = mesh->GetMaterials()[i].diffuse_k;
-        pass_buffer_->GetData().mats[i].spec_ = mesh->GetMaterials()[i].specular_k;
-        pass_buffer_->GetData().mats[i].shiny_ = mesh->GetMaterials()[i].shiny_k;
-        if (mesh->GetMaterials()[i].hasHeightTexture) {
-            pass_buffer_->GetData().mats[i].NormalType = 2;
-        }
-        else if (mesh->GetMaterials()[i].hasNormTexture) {
-            pass_buffer_->GetData().mats[i].NormalType = 1;
-        }
-        else {
-            pass_buffer_->GetData().mats[i].NormalType = 0;
-        }
-    }
-    pass_buffer_->Save_changes();
-}
+
 void RenderingSystem::CreateInputLayout() {
     input_layout_ =
     {
@@ -306,7 +293,7 @@ std::shared_ptr<Model> RenderingSystem::BilBoardMesh(std::shared_ptr<Model> mesh
     return mesh;
 }
 
-void RenderingSystem::SetupGeomPass(const float clearColor[4]) {
+void RenderingSystem::SetupGeomPass(const float clearColor[4], bool with_pbr) {
     device_->cmd_->command_list_->SetPipelineState(geom_pso_->GetPSO().Get());
     device_->cmd_->command_list_->SetGraphicsRootSignature(geom_root_signature_->GetRootSign().Get());
 
@@ -314,7 +301,16 @@ void RenderingSystem::SetupGeomPass(const float clearColor[4]) {
     //clearing
     device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->albedo_->handle_.cpu_, clearColor, 0, nullptr);
     device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->normal_->handle_.cpu_, clearColor, 0, nullptr);
-    device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->material_index_->handle_.cpu_, clearColor, 0, nullptr);
+
+    if (with_pbr) {
+        device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->metallic_->handle_.cpu_, clearColor, 0, nullptr);
+        device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->roughness_->handle_.cpu_, clearColor, 0, nullptr);
+        device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->ambient_occolision_->handle_.cpu_, clearColor, 0, nullptr);
+
+    }
+    else {
+        device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->material_index_->handle_.cpu_, clearColor, 0, nullptr);
+    }
     device_->cmd_->command_list_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
     // setting gbuffer as render target
@@ -324,7 +320,7 @@ void RenderingSystem::SetupGeomPass(const float clearColor[4]) {
     //desc tables setup
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, pass_buffer_->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, pov_buffer_->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(4, Sampler_handle_.gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(5, Sampler_handle_.gpu_);
 }
 
 
@@ -335,6 +331,7 @@ void RenderingSystem::GeomPass(std::shared_ptr<Model> mesh) {
     D3D12_VERTEX_BUFFER_VIEW vbv = mesh->GetVBV();
     device_->cmd_->command_list_->IASetVertexBuffers(0, 1, &vbv);
     device_->cmd_->command_list_->IASetIndexBuffer(&ibv);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, mesh->GetMaterialBuffer()->GetHandle().gpu_);
     // culling bullshit
     std::vector<int> submeshes;
 
@@ -365,9 +362,9 @@ void RenderingSystem::GeomPass(std::shared_ptr<Model> mesh) {
         SubMesh submesh = mesh->GetSubMeshes()[submeshes[i]];
         pass_buffer_->GetData().current_mat = submesh.materialIndex;
         pass_buffer_->Save_changes();
-        device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, mesh->GetMaterials()[submesh.materialIndex].diffuseTexture->GetResourse()->GetHandle().gpu_);
+        device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, mesh->GetMaterials()[submesh.materialIndex].diffuseTexture->GetResourse()->GetHandle().gpu_);
         //normal textures
-        device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, mesh->GetMaterials()[submesh.materialIndex].HeightNormTexture->GetResourse()->GetHandle().gpu_);
+        device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(4, mesh->GetMaterials()[submesh.materialIndex].HeightNormTexture->GetResourse()->GetHandle().gpu_);
         if (mesh->GetName() == "water.obj") {
             device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
             device_->cmd_->command_list_->SetPipelineState(geom_pso_water_tes_->GetPSO().Get());
@@ -413,7 +410,6 @@ void RenderingSystem::ShadowPass(XMVECTOR camera_pos, XMVECTOR camera_target, XM
                 for (int k = 0; k < meshes_.size(); k++) {
                     //fill buffer
                     std::shared_ptr<Model> mesh = meshes_[k];
-                    ParseModelToCBuffer(mesh);
                     mesh = BilBoardMesh(mesh, pass_buffer_->GetData().time, camera_target, camera_pos, camera_up_);
                     GeomPass(mesh);
                 }
@@ -564,16 +560,17 @@ void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, pov_buffer_->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(2, light_buffer_->GetMaxLights()->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, light_buffer_->GetShadowConstants()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(4, g_buffer_->albedo_->texture_->GetResourse()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(5, g_buffer_->normal_->texture_->GetResourse()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(6, g_buffer_->depth_->z_buffer_->GetResourse()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(7, g_buffer_->material_index_->texture_->GetResourse()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(8, light_buffer_->GetBuffer()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(9, light_buffer_->GetShadowMapHandles()[0]);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(10, light_buffer_->GetShadowMapHandles()[1]);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(11, light_buffer_->GetShadowMapHandles()[2]);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(12, light_buffer_->GetShadowMapHandles()[3]);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(13, Sampler_handle_.gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(4, meshes_[0]->GetMaterialBuffer()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(5, g_buffer_->albedo_->texture_->GetResourse()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(6, g_buffer_->normal_->texture_->GetResourse()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(7, g_buffer_->depth_->z_buffer_->GetResourse()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(8, g_buffer_->material_index_->texture_->GetResourse()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(9, light_buffer_->GetBuffer()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(10, light_buffer_->GetShadowMapHandles()[0]);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(11, light_buffer_->GetShadowMapHandles()[1]);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(12, light_buffer_->GetShadowMapHandles()[2]);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(13, light_buffer_->GetShadowMapHandles()[3]);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(14, Sampler_handle_.gpu_);
     // draw
     device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     device_->cmd_->command_list_->DrawInstanced(3, 1, 0, 0);
@@ -758,12 +755,10 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
         device_->cmd_->command_list_.Get()->ResourceBarrier(toGeom.size(), toGeom.data());
     }
     }
-    SetupGeomPass(clearColor);
+    SetupGeomPass(clearColor, false);
     for (int i = 0; i < meshes_.size(); i++) {
         //fill buffer
         std::shared_ptr<Model> mesh = meshes_[i];
-
-        ParseModelToCBuffer(mesh);
         mesh = BilBoardMesh(mesh, time, look_at, cam_pos, up);
         
         // make frustum
@@ -774,10 +769,6 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
     if (emiters_.size() > 0) {
         for(int i=0; i<emiters_.size();i++){
             std::shared_ptr<ParticleEmiter> emiter = emiters_[i];
-            pass_buffer_->GetData().mats[0].ambient_ = XMFLOAT3(1.0f, 1.0f, 1.0f);
-            pass_buffer_->GetData().mats[0].diffuse_ = XMFLOAT3(1.0f, 1.0f, 1.0f);
-            pass_buffer_->GetData().mats[0].spec_ = XMFLOAT3(0.0f, 0.0f, 0.0f);
-            pass_buffer_->GetData().mats[0].shiny_ = 1.0f;
             FillCbuffers(cam_pos, look_at, up, time);
             ComputePass(emiter);
             ParticlePass(emiter);
