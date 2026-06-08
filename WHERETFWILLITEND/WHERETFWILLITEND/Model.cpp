@@ -102,6 +102,12 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool 
     mat_buffer_ = std::make_shared<Cbuffer<MaterialConstants>>(device);
     Assimp::Importer importer;
     dummy_.read_tga_file("dummy.tga");
+    const Image* Whitedummy_;
+    ScratchImage Whitedummy_image;
+    std::string white_dummy_path = "white.png";
+    std::wstring wpath(white_dummy_path.begin(), white_dummy_path.end());
+    HRESULT hr = LoadFromWICFile(wpath.c_str(), WIC_FLAGS_NONE, nullptr, Whitedummy_image);
+    Whitedummy_ = Whitedummy_image.GetImage(0, 0, 0);
     const aiScene* scene = importer.ReadFile(
         filename,
         aiProcess_Triangulate |
@@ -190,6 +196,7 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool 
                 std::wstring wpath(outMat.diffuseTexPath.begin(), outMat.diffuseTexPath.end());
                 HRESULT hr = LoadFromWICFile(wpath.c_str(), WIC_FLAGS_NONE, nullptr, image);
                 if (FAILED(hr)) {
+                    OutputDebugStringA((outMat.diffuseTexPath).c_str());
                     throw std::runtime_error("failed loading texture from png");
                 }
                 image_png = image.GetImage(0, 0, 0);
@@ -210,10 +217,10 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool 
         aiMaterial* mat = scene->mMaterials[i];
         MaterialData& outMat = materials_[i];
 
-        if (mat->GetTextureCount(aiTextureType_HEIGHT) > 0)
+        if (mat->GetTextureCount(aiTextureType_NORMALS) > 0)
         {
             aiString path;
-            mat->GetTexture(aiTextureType_HEIGHT, 0, &path);
+            mat->GetTexture(aiTextureType_NORMALS, 0, &path);
             std::string path_ = path.C_Str();
             TGAImage image_tga;
             const Image* image_png;
@@ -297,18 +304,18 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool 
         mat_buffer_->GetData().mats[i].using_pbr_ = outMat.hasMetallicTexture;
     }
 
-    //roughness
+    //roughness/shinyness
 
 
     for (unsigned i = 0; i < scene->mNumMaterials; ++i) {
         aiMaterial* mat = scene->mMaterials[i];
         MaterialData& outMat = materials_[i];
         outMat.hasRoughnessTexture = false;
-        if (mat->GetTextureCount(aiTextureType_DIFFUSE_ROUGHNESS) > 0)
+        if (mat->GetTextureCount(aiTextureType_SHININESS ) > 0)
         {
             outMat.hasRoughnessTexture = true;
             aiString path;
-            mat->GetTexture(aiTextureType_METALNESS, 0, &path);
+            mat->GetTexture(aiTextureType_SHININESS, 0, &path);
             std::string path_ = path.C_Str();
             TGAImage image_tga;
             const Image* image_png;
@@ -352,7 +359,7 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool 
         {
             outMat.hasAOTexture = true;
             aiString path;
-            mat->GetTexture(aiTextureType_METALNESS, 0, &path);
+            mat->GetTexture(aiTextureType_AMBIENT_OCCLUSION, 0, &path);
             std::string path_ = path.C_Str();
             TGAImage image_tga;
             const Image* image_png;

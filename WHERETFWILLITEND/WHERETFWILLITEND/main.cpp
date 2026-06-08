@@ -11,7 +11,7 @@ const int height = 800;
 //light stuff
 //camera stuff
 XMVECTOR cam_coords = {-14.0, 10.0, 0.0, 1.0};
-XMVECTOR look_at = {1.0, 10.0, 0.0, 1.0};
+XMVECTOR look_at = {0.0, 0.0, 0.0, 1.0};
 XMVECTOR up = {0.0, 1.0, 0.0, 1.0 };
 // material stuff
 const float ambient_k = 0.3;
@@ -72,16 +72,16 @@ int Run() {
             culling_enabled = true;
         }
         if (g_Input.IsKeyDown('W')) {
-            cam_coords += forward * 0.1f;
+            cam_coords += forward * 0.01f;
         }
         if (g_Input.IsKeyDown('S')) {
-            cam_coords -= forward * 0.1f;
+            cam_coords -= forward * 0.01f;
         }
         if (g_Input.IsKeyDown('A')) {
-            cam_coords += right * 10.0f;
+            cam_coords += right * 0.01f;
         }
         if (g_Input.IsKeyDown('D')) {
-            cam_coords -= right * 10.0f;
+            cam_coords -= right * 0.01f;
         }
        auto currentTime = clock::now();
        float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
@@ -101,7 +101,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR, int nCmdShow){
     //init input device
     g_Input.Initialize(g_Window.GetHWND());
     //catch messege stuff
-    std::vector<std::string> pathes = {"Cerberus_by_Andrew_Maximov/Cerberus_LP.FBX"};
+    std::vector<std::string> pathes = {"32-coffee_cup_fbx/coffee_cup_fbx.fbx"};
     g_Renderer = std::make_shared<NewRenderer>(width,height,2, &(g_Window), pathes, cam_coords, look_at, up, 0);
 
     int messege = Run();

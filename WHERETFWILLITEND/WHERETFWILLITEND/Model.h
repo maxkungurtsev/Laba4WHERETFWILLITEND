@@ -89,6 +89,7 @@ private:
     XMFLOAT3 rotation_ = { 0,0,0 };
     XMFLOAT3 scale_ = {1,1,1};
     TGAImage dummy_;
+    const Image* Whitedummy_;
     UINT vertex_count_;
     std::string name;
     ComPtr<ID3D12Resource> vertex_buffer_;

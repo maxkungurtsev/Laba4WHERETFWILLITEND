@@ -686,7 +686,7 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<st
 
 }
 void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up, D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle, bool shootlight, bool culling_enabled) {
-    const float clearColor[4] = { 0.2f, 0.4f, 0.6f, 1.0f };
+    const float clearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
     {
     if (shootlight) {
         XMFLOAT4 camera_pos;
