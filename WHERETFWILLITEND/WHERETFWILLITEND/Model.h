@@ -71,7 +71,7 @@ public:
             OutputDebugStringA("octree present\n");
         }
         else {
-            throw std::runtime_error("octree not prese");
+            throw std::runtime_error("octree not present");
         }
     }
     void SetBilboard(std::shared_ptr<Model> bilboard) { bilboard_ = bilboard; }

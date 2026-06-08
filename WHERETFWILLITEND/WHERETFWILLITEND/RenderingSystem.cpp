@@ -30,6 +30,12 @@ void RenderingSystem::CreateGeomRootSign() {
     geom_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_ALL);
     //normal
     geom_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_ALL);
+    //metallic
+    geom_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_ALL);
+    //shinyness
+    geom_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_ALL);
+    //AO
+    geom_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_ALL);
     //sampler
     geom_root_signature_->AddParameter(Type::sampler, 1, D3D12_SHADER_VISIBILITY_ALL);
     OutputDebugStringA("sampler made\n");
@@ -87,14 +93,17 @@ void RenderingSystem::CreateLightRootSign() {
     light_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     //material constants (b4)
     light_root_signature_->AddParameter(Type::cbv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
-    // g buffer
+    // g buffer t0-t6
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
-    // Lights 
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
-    // shadow maps (t5-t8)
+    light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    // Lights t7
+    light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    // shadow maps (t8-t11)
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
@@ -144,7 +153,7 @@ void RenderingSystem::InitGeomPass() {
     CompileShader(L"GeomVertexShader.hlsl", geom_vertex_shader_, type);
     CompileShader(L"GeomVertexShader_anim_.hlsl", geom_vertex_shader_anim_, type);
     type = "ps_5_0";
-    CompileShader(L"GeomPixelShader.hlsl", geom_pixel_shader_, type);
+    CompileShader(L"GeomPixelShaderPBR.hlsl", geom_pixel_shader_, type);
     OutputDebugStringA("geom shaders compiled\n");
     geom_pso_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, geom_pixel_shader_, device_, geom_root_signature_, 3, PSO_formats_);
     OutputDebugStringA("geom pso 1 made\n");
@@ -217,9 +226,12 @@ void RenderingSystem::CreateInputLayout() {
     {
         {"POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
         {"NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}, 
+        {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
         {"TEXCOORD", 1, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
         {"TEXCOORD", 2, DXGI_FORMAT_R32G32B32_FLOAT, 0, 44, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 3, DXGI_FORMAT_R32G32B32_FLOAT, 0, 56, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 4, DXGI_FORMAT_R32G32B32_FLOAT, 0, 68, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 5, DXGI_FORMAT_R32G32B32_FLOAT, 0, 80, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
     };
 }
 
@@ -301,26 +313,21 @@ void RenderingSystem::SetupGeomPass(const float clearColor[4], bool with_pbr) {
     //clearing
     device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->albedo_->handle_.cpu_, clearColor, 0, nullptr);
     device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->normal_->handle_.cpu_, clearColor, 0, nullptr);
-
-    if (with_pbr) {
-        device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->metallic_->handle_.cpu_, clearColor, 0, nullptr);
-        device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->roughness_->handle_.cpu_, clearColor, 0, nullptr);
-        device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->ambient_occolision_->handle_.cpu_, clearColor, 0, nullptr);
-
-    }
-    else {
-        device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->material_index_->handle_.cpu_, clearColor, 0, nullptr);
-    }
+    device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->metallic_->handle_.cpu_, clearColor, 0, nullptr);
+    device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->roughness_->handle_.cpu_, clearColor, 0, nullptr);
+    device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->ambient_occolision_->handle_.cpu_, clearColor, 0, nullptr);
+    device_->cmd_->command_list_->ClearRenderTargetView(g_buffer_->material_index_->handle_.cpu_, clearColor, 0, nullptr);
     device_->cmd_->command_list_->ClearDepthStencilView(dsvHandle, D3D12_CLEAR_FLAG_DEPTH, 1.0f, 0, 0, nullptr);
 
     // setting gbuffer as render target
-    D3D12_CPU_DESCRIPTOR_HANDLE handles[3] = { g_buffer_->albedo_->handle_.cpu_, g_buffer_->normal_->handle_.cpu_, g_buffer_->material_index_->handle_.cpu_};
-    device_->cmd_->command_list_->OMSetRenderTargets(3, &g_buffer_->albedo_->handle_.cpu_, TRUE, &dsvHandle);
+    D3D12_CPU_DESCRIPTOR_HANDLE handles[6] = { g_buffer_->albedo_->handle_.cpu_, g_buffer_->normal_->handle_.cpu_, g_buffer_->material_index_->handle_.cpu_,
+                                               g_buffer_->roughness_->handle_.cpu_, g_buffer_->metallic_->handle_.cpu_,g_buffer_->ambient_occolision_->handle_.cpu_};
+    device_->cmd_->command_list_->OMSetRenderTargets(6, &g_buffer_->albedo_->handle_.cpu_, TRUE, &dsvHandle);
 
     //desc tables setup
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, pass_buffer_->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(1, pov_buffer_->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(5, Sampler_handle_.gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(8, Sampler_handle_.gpu_);
 }
 
 
@@ -365,6 +372,12 @@ void RenderingSystem::GeomPass(std::shared_ptr<Model> mesh) {
         device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(3, mesh->GetMaterials()[submesh.materialIndex].diffuseTexture->GetResourse()->GetHandle().gpu_);
         //normal textures
         device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(4, mesh->GetMaterials()[submesh.materialIndex].HeightNormTexture->GetResourse()->GetHandle().gpu_);
+        //roughness textures
+        device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(5, mesh->GetMaterials()[submesh.materialIndex].roughnessTexture->GetResourse()->GetHandle().gpu_);
+        //metallic textures
+        device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(6, mesh->GetMaterials()[submesh.materialIndex].metallicTexture->GetResourse()->GetHandle().gpu_);
+        //AO textures
+        device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(7, mesh->GetMaterials()[submesh.materialIndex].AOTexture->GetResourse()->GetHandle().gpu_);
         if (mesh->GetName() == "water.obj") {
             device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST);
             device_->cmd_->command_list_->SetPipelineState(geom_pso_water_tes_->GetPSO().Get());
@@ -565,12 +578,15 @@ void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(6, g_buffer_->normal_->texture_->GetResourse()->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(7, g_buffer_->depth_->z_buffer_->GetResourse()->GetHandle().gpu_);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(8, g_buffer_->material_index_->texture_->GetResourse()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(9, light_buffer_->GetBuffer()->GetHandle().gpu_);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(10, light_buffer_->GetShadowMapHandles()[0]);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(11, light_buffer_->GetShadowMapHandles()[1]);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(12, light_buffer_->GetShadowMapHandles()[2]);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(13, light_buffer_->GetShadowMapHandles()[3]);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(14, Sampler_handle_.gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(9, g_buffer_->roughness_->texture_->GetResourse()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(10, g_buffer_->metallic_->texture_->GetResourse()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(11, g_buffer_->ambient_occolision_->texture_->GetResourse()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(12, light_buffer_->GetBuffer()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(13, light_buffer_->GetShadowMapHandles()[0]);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(14, light_buffer_->GetShadowMapHandles()[1]);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(15, light_buffer_->GetShadowMapHandles()[2]);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(16, light_buffer_->GetShadowMapHandles()[3]);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(17, Sampler_handle_.gpu_);
     // draw
     device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     device_->cmd_->command_list_->DrawInstanced(3, 1, 0, 0);
@@ -714,14 +730,18 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
                        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET),
             Transition(g_buffer_->material_index_->texture_->GetResourse()->GetResourse().Get(),
                        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET),
+            Transition(g_buffer_->roughness_->texture_->GetResourse()->GetResourse().Get(),
+                       D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET),
+            Transition(g_buffer_->metallic_->texture_->GetResourse()->GetResourse().Get(),
+                       D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET),
+            Transition(g_buffer_->ambient_occolision_->texture_->GetResourse()->GetResourse().Get(),
+                       D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET),
             Transition(scene_color->texture_->GetResourse()->GetResourse().Get(),
                        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET),
             Transition(post_proccess_color0->texture_->GetResourse()->GetResourse().Get(),
                        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_RENDER_TARGET),
             Transition(post_proccess_color1->texture_->GetResourse()->GetResourse().Get(),
                        D3D12_RESOURCE_STATE_COPY_DEST, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
-
-                       
         };
 
         device_->cmd_->command_list_.Get()->ResourceBarrier(toRenderframe.size(), toRenderframe.data());
@@ -738,6 +758,13 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
                        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET),
             Transition(g_buffer_->depth_->z_buffer_->GetResourse()->GetResourse().Get(),
                        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_DEPTH_WRITE),
+            Transition(g_buffer_->roughness_->texture_->GetResourse()->GetResourse().Get(),
+                       D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET),
+            Transition(g_buffer_->metallic_->texture_->GetResourse()->GetResourse().Get(),
+                       D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET),
+            Transition(g_buffer_->ambient_occolision_->texture_->GetResourse()->GetResourse().Get(),
+                       D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET),
+
             Transition(scene_color->texture_->GetResourse()->GetResourse().Get(),
                        D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE, D3D12_RESOURCE_STATE_RENDER_TARGET)
         };
@@ -785,7 +812,14 @@ void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos
             Transition(g_buffer_->material_index_->texture_->GetResourse()->GetResourse().Get(),
                        D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
             Transition(g_buffer_->depth_->z_buffer_->GetResourse()->GetResourse().Get(),
-                       D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+                       D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
+            Transition(g_buffer_->roughness_->texture_->GetResourse()->GetResourse().Get(),
+                       D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
+            Transition(g_buffer_->metallic_->texture_->GetResourse()->GetResourse().Get(),
+                       D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE),
+            Transition(g_buffer_->ambient_occolision_->texture_->GetResourse()->GetResourse().Get(),
+                       D3D12_RESOURCE_STATE_RENDER_TARGET, D3D12_RESOURCE_STATE_PIXEL_SHADER_RESOURCE)
+
         };
         device_->cmd_->command_list_.Get()->ResourceBarrier(toLight.size(), toLight.data());
     }

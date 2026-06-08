@@ -94,8 +94,8 @@ PS_OUT main(PS_IN input) : SV_TARGET
             output.normal = float4(normalize(mul(n, TBN)), 1.0)*0.5+0.5;
             break;}
     }
-    output.albedo = diffuseMap.Sample(samplerState, uv).bgra;
-    output.roughness = RoughnessMap.Sample(samplerState, uv).bgra;
+    output.albedo = diffuseMap.Sample(samplerState, uv).rgba;
+    output.roughness = RoughnessMap.Sample(samplerState, uv).rgba;
     output.material_index = int4(current_mat, 0, 0, 0);
     output.metallic = MetallicMap.Sample(samplerState, uv).bgra;
     output.ambient_occolision = AmbientOccolisionMap.Sample(samplerState, uv).bgra;
