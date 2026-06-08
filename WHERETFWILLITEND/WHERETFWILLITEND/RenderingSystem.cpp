@@ -155,9 +155,11 @@ void RenderingSystem::InitGeomPass() {
     type = "ps_5_0";
     CompileShader(L"GeomPixelShaderPBR.hlsl", geom_pixel_shader_, type);
     OutputDebugStringA("geom shaders compiled\n");
-    geom_pso_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, geom_pixel_shader_, device_, geom_root_signature_, 3, PSO_formats_);
+
+    std::vector<DXGI_FORMAT> formats= { DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_B8G8R8A8_UNORM ,DXGI_FORMAT_R32_SINT, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM, DXGI_FORMAT_R8G8B8A8_UNORM};
+    geom_pso_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, geom_pixel_shader_, device_, geom_root_signature_, 6, formats);
     OutputDebugStringA("geom pso 1 made\n");
-    geom_pso_anim_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_anim_, geom_pixel_shader_, device_, geom_root_signature_, 3, PSO_formats_);
+    geom_pso_anim_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_anim_, geom_pixel_shader_, device_, geom_root_signature_, 6, formats);
     OutputDebugStringA("geom pso 2 made\n");
 
 
@@ -167,8 +169,8 @@ void RenderingSystem::InitGeomPass() {
     type = "ds_5_0";
     CompileShader(L"DomainShaderWater.hlsl", water_domain_shader_, type);
     CompileShader(L"DomainShader.hlsl", domain_shader_, type);
-    geom_pso_tes_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, hull_shader_, domain_shader_, geom_pixel_shader_, device_, geom_root_signature_, 3, PSO_formats_);
-    geom_pso_water_tes_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, hull_shader_, water_domain_shader_, geom_pixel_shader_, device_, geom_root_signature_, 3, PSO_formats_);
+    geom_pso_tes_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, hull_shader_, domain_shader_, geom_pixel_shader_, device_, geom_root_signature_, 6, formats);
+    geom_pso_water_tes_ = std::make_shared<PSO>(input_layout_, geom_vertex_shader_, hull_shader_, water_domain_shader_, geom_pixel_shader_, device_, geom_root_signature_, 6, formats);
     OutputDebugStringA("geom pso with tesselation made\n");
 }
 
@@ -228,10 +230,10 @@ void RenderingSystem::CreateInputLayout() {
         {"NORMAL",   0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 12, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
         {"TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,    0, 24, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
         {"TEXCOORD", 1, DXGI_FORMAT_R32G32B32_FLOAT, 0, 32, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-        {"TEXCOORD", 2, DXGI_FORMAT_R32G32B32_FLOAT, 0, 44, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-        {"TEXCOORD", 3, DXGI_FORMAT_R32G32B32_FLOAT, 0, 56, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-        {"TEXCOORD", 4, DXGI_FORMAT_R32G32B32_FLOAT, 0, 68, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
-        {"TEXCOORD", 5, DXGI_FORMAT_R32G32B32_FLOAT, 0, 80, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        {"TEXCOORD", 2, DXGI_FORMAT_R32G32B32_FLOAT, 0, 44, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0}
+        //{"TEXCOORD", 3, DXGI_FORMAT_R32G32B32_FLOAT, 0, 56, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        //{"TEXCOORD", 4, DXGI_FORMAT_R32G32B32_FLOAT, 0, 68, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
+        //{"TEXCOORD", 5, DXGI_FORMAT_R32G32B32_FLOAT, 0, 80, D3D12_INPUT_CLASSIFICATION_PER_VERTEX_DATA, 0},
     };
 }
 
@@ -322,7 +324,7 @@ void RenderingSystem::SetupGeomPass(const float clearColor[4], bool with_pbr) {
     // setting gbuffer as render target
     D3D12_CPU_DESCRIPTOR_HANDLE handles[6] = { g_buffer_->albedo_->handle_.cpu_, g_buffer_->normal_->handle_.cpu_, g_buffer_->material_index_->handle_.cpu_,
                                                g_buffer_->roughness_->handle_.cpu_, g_buffer_->metallic_->handle_.cpu_,g_buffer_->ambient_occolision_->handle_.cpu_};
-    device_->cmd_->command_list_->OMSetRenderTargets(6, &g_buffer_->albedo_->handle_.cpu_, TRUE, &dsvHandle);
+    device_->cmd_->command_list_->OMSetRenderTargets(6, &handles[0], TRUE, &dsvHandle);
 
     //desc tables setup
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(0, pass_buffer_->GetHandle().gpu_);
