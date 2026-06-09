@@ -71,6 +71,8 @@ cbuffer ShadowConstants : register(b3)
     float4 cascade_split_depths;
 }
 
+static const float PI = 3.14159265359f;
+
 float4 CalcShadowFactor(float3 worldPos, float viewDepth)
 {
     const float depthBias = 0.01f;
@@ -168,9 +170,125 @@ float4 CalcShadowFactor(float3 worldPos, float viewDepth)
     return accumulated_light/iterations;
 }
 
-float3 CalcLightPBR()
+
+float DistributionGGX(float3 N, float3 H, float roughness)
 {
-    return float3(1.0f, 0.0f, 0.0f);
+    float a = roughness * roughness;
+    float a2 = a * a;
+    float NdotH = max(dot(N, H), 0.0f);
+    float NdotH2 = NdotH * NdotH;
+    float denom = (NdotH2 * (a2 - 1.0f) + 1.0f);
+    denom = PI * denom * denom;
+    return a2 / max(denom, 1e-6f);
+}
+
+float GeometrySchlickGGX(float NdotV, float roughness)
+{
+    float r = roughness + 1.0f;
+    float k = (r * r) / 8.0f;
+    return NdotV / max(NdotV * (1.0f - k) + k, 1e-6f);
+}
+
+float GeometrySmith(float3 N, float3 V, float3 L, float roughness)
+{
+    float NdotV = max(dot(N, V), 0.0f);
+    float NdotL = max(dot(N, L), 0.0f);
+    float ggxV = GeometrySchlickGGX(NdotV, roughness);
+    float ggxL = GeometrySchlickGGX(NdotL, roughness);
+
+    return ggxV * ggxL;
+}
+
+float3 FresnelSchlick(float cosTheta, float3 F0)
+{
+    return F0 + (1.0f - F0) * pow(1.0f - cosTheta, 5.0f);
+}
+
+float3 CalcLightPBR(LightData light, float3 normal, float3 worldPos, float3 view_dir, float3 albedo, float roughness, float metallic, float ao)
+{
+    float4 pos = light.position;
+    if (light.velocity > 0.0f)
+    {
+        pos += normalize(light.movement_direction) * light.velocity * (time - light.spawn_time);
+    }
+
+    roughness = clamp(roughness, 0.04f, 1.0f);
+    metallic = saturate(metallic);
+    ao = saturate(ao);
+
+    float3 F0 = lerp(float3(0.04f, 0.04f, 0.04f), albedo, metallic);
+
+    float3 light_pos = 0.0f;
+    float3 radiance = light.strength;
+    float attenuation = 1.0f;
+    float spotFactor = 1.0f;
+
+    switch (light.type)
+    {
+        case 0: // directional
+        {
+                light_pos = normalize(-light.direction.xyz);
+                break;
+            }
+
+        case 1: // point
+        {
+                float3 toLight = pos.xyz - worldPos;
+                float dist = length(toLight);
+                light_pos = normalize(toLight);
+
+                float range = max(light.falloff_end - light.falloff_start, 0.00001f);
+                attenuation = saturate((light.falloff_end - dist) / range);
+                break;
+            }
+
+        case 2: // spot
+        {
+                float3 toLight = pos.xyz - worldPos;
+                float dist = length(toLight);
+                light_pos = normalize(toLight);
+
+                float range = max(light.falloff_end - light.falloff_start, 0.00001f);
+                attenuation = saturate((light.falloff_end - dist) / range);
+
+                float3 spotDir = normalize(-light.direction.xyz);
+                float spotCos = dot(light_pos, spotDir);
+
+                spotFactor = smoothstep(light.falloff_end, light.falloff_start, spotCos);
+                spotFactor = pow(spotFactor, light.spot_power);
+                spotFactor = saturate(spotFactor);
+                break;
+            }
+
+        case 3: // ambient fallback
+        {
+                return albedo * light.strength * ao;
+            }
+    }
+
+    float NdotL = max(dot(normal, light_pos), 0.0f);
+    float NdotV = max(dot(normal, view_dir), 0.0f);
+
+    if (NdotL <= 0.0f || NdotV <= 0.0f)
+        return 0.0f;
+
+    float3 H = normalize(view_dir + light_pos);
+
+    float3 F = FresnelSchlick(max(dot(H, view_dir), 0.0f), F0);
+    float NDF = DistributionGGX(normal, H, roughness);
+    float G = GeometrySmith(normal, view_dir, light_pos, roughness);
+
+    float3 numerator = NDF * G * F;
+    float denom = max(4.0f * NdotV * NdotL, 1e-4f);
+    float3 specular = numerator / denom;
+
+    float3 kS = F;
+    float3 kD = (1.0f - kS) * (1.0f - metallic);
+    float3 diffuse = kD;
+
+    float3 Lo = (diffuse + specular) * radiance * NdotL * attenuation * spotFactor;
+
+    return Lo;
 }
 
 float3 CalcLightPhong(LightData light, float3 normal, float3 worldPos, float3 viewDir, shaderMaterialData mat)
@@ -242,11 +360,11 @@ float3 CalcLightPhong(LightData light, float3 normal, float3 worldPos, float3 vi
     return lightContrib;
 }
 
-float3 CalcLight(LightData light, float3 normal, float3 worldPos, float3 viewDir, shaderMaterialData mat)
+float3 CalcLight(LightData light, float3 normal, float3 worldPos, float3 viewDir, shaderMaterialData mat, float3 albedo, float roughness, float metallic, float ao)
 {
     if (mat.using_pbr_)
     {
-        return CalcLightPhong(light, normal, worldPos, viewDir, mat);
+        return CalcLightPBR(light, normal, worldPos, viewDir, albedo, roughness, metallic, ao);
     }
     else
     {
@@ -269,7 +387,7 @@ float4 main(PS_IN input) : SV_Target{
     int2 pix = int2(input.pos.xy); // screen pixel
     float2 uv = (pix + 0.5) / float2(w, h); // for albedo/normal if needed
     
-    float3 albedo = RoughnessMap.Sample(samplerState, uv).xyz;
+    float3 albedo = diffuseMap.Sample(samplerState, uv).xyz;
     float3 normal = normalize(NormalMap.Sample(samplerState, uv).xyz*2 -1);
 
 
@@ -308,7 +426,7 @@ float4 main(PS_IN input) : SV_Target{
     {
         
         shadowFactor = 1.0f;
-        float3 light = CalcLight(lights[i], normal, worldPos, V, mats[matIndex]);
+        float3 light = CalcLight(lights[i], normal, worldPos, V, mats[matIndex], albedo, (RoughnessMap.Sample(samplerState, uv).r), MetallicMap.Sample(samplerState, uv).r, AOMap.Sample(samplerState, uv).r);
         if (lights[i].type == 0)
         {
            // shadowFactor = CalcShadowFactor(worldPos, viewDepth);

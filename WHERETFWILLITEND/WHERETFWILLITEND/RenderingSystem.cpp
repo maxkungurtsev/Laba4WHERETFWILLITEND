@@ -669,7 +669,7 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<st
     // let there be light
     light_buffer_ = std::make_shared<Lights>(device_);
     light_buffer_->AddAmbientlight({ 0.6,0.6,0.6 }, false);
-    light_buffer_->AddDirlight({ 0.6,0.6,0.6 }, { 1.0 ,-1.0,1.0, 0.0 }, false);
+    light_buffer_->AddDirlight({ 0.6,0.6,0.6 }, { 1.0 ,0.0, 0.0, 0.0 }, false);
     XMMATRIX view = XMLoadFloat4x4(&pov_buffer_->GetData().view);
     XMMATRIX proj = XMLoadFloat4x4(&pov_buffer_->GetData().projection);
     light_buffer_->UpdateShadowMatricies(view, XM_PIDIV4, device_->width_ / device_->height_);

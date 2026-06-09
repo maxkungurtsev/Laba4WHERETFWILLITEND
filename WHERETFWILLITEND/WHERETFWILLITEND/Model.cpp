@@ -392,7 +392,7 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool 
             outMat.AOTexture = std::make_shared<GTexture>(dummy_, name, device, TextureUsage::Albedo);
             OutputDebugStringA(("AO texture for material " + std::to_string(i) + " is missing" + '\n').c_str());
         }
-        mat_buffer_->GetData().mats[i].using_pbr_ *= outMat.hasAOTexture;
+        //mat_buffer_->GetData().mats[i].using_pbr_ *= outMat.hasAOTexture;
     }
     mat_buffer_->Save_changes();
     // meshs
