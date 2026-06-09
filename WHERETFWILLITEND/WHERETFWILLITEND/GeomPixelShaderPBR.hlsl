@@ -95,9 +95,9 @@ PS_OUT main(PS_IN input) : SV_TARGET
             break;}
     }
     output.albedo = diffuseMap.Sample(samplerState, uv).rgba;
-    output.roughness = RoughnessMap.Sample(samplerState, uv).rgba;
+    output.roughness = RoughnessMap.Sample(samplerState, uv);
     output.material_index = int4(current_mat, 0, 0, 0);
-    output.metallic = MetallicMap.Sample(samplerState, uv).bgra;
-    output.ambient_occolision = AmbientOccolisionMap.Sample(samplerState, uv).bgra;
+    output.metallic = MetallicMap.Sample(samplerState, uv);
+    output.ambient_occolision = AmbientOccolisionMap.Sample(samplerState, uv);
     return output;
 }

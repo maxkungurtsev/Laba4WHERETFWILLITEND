@@ -262,7 +262,7 @@ float3 CalcLightPBR(LightData light, float3 normal, float3 worldPos, float3 view
 
         case 3: // ambient fallback
         {
-                return albedo * light.strength * ao;
+                return light.strength * ao;
             }
     }
 
