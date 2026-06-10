@@ -46,9 +46,60 @@ void Lights::AddAmbientlight(XMFLOAT3 strength, bool in_render_frame) {
 	newlight.velocity = 0;
 	lights_->AddElement(newlight, max_lights_->GetData().x, in_render_frame);
 	max_lights_->GetData().x += 1;
+	OutputDebugStringA("HELP\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n");
+	max_lights_->Save_changes();
+	std::string name = "dummy_is_used";
+	const Image* Whitedummy_;
+	ScratchImage Whitedummy_image;
+	std::string white_dummy_path = "white.png";
+	std::wstring wpath(white_dummy_path.begin(), white_dummy_path.end());
+	HRESULT hr = LoadFromWICFile(wpath.c_str(), WIC_FLAGS_NONE, nullptr, Whitedummy_image);
+	if (FAILED(hr)) {
+		OutputDebugStringA("WHITE DUMMY IS ASS\n");
+
+		throw std::runtime_error("WHITE DUMMY IS ASS");
+	}
+	Whitedummy_ = Whitedummy_image.GetImage(0, 0, 0);
+	ambient_cubemap_ = std::make_shared<GTexture>(Whitedummy_, name, device_, TextureUsage::Albedo);
+}
+void Lights::AddAmbientlight(XMFLOAT3 strength, std::string cubemap_pass, bool in_render_frame) {
+	LightData newlight;
+	newlight.strength = strength;
+	newlight.direction = { 0,0,0,0 };
+	newlight.falloff_start = 0;
+	newlight.position = { 0,0,0,0 };
+	newlight.falloff_end = 0;
+	newlight.spot_power = 0;
+	newlight.type = 3;
+	newlight.velocity = 0;
+	newlight.using_IBL_ = 1.0f;
+	TGAImage image_tga;
+	const Image* image_png;
+	if (cubemap_pass.substr(cubemap_pass.size() - 3) == "tga") {
+		image_tga.read_tga_file(cubemap_pass.c_str());
+		OutputDebugStringA(("loading texture for amb light " + cubemap_pass + '\n').c_str());
+		if (image_tga.get_height() == 0 or image_tga.get_width() == 0) {
+			throw std::runtime_error("texture for amb light failed to load");
+		}
+		OutputDebugStringA(("texture for amb_light " + cubemap_pass + "loaded" + '\n').c_str());
+		ambient_cubemap_ = std::make_shared<GTexture>(image_tga, cubemap_pass, device_, TextureUsage::CubeMap);
+	}
+	else {
+		ScratchImage image;
+		std::wstring wpath(cubemap_pass.begin(), cubemap_pass.end());
+		HRESULT hr = LoadFromWICFile(wpath.c_str(), WIC_FLAGS_NONE, nullptr, image);
+		if (FAILED(hr)) {
+			OutputDebugStringA(("texture for amb_light " + cubemap_pass + " failed to load" + '\n').c_str());
+
+			throw std::runtime_error("failed to load texture for amb_light from png");
+		}
+		image_png = image.GetImage(0, 0, 0);
+		ambient_cubemap_ = std::make_shared<GTexture>(image_png, cubemap_pass, device_, TextureUsage::Albedo);
+	}
+	lights_->AddElement(newlight, max_lights_->GetData().x, in_render_frame);
+	max_lights_->GetData().x += 1;
 	max_lights_->Save_changes();
 }
-
 
 std::vector<D3D12_GPU_DESCRIPTOR_HANDLE>& Lights::GetShadowMapHandles() {
 	if (casc_shad_map_handles.size() == 0) {

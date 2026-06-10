@@ -11,7 +11,8 @@ enum class TextureUsage
     Normalmap,
     Heightmap,
     Depth = Heightmap,
-    MaterialIndex
+    MaterialIndex,
+    CubeMap
 };
 
 class GTexture{
@@ -19,7 +20,7 @@ class GTexture{
 	UINT height_=0;
     TextureUsage usage_;
 	std::shared_ptr<GResourse> Gresourse_;
-    DXGI_FORMAT formats[4] = { DXGI_FORMAT_R8G8B8A8_UNORM , DXGI_FORMAT_B8G8R8A8_UNORM ,DXGI_FORMAT_R32_TYPELESS, DXGI_FORMAT_R32_SINT };
+    DXGI_FORMAT formats[5] = { DXGI_FORMAT_R8G8B8A8_UNORM , DXGI_FORMAT_B8G8R8A8_UNORM ,DXGI_FORMAT_R32_TYPELESS, DXGI_FORMAT_R32_SINT, DXGI_FORMAT_R8G8B8A8_UNORM };
     D3D12_RESOURCE_STATES initial_states_[4] = { D3D12_RESOURCE_STATE_COPY_DEST , D3D12_RESOURCE_STATE_COPY_DEST ,D3D12_RESOURCE_STATE_DEPTH_WRITE, D3D12_RESOURCE_STATE_COPY_DEST };
 	void FillData(UINT width, UINT height, std::string& name, std::shared_ptr<Gdevice> device, TextureUsage usage, D3D12_RESOURCE_FLAGS flag = D3D12_RESOURCE_FLAG_NONE);
 public:

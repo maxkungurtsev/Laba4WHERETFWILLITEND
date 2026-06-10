@@ -102,7 +102,6 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool 
     mat_buffer_ = std::make_shared<Cbuffer<MaterialConstants>>(device);
     Assimp::Importer importer;
     dummy_.read_tga_file("dummy.tga");
-    const Image* Whitedummy_;
     ScratchImage Whitedummy_image;
     std::string white_dummy_path = "white.png";
     std::wstring wpath(white_dummy_path.begin(), white_dummy_path.end());
@@ -389,7 +388,7 @@ Model::Model(const std::string& filename, std::shared_ptr<Gdevice> device, bool 
         }
         else {
             std::string name = "no texture = no path";
-            outMat.AOTexture = std::make_shared<GTexture>(dummy_, name, device, TextureUsage::Albedo);
+            outMat.AOTexture = std::make_shared<GTexture>(Whitedummy_, name, device, TextureUsage::Albedo);
             OutputDebugStringA(("AO texture for material " + std::to_string(i) + " is missing" + '\n').c_str());
         }
         //mat_buffer_->GetData().mats[i].using_pbr_ *= outMat.hasAOTexture;

@@ -10,6 +10,7 @@ Texture2D shadowMap0 : register(t8);
 Texture2D shadowMap1 : register(t9);
 Texture2D shadowMap2 : register(t10);
 Texture2D shadowMap3 : register(t11);
+TextureCube AmbientCubeMap : register(t12);
 struct LightData
 {
     float3 strength;
@@ -21,7 +22,8 @@ struct LightData
     int type;
     float velocity;
     float spawn_time;
-    float pad[3];
+    float using_IBL_;
+    float pad[2];
     float4 movement_direction;
 };
 
@@ -420,8 +422,6 @@ float4 main(PS_IN input) : SV_Target{
         }
     }
     
-    
-        
     for (int i = 0; i < max_lights.x; i++)
     {
         
@@ -430,6 +430,11 @@ float4 main(PS_IN input) : SV_Target{
         if (lights[i].type == 0)
         {
            // shadowFactor = CalcShadowFactor(worldPos, viewDepth);
+        }
+        if (lights[i].using_IBL_>0)
+        {
+            return float4(albedo, 1.0);
+
         }
         float4 out_light = float4(light.x * shadowFactor.x, light.y * shadowFactor.y, light.z * shadowFactor.z, 1.0f);
         finalLight += out_light;

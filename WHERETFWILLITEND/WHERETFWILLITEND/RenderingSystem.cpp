@@ -108,6 +108,8 @@ void RenderingSystem::CreateLightRootSign() {
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
     light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
+    // amb cubemap (t12)
+    light_root_signature_->AddParameter(Type::srv, 1, D3D12_SHADER_VISIBILITY_PIXEL);
 
     //sampler
     light_root_signature_->AddParameter(Type::sampler, 1, D3D12_SHADER_VISIBILITY_PIXEL);
@@ -588,7 +590,8 @@ void RenderingSystem::LightPass(const float clearColor[4], D3D12_CPU_DESCRIPTOR_
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(14, light_buffer_->GetShadowMapHandles()[1]);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(15, light_buffer_->GetShadowMapHandles()[2]);
     device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(16, light_buffer_->GetShadowMapHandles()[3]);
-    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(17, Sampler_handle_.gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(17, light_buffer_->GetAmbCubeMap()->GetResourse()->GetHandle().gpu_);
+    device_->cmd_->command_list_->SetGraphicsRootDescriptorTable(18, Sampler_handle_.gpu_);
     // draw
     device_->cmd_->command_list_->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
     device_->cmd_->command_list_->DrawInstanced(3, 1, 0, 0);
@@ -668,7 +671,8 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<st
     FillCbuffers(cam_pos, look_at, up, time);
     // let there be light
     light_buffer_ = std::make_shared<Lights>(device_);
-    light_buffer_->AddAmbientlight({ 0.6,0.6,0.6 }, false);
+    XMFLOAT3 amb_strength= { 0.6,0.6,0.6 };
+    light_buffer_->AddAmbientlight(amb_strength,"snow_corridor_cubemap.png", false);
     light_buffer_->AddDirlight({ 0.6,0.6,0.6 }, { 1.0 ,0.0, 0.0, 0.0 }, false);
     XMMATRIX view = XMLoadFloat4x4(&pov_buffer_->GetData().view);
     XMMATRIX proj = XMLoadFloat4x4(&pov_buffer_->GetData().projection);

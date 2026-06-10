@@ -6,13 +6,24 @@ GTexture::GTexture(TGAImage image, std::string& name, std::shared_ptr<Gdevice> d
 	UINT64 uploadBufferSize;
 	device->GetDXDevice()->GetCopyableFootprints(&(Gresourse_->GetResDesc()), 0, 1, 0, nullptr, nullptr, nullptr, &uploadBufferSize);
 	D3D12_RESOURCE_DESC uploadDesc{};
-	uploadDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	uploadDesc.Width = uploadBufferSize;
-	uploadDesc.Height = 1;
-	uploadDesc.DepthOrArraySize = 1;
-	uploadDesc.MipLevels = 1;
-	uploadDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-	uploadDesc.SampleDesc.Count = 1;
+	switch (usage) {
+		case TextureUsage::CubeMap:
+			uploadDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+			uploadDesc.Width = uploadBufferSize;
+			uploadDesc.Height = 1;
+			uploadDesc.DepthOrArraySize = 6;
+			uploadDesc.MipLevels = 1;
+			uploadDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+			uploadDesc.SampleDesc.Count = 1;
+		default:
+			uploadDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+			uploadDesc.Width = uploadBufferSize;
+			uploadDesc.Height = 1;
+			uploadDesc.DepthOrArraySize = 1;
+			uploadDesc.MipLevels = 1;
+			uploadDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+			uploadDesc.SampleDesc.Count = 1;
+	}
 	D3D12_HEAP_PROPERTIES uploadHeapProps{};
 	uploadHeapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
 	ComPtr<ID3D12Resource> textureUploadHeap;
@@ -175,6 +186,7 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 	D3D12_RESOURCE_DESC desc;
 	DXGI_FORMAT srv_format;
 	int index = static_cast<int>(usage);
+	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 	switch (usage) {
 	case TextureUsage::Albedo:
 		heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
@@ -187,6 +199,7 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 			flag,
 			D3D12_TEXTURE_LAYOUT_UNKNOWN, 0);
 		srv_format = formats[index];
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 		break;
 	case TextureUsage::Normalmap:
 		heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
@@ -199,6 +212,7 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 			flag,
 			D3D12_TEXTURE_LAYOUT_UNKNOWN, 0);
 		srv_format = formats[index];
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 		break;
 	case TextureUsage::Depth:
 		desc = CD3DX12_RESOURCE_DESC::Tex2D(formats[index],
@@ -216,6 +230,7 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 		heapProps.VisibleNodeMask = 1;
 		clear_value_pointer = &clear_value;
 		srv_format = DXGI_FORMAT_R32_FLOAT;
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 		break;
 	case TextureUsage::MaterialIndex:
 		heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
@@ -228,15 +243,26 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 			flag,
 			D3D12_TEXTURE_LAYOUT_UNKNOWN, 0);
 		srv_format = formats[index];
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		break;
+	case TextureUsage::CubeMap:
+		heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
+		heapProps.CPUPageProperty = D3D12_CPU_PAGE_PROPERTY_UNKNOWN;
+		heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
+		heapProps.CreationNodeMask = 1;
+		heapProps.VisibleNodeMask = 1;
+		desc = CD3DX12_RESOURCE_DESC::Tex2D(formats[index],
+			width, height, 1, 1, 1, 0,
+			flag,
+			D3D12_TEXTURE_LAYOUT_UNKNOWN, 0);
+		srv_format = formats[index];
+		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
 		break;
 	}
-	D3D12_SHADER_RESOURCE_VIEW_DESC srvDesc{};
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.Format = srv_format;
-	srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	srvDesc.Texture2D.MostDetailedMip = 0;
 	srvDesc.Texture2D.MipLevels = 1;
 	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
-	D3D12_SRV_DIMENSION dimension = D3D12_SRV_DIMENSION_TEXTURE2D;
 	Gresourse_ = std::make_shared<GResourse>(desc, srvDesc, heapProps, name, device,initial_states_[index], clear_value_pointer);
 }
