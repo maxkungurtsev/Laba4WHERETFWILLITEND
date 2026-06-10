@@ -431,11 +431,6 @@ float4 main(PS_IN input) : SV_Target{
         {
            // shadowFactor = CalcShadowFactor(worldPos, viewDepth);
         }
-        if (lights[i].using_IBL_>0)
-        {
-            return float4(albedo, 1.0);
-
-        }
         float4 out_light = float4(light.x * shadowFactor.x, light.y * shadowFactor.y, light.z * shadowFactor.z, 1.0f);
         finalLight += out_light;
     }
