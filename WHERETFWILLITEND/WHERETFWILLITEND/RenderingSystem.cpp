@@ -667,13 +667,15 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<st
     InitPresentPass();
     // c buffer
     pass_buffer_ = std::make_shared<Cbuffer<PassConstants>>(device_);
+    pass_buffer_->GetData().GGX_or_Beckman = 0;
+    pass_buffer_->Save_changes();
     pov_buffer_ = std::make_shared<Cbuffer<POVConstants>>(device_);
     FillCbuffers(cam_pos, look_at, up, time);
     // let there be light
     light_buffer_ = std::make_shared<Lights>(device_);
     XMFLOAT3 amb_strength= { 0.6,0.6,0.6 };
     light_buffer_->AddAmbientlight(amb_strength,"snow_corridor_cubemap.png", false);
-    light_buffer_->AddDirlight({ 0.6,0.6,0.6 }, { 1.0 ,0.0, 0.0, 0.0 }, false);
+    light_buffer_->AddDirlight({ 0.6,0.6,0.6 }, { 1.0 ,1.0, 1.0, 0.0 }, false);
     XMMATRIX view = XMLoadFloat4x4(&pov_buffer_->GetData().view);
     XMMATRIX proj = XMLoadFloat4x4(&pov_buffer_->GetData().projection);
     light_buffer_->UpdateShadowMatricies(view, XM_PIDIV4, device_->width_ / device_->height_);
@@ -707,8 +709,10 @@ RenderingSystem::RenderingSystem(std::shared_ptr<Gdevice> device, std::vector<st
 
 
 }
-void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up, D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle, bool shootlight, bool culling_enabled) {
+void RenderingSystem::RenderFrame(float time, XMVECTOR look_at, XMVECTOR cam_pos, XMVECTOR up, D3D12_CPU_DESCRIPTOR_HANDLE& rtvHandle, bool shootlight, bool culling_enabled, bool ggx_or_beckman) {
     const float clearColor[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+    pass_buffer_->GetData().GGX_or_Beckman = ggx_or_beckman;
+    pass_buffer_->Save_changes();
     {
     if (shootlight) {
         XMFLOAT4 camera_pos;

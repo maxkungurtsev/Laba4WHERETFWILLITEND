@@ -15,6 +15,7 @@ GTexture::GTexture(TGAImage image, std::string& name, std::shared_ptr<Gdevice> d
 			uploadDesc.MipLevels = 1;
 			uploadDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
 			uploadDesc.SampleDesc.Count = 1;
+			break;
 		default:
 			uploadDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
 			uploadDesc.Width = uploadBufferSize;
@@ -93,15 +94,32 @@ GTexture::GTexture(const DirectX::Image* image, std::string& name, std::shared_p
 	FillData(image->width, image->height, name, device, usage);
 	device->cmd_->ResetAllocator();
 	UINT64 uploadBufferSize;
-	device->GetDXDevice()->GetCopyableFootprints(&(Gresourse_->GetResDesc()), 0, 1, 0, nullptr, nullptr, nullptr, &uploadBufferSize);
+	int subresourses = 1;
+	if (usage == TextureUsage::CubeMap) {
+		subresourses = 6;
+	}
+	device->GetDXDevice()->GetCopyableFootprints(&(Gresourse_->GetResDesc()), 0, subresourses, 0, nullptr, nullptr, nullptr, &uploadBufferSize);
 	D3D12_RESOURCE_DESC uploadDesc{};
-	uploadDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
-	uploadDesc.Width = uploadBufferSize;
-	uploadDesc.Height = 1;
-	uploadDesc.DepthOrArraySize = 1;
-	uploadDesc.MipLevels = 1;
-	uploadDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
-	uploadDesc.SampleDesc.Count = 1;
+	switch (usage) {
+	case TextureUsage::CubeMap:
+		uploadDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+		uploadDesc.Width = uploadBufferSize;
+		uploadDesc.Height = 1;
+		uploadDesc.DepthOrArraySize = 1;
+		uploadDesc.MipLevels = 1;
+		uploadDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+		uploadDesc.SampleDesc.Count = 1;
+		break;
+	default:
+		uploadDesc.Dimension = D3D12_RESOURCE_DIMENSION_BUFFER;
+		uploadDesc.Width = uploadBufferSize;
+		uploadDesc.Height = 1;
+		uploadDesc.DepthOrArraySize = 1;
+		uploadDesc.MipLevels = 1;
+		uploadDesc.Layout = D3D12_TEXTURE_LAYOUT_ROW_MAJOR;
+		uploadDesc.SampleDesc.Count = 1;
+	}
+
 	D3D12_HEAP_PROPERTIES uploadHeapProps{};
 	uploadHeapProps.Type = D3D12_HEAP_TYPE_UPLOAD;
 	ComPtr<ID3D12Resource> textureUploadHeap;
@@ -116,38 +134,107 @@ GTexture::GTexture(const DirectX::Image* image, std::string& name, std::shared_p
 	if (FAILED(hr)) {
 		throw std::runtime_error("Failed to create texture upload heap");
 	}
-	//TGA â upload heap
-	void* mappedData = nullptr;
-	D3D12_RANGE readRange{ 0, 0 };
-	textureUploadHeap->Map(0, &readRange, &mappedData);
-	for (UINT y = 0; y < height_; y++) {
-		for (UINT x = 0; x < width_; x++) {
-			const uint8_t* pixel = image->pixels + y * image->rowPitch + x * 4;
-			UINT idx = (y * width_ + x) * 4;
+	//â upload heap
+	int index = static_cast<int>(usage);
+	switch (usage) {
+		case TextureUsage::CubeMap:{
+			float faces[6][2] = { {2,1},{0,1},{1,0},{1,2},{1,1},{3,1} };
+			float face_size = width_ / 4;
+			void* mappedData = nullptr;
+			D3D12_RANGE readRange{ 0, 0 };
+			textureUploadHeap->Map(0, &readRange, &mappedData);
+			UINT faceBytes = face_size * face_size * 4;
+			BYTE* dstData = reinterpret_cast<BYTE*>(mappedData);
+			for (UINT face = 0; face < 6; face++)
+			{
+				UINT srcStartX = faces[face][0] * face_size;
+				UINT srcStartY = faces[face][1] * face_size;
 
-			reinterpret_cast<BYTE*>(mappedData)[idx + 0] = pixel[2]; // B
-			reinterpret_cast<BYTE*>(mappedData)[idx + 1] = pixel[1]; // G
-			reinterpret_cast<BYTE*>(mappedData)[idx + 2] = pixel[0]; // R
-			reinterpret_cast<BYTE*>(mappedData)[idx + 3] = pixel[3]; // A
+				BYTE* faceDst = dstData + face * faceBytes;
+
+				for (UINT y = 0; y < face_size; y++)
+				{
+					for (UINT x = 0; x < face_size; x++)
+					{
+						const uint8_t* pixel =
+							image->pixels +
+							(srcStartY + y) * image->rowPitch +
+							(srcStartX + x) * 4;
+
+						UINT idx = (y * face_size + x) * 4;
+
+						faceDst[idx + 0] = pixel[2];
+						faceDst[idx + 1] = pixel[1];
+						faceDst[idx + 2] = pixel[0];
+						faceDst[idx + 3] = pixel[3];
+					}
+				}
+			}
+
+			textureUploadHeap->Unmap(0, nullptr);
+			// data to GPU texture
+			D3D12_TEXTURE_COPY_LOCATION dst{};
+			dst.pResource = Gresourse_->GetResourse().Get();
+			dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+
+			for (UINT face = 0; face < 6; face++)
+			{
+				D3D12_TEXTURE_COPY_LOCATION dst{};
+				dst.pResource = Gresourse_->GetResourse().Get();
+				dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+				dst.SubresourceIndex = face;
+
+				D3D12_TEXTURE_COPY_LOCATION src{};
+				src.pResource = textureUploadHeap.Get();
+				src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+
+				src.PlacedFootprint.Offset =face * face_size * face_size * 4;
+
+				src.PlacedFootprint.Footprint.Format = formats[index];
+				src.PlacedFootprint.Footprint.Width = face_size;
+				src.PlacedFootprint.Footprint.Height = face_size;
+				src.PlacedFootprint.Footprint.Depth = 1;
+				src.PlacedFootprint.Footprint.RowPitch = face_size * 4;
+
+				device->cmd_->command_list_->CopyTextureRegion(&dst,0,0,0,&src,nullptr);
+			}
+
+			break;
+		}
+		default:{
+			void* mappedData = nullptr;
+			D3D12_RANGE readRange{ 0, 0 };
+			textureUploadHeap->Map(0, &readRange, &mappedData);
+			for (UINT y = 0; y < height_; y++) {
+				for (UINT x = 0; x < width_; x++) {
+					const uint8_t* pixel = image->pixels + y * image->rowPitch + x * 4;
+					UINT idx = (y * width_ + x) * 4;
+
+					reinterpret_cast<BYTE*>(mappedData)[idx + 0] = pixel[2]; // B
+					reinterpret_cast<BYTE*>(mappedData)[idx + 1] = pixel[1]; // G
+					reinterpret_cast<BYTE*>(mappedData)[idx + 2] = pixel[0]; // R
+					reinterpret_cast<BYTE*>(mappedData)[idx + 3] = pixel[3]; // A
+				}
+			}
+			textureUploadHeap->Unmap(0, nullptr);
+			// data to GPU texture
+			D3D12_TEXTURE_COPY_LOCATION dst{};
+			dst.pResource = Gresourse_->GetResourse().Get();
+			dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
+			dst.SubresourceIndex = 0;
+			D3D12_TEXTURE_COPY_LOCATION src{};
+			src.pResource = textureUploadHeap.Get();
+			src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
+			src.PlacedFootprint.Offset = 0;
+			src.PlacedFootprint.Footprint.Format = formats[index];
+			src.PlacedFootprint.Footprint.Width = width_;
+			src.PlacedFootprint.Footprint.Height = height_;
+			src.PlacedFootprint.Footprint.Depth = 1;
+			src.PlacedFootprint.Footprint.RowPitch = width_ * 4;
+			device->cmd_->command_list_->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
+			break;
 		}
 	}
-	textureUploadHeap->Unmap(0, nullptr);
-	// data to GPU texture
-	int index = static_cast<int>(usage);
-	D3D12_TEXTURE_COPY_LOCATION dst{};
-	dst.pResource = Gresourse_->GetResourse().Get();
-	dst.Type = D3D12_TEXTURE_COPY_TYPE_SUBRESOURCE_INDEX;
-	dst.SubresourceIndex = 0;
-	D3D12_TEXTURE_COPY_LOCATION src{};
-	src.pResource = textureUploadHeap.Get();
-	src.Type = D3D12_TEXTURE_COPY_TYPE_PLACED_FOOTPRINT;
-	src.PlacedFootprint.Offset = 0;
-	src.PlacedFootprint.Footprint.Format = formats[index];
-	src.PlacedFootprint.Footprint.Width = width_;
-	src.PlacedFootprint.Footprint.Height = height_;
-	src.PlacedFootprint.Footprint.Depth = 1;
-	src.PlacedFootprint.Footprint.RowPitch = width_ * 4;
-	device->cmd_->command_list_->CopyTextureRegion(&dst, 0, 0, 0, &src, nullptr);
 	D3D12_RESOURCE_BARRIER barrier{};
 	barrier.Type = D3D12_RESOURCE_BARRIER_TYPE_TRANSITION;
 	barrier.Transition.pResource = Gresourse_->GetResourse().Get();
@@ -200,6 +287,9 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 			D3D12_TEXTURE_LAYOUT_UNKNOWN, 0);
 		srv_format = formats[index];
 		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MostDetailedMip = 0;
+		srvDesc.Texture2D.MipLevels = 1;
+		srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 		break;
 	case TextureUsage::Normalmap:
 		heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
@@ -213,6 +303,9 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 			D3D12_TEXTURE_LAYOUT_UNKNOWN, 0);
 		srv_format = formats[index];
 		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MostDetailedMip = 0;
+		srvDesc.Texture2D.MipLevels = 1;
+		srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 		break;
 	case TextureUsage::Depth:
 		desc = CD3DX12_RESOURCE_DESC::Tex2D(formats[index],
@@ -231,6 +324,9 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 		clear_value_pointer = &clear_value;
 		srv_format = DXGI_FORMAT_R32_FLOAT;
 		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MostDetailedMip = 0;
+		srvDesc.Texture2D.MipLevels = 1;
+		srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 		break;
 	case TextureUsage::MaterialIndex:
 		heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
@@ -244,6 +340,9 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 			D3D12_TEXTURE_LAYOUT_UNKNOWN, 0);
 		srv_format = formats[index];
 		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURE2D;
+		srvDesc.Texture2D.MostDetailedMip = 0;
+		srvDesc.Texture2D.MipLevels = 1;
+		srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 		break;
 	case TextureUsage::CubeMap:
 		heapProps.Type = D3D12_HEAP_TYPE_DEFAULT;
@@ -251,18 +350,20 @@ void GTexture::FillData(UINT width, UINT height, std::string& name, std::shared_
 		heapProps.MemoryPoolPreference = D3D12_MEMORY_POOL_UNKNOWN;
 		heapProps.CreationNodeMask = 1;
 		heapProps.VisibleNodeMask = 1;
-		desc = CD3DX12_RESOURCE_DESC::Tex2D(formats[index],
-			width, height, 1, 1, 1, 0,
-			flag,
-			D3D12_TEXTURE_LAYOUT_UNKNOWN, 0);
+		if (width / 4 == 0 or height / 3 == 0 or height / 3 != width / 4) {
+			OutputDebugStringA(("\nwidth"+std::to_string(width / 4) + " height:" + std::to_string(height / 3)+'\n').c_str());
+			throw std::runtime_error("cubemap params wrong");
+		}
+		desc = CD3DX12_RESOURCE_DESC::Tex2D(formats[index],width/4, height/3, 6, 1, 1, 0,
+			flag,D3D12_TEXTURE_LAYOUT_UNKNOWN, 0);
 		srv_format = formats[index];
 		srvDesc.ViewDimension = D3D12_SRV_DIMENSION_TEXTURECUBE;
+		srvDesc.TextureCube.MostDetailedMip = 0;
+		srvDesc.TextureCube.MipLevels = 1;
+		srvDesc.TextureCube.ResourceMinLODClamp = 0.0f;
 		break;
 	}
 	srvDesc.Shader4ComponentMapping = D3D12_DEFAULT_SHADER_4_COMPONENT_MAPPING;
 	srvDesc.Format = srv_format;
-	srvDesc.Texture2D.MostDetailedMip = 0;
-	srvDesc.Texture2D.MipLevels = 1;
-	srvDesc.Texture2D.ResourceMinLODClamp = 0.0f;
 	Gresourse_ = std::make_shared<GResourse>(desc, srvDesc, heapProps, name, device,initial_states_[index], clear_value_pointer);
 }

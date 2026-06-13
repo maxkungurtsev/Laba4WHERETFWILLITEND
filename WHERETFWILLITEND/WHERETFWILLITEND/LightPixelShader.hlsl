@@ -46,6 +46,8 @@ cbuffer PassConstants : register(b0)
     int current_mat;
     float cam_near;
     float cam_far;
+    float GGX_or_Beckman;
+    float pad[3];
 };
 
 cbuffer MaterialConstants : register(b4)
@@ -191,20 +193,110 @@ float GeometrySchlickGGX(float NdotV, float roughness)
     return NdotV / max(NdotV * (1.0f - k) + k, 1e-6f);
 }
 
+float DistributionBeckman(float3 N, float3 H, float roughness)
+{
+    float alpha = max(roughness, 0.001f);
+    float alpha2 = alpha * alpha;
+
+    float NdotH = max(dot(N, H), 0.0f);
+    if (NdotH <= 0.0f)
+        return 0.0f;
+
+    float NdotH2 = NdotH * NdotH;
+    float tanTheta2 = (1.0f - NdotH2) / max(NdotH2, 1e-6f);
+
+    float exponent = -tanTheta2 / max(alpha2, 1e-6f);
+    float denom = PI * alpha2 * NdotH2 * NdotH2;
+
+    return exp(exponent) / max(denom, 1e-6f);
+}
+float GeometryBeckman(float NdotV, float roughness)
+{
+    float alpha = max(roughness, 0.001f);
+
+    NdotV = saturate(NdotV);
+    if (NdotV <= 0.0f)
+        return 0.0f;
+
+    float sinTheta = sqrt(max(1.0f - NdotV * NdotV, 0.0f));
+    float tanTheta = sinTheta / max(NdotV, 1e-6f);
+
+    if (tanTheta <= 0.0f)
+        return 1.0f;
+
+    // Beckmann G1 approximation
+    float a = 1.0f / (alpha * tanTheta);
+
+    if (a >= 1.6f)
+        return 1.0f;
+
+    return (3.535f * a + 2.181f * a * a) /
+           (1.0f + 2.276f * a + 2.577f * a * a);
+}
 float GeometrySmith(float3 N, float3 V, float3 L, float roughness)
 {
     float NdotV = max(dot(N, V), 0.0f);
     float NdotL = max(dot(N, L), 0.0f);
+    if (GGX_or_Beckman == 0)
+    {
     float ggxV = GeometrySchlickGGX(NdotV, roughness);
     float ggxL = GeometrySchlickGGX(NdotL, roughness);
 
     return ggxV * ggxL;
+    }
+    else
+    {
+        float BeckmanV = GeometryBeckman(NdotV, roughness);
+        float BeckmanL = GeometryBeckman(NdotL, roughness);
+        return BeckmanV * BeckmanL;
+    }
 }
 
 float3 FresnelSchlick(float cosTheta, float3 F0)
 {
     return F0 + (1.0f - F0) * pow(1.0f - cosTheta, 5.0f);
 }
+
+float3 FresnelSchlickRoughness(float cosTheta, float3 F0, float roughness)
+{
+    return F0 + (max(float3(1.0f - roughness, 1.0f - roughness, 1.0f - roughness), F0) - F0) * pow(1.0f - cosTheta, 5.0f);
+}
+
+float3 CalcAmbientIBL(LightData light, float3 normal, float3 view_dir, float roughness, float metallic, float ao, float3 F0)
+{
+    float3 N = normalize(normal);
+    float3 V = normalize(view_dir);
+    float NdotV = max(dot(N, V), 0.0f);
+    float3 F = FresnelSchlickRoughness(NdotV, F0, roughness);
+    float3 kS = F;
+    float3 kD = (1.0f - kS) * (1.0f - metallic);
+    float3 smapled_color = float3(0,0,0);
+    int denom=0;
+    for (int i = -2; i < 3; i++)
+    {
+        for (int j = -2; j < 3; j++)
+        {
+                smapled_color += AmbientCubeMap.SampleLevel(samplerState, normalize(N + float3(i, j, 10-i*i-j*j) * 0.1),0).rgb;
+                denom++;
+        }
+    }
+    smapled_color = smapled_color / denom;
+    float3 irradiance = smapled_color * light.strength;
+
+    float3 R = reflect(-V, N);
+    float3 specularSampleDir = normalize(lerp(R, N, roughness * roughness));
+    float3 envSpecular = AmbientCubeMap.SampleLevel(samplerState, specularSampleDir, 0).rgb * light.strength;
+    float3 specular = envSpecular * F;
+
+    return (kD * irradiance + specular) * ao;
+}
+
+float3 CalcAmbientFallback(LightData light, float metallic, float ao, float3 F0)
+{
+    float3 kD = (1.0f - F0) * (1.0f - metallic);
+    return kD* light.strength * ao;
+}
+
 
 float3 CalcLightPBR(LightData light, float3 normal, float3 worldPos, float3 view_dir, float3 albedo, float roughness, float metallic, float ao)
 {
@@ -264,8 +356,12 @@ float3 CalcLightPBR(LightData light, float3 normal, float3 worldPos, float3 view
 
         case 3: // ambient fallback
         {
-                return light.strength * ao;
+            if (light.using_IBL_ > 0.5f)
+            {
+                return CalcAmbientIBL(light, normal, view_dir, roughness, metallic, ao, F0);
             }
+                return CalcAmbientFallback(light, metallic, ao, F0);
+        }
     }
 
     float NdotL = max(dot(normal, light_pos), 0.0f);
@@ -277,7 +373,15 @@ float3 CalcLightPBR(LightData light, float3 normal, float3 worldPos, float3 view
     float3 H = normalize(view_dir + light_pos);
 
     float3 F = FresnelSchlick(max(dot(H, view_dir), 0.0f), F0);
-    float NDF = DistributionGGX(normal, H, roughness);
+    float NDF;
+    if (GGX_or_Beckman == 0)
+    {
+        NDF = DistributionGGX(normal, H, roughness);
+    }
+    else
+    {
+        NDF = DistributionBeckman(normal, H, roughness);
+    }
     float G = GeometrySmith(normal, view_dir, light_pos, roughness);
 
     float3 numerator = NDF * G * F;
@@ -318,7 +422,7 @@ float3 CalcLightPhong(LightData light, float3 normal, float3 worldPos, float3 vi
         {
                 float3 toLight = pos.xyz - worldPos;
                 float dist = length(toLight);
-                float3 L = normalize(pos.xyz - worldPos);
+                float3 L = normalize(pos.xyz - worldPos);   
                 float NdotL = max(dot(normal, L), 0.0f);
                 float attenuation = 1.0f;
                 float range = max(light.falloff_end - light.falloff_start, 0.00001f);
@@ -402,6 +506,12 @@ float4 main(PS_IN input) : SV_Target{
 
     float4 clip = float4(ndc, depth, 1.0);
     float4 viewPos = mul(inv_projection, clip);
+    if (depth >= 1.0f)
+    {
+        float3 veiew_pos = viewPos.xyz;
+        float3 worldDir = normalize(mul((float3x3) inv_view, veiew_pos));
+        return AmbientCubeMap.Sample(samplerState, worldDir);
+    }
     viewPos /= viewPos.w;
     float3 worldPos = mul(inv_view, viewPos).xyz;
     float3 finalLight = float3(0, 0, 0);
@@ -411,31 +521,24 @@ float4 main(PS_IN input) : SV_Target{
     lights.GetDimensions(elementCount, stride);
     float4 shadowFactor = float4(1.0f, 1.0f, 1.0f, 1.0f);
     float viewDepth = abs(viewPos.z);
-    
-    int cascade = 3;
-    for (int j = 0; j < 4; ++j)
+    float3 smapled_color = float3(0, 0, 0);
+    int denom = 0;
+    float roughness = RoughnessMap.Sample(samplerState, uv).r;
+    float metallic = MetallicMap.Sample(samplerState, uv).r;
+    float AO = AOMap.Sample(samplerState, uv).r;
+    for (int k = 0; k < max_lights.x; k++)
     {
-        if (viewDepth < cascade_split_depths[j])
-        {
-            cascade = j;
-            break;
-        }
-    }
-    
-    for (int i = 0; i < max_lights.x; i++)
-    {
-        
         shadowFactor = 1.0f;
-        float3 light = CalcLight(lights[i], normal, worldPos, V, mats[matIndex], albedo, (RoughnessMap.Sample(samplerState, uv).r), MetallicMap.Sample(samplerState, uv).r, AOMap.Sample(samplerState, uv).r);
-        if (lights[i].type == 0)
+        float3 light = CalcLight(lights[k], normal, worldPos, V, mats[matIndex], albedo, roughness, metallic, AO);
+        if (lights[k].type == 0)
         {
            // shadowFactor = CalcShadowFactor(worldPos, viewDepth);
         }
         float4 out_light = float4(light.x * shadowFactor.x, light.y * shadowFactor.y, light.z * shadowFactor.z, 1.0f);
-        finalLight += out_light;
+        finalLight += out_light.xyz;
     }
     float4 Final;
-    Final = float4(albedo*finalLight, 1.0);
+    Final = float4(albedo * finalLight, 1.0);
     return Final;
     float storedDepth1 = Depth.Sample(samplerState, uv).r;
     float storedDepth2 = shadowMap0.Sample(samplerState, uv).r;

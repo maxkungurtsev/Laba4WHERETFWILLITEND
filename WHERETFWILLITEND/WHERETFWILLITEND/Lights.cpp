@@ -94,7 +94,7 @@ void Lights::AddAmbientlight(XMFLOAT3 strength, std::string cubemap_pass, bool i
 			throw std::runtime_error("failed to load texture for amb_light from png");
 		}
 		image_png = image.GetImage(0, 0, 0);
-		ambient_cubemap_ = std::make_shared<GTexture>(image_png, cubemap_pass, device_, TextureUsage::Albedo);
+		ambient_cubemap_ = std::make_shared<GTexture>(image_png, cubemap_pass, device_, TextureUsage::CubeMap);
 	}
 	lights_->AddElement(newlight, max_lights_->GetData().x, in_render_frame);
 	max_lights_->GetData().x += 1;

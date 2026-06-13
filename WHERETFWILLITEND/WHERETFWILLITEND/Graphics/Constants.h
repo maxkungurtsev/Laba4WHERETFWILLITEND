@@ -34,6 +34,8 @@ struct PassConstants {
 	int current_mat;
 	float cam_near;
 	float cam_far;
+	float GGX_or_Beckman;
+	float pad[3];
 };
 struct POVConstants {
 	XMFLOAT4X4 model;

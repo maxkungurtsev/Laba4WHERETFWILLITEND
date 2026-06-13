@@ -25,6 +25,7 @@ int Run() {
     auto lastTime = clock::now();
     float time = 0;
     bool shootLight = false;
+    bool ggx_or_beckman = false;
     bool culling_enabled = true;
     while (running) {
         shootLight = false;
@@ -83,12 +84,18 @@ int Run() {
         if (g_Input.IsKeyDown('D')) {
             cam_coords -= right * 0.01f;
         }
+        if (g_Input.IsKeyDown('G')) {
+            ggx_or_beckman = false;
+        }
+        if (g_Input.IsKeyDown('B')) {
+            ggx_or_beckman = true;
+        }
        auto currentTime = clock::now();
        float deltaTime = std::chrono::duration<float>(currentTime - lastTime).count();
        lastTime = currentTime;
        time += deltaTime;
        look_at = cam_coords + forward;
-       g_Renderer->RenderFrame(time, look_at, cam_coords, up, shootLight, culling_enabled);
+       g_Renderer->RenderFrame(time, look_at, cam_coords, up, shootLight, culling_enabled, ggx_or_beckman);
     }
     return (int)msg.wParam;
 }
